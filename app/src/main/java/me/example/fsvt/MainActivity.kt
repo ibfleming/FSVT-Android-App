@@ -1,8 +1,13 @@
 package me.example.fsvt
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -20,14 +25,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign.Companion
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import me.example.fsvt.ui.theme.FVSTAppTheme
+import java.util.logging.Logger
 
 class MainActivity : ComponentActivity() {
 
-    private val logTag = "MY LOGGING"
+    private val logTag = "IAN"
+
+    private lateinit var bluetoothAdapter: BluetoothAdapter
+    private lateinit var bluetoothLeScanner: BluetoothLeScanner
+    private var scanning = false
+
+    // Scan for 10 seconds
+    private val SCAN_PERIOD: Long = 10000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             FVSTAppTheme {
                 // A surface container using the 'background' color from the theme
@@ -35,47 +53,59 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //Greeting("Test")
+                    Greeting("Test")
                 }
             }
         }
 
-        val bluetoothManager : BluetoothManager = getSystemService(BluetoothManager::class.java)
-        val bluetoothAdapter : BluetoothAdapter? = bluetoothManager.adapter
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothAdapter = bluetoothManager.adapter
+        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
 
-        // Check to see if the Bluetooth classic feature is available.
-        val bluetoothAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
-        // Check to see if the BLE feature is available.
-        val bluetoothLEAvailable = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+        if(!bluetoothAdapter.isEnabled) {
 
-        if(bluetoothAvailable) {
-            Log.i(logTag, "INFO: HAS BLUETOOTH CLASSIC")
+            val enableBTLauncher: ActivityResultLauncher<Intent> =
+                registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                    if( result.resultCode == Activity.RESULT_OK ) {
+                        // Bluetooth was enabled by the user manually
+                        Log.i(logTag, "ACTIVITY: Bluetooth has been enabled")
+                    } else {
+                        // User decided not to enable Bluetooth
+                        Log.i(logTag, "ACTIVITY: Bluetooth was not enabled")
+                    }
+                }
+
+            val enableBTIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBTLauncher.launch(enableBTIntent)
         }
-        if(bluetoothLEAvailable) {
-            Log.i(logTag, "INFO: HAS BLUETOOTH LOW ENERGY")
+        else {
+            scanLeDevice()
         }
+    }
 
-        val enableBTLauncher: ActivityResultLauncher<Intent> =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if( result.resultCode == Activity.RESULT_OK ) {
-                // Bluetooth was enabled by the user manually
-                Log.i(logTag, "ACTIVITY: Bluetooth has been enabled")
-            } else {
-                // User decided not to enable Bluetooth
-                Log.i(logTag, "ACTIVITY: Bluetooth was not enabled")
+    private val scanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    @SuppressLint("MissingPermission")
+    private fun scanLeDevice() {
+        if(!scanning) {
+            GlobalScope.launch {
+                delay(SCAN_PERIOD)
+                scanning = false
+                bluetoothLeScanner.stopScan(scanCallback)
             }
-        }
-
-        if( bluetoothAdapter != null ) {
-            Log.i(logTag, "INFO: DEVICE HAS BLUETOOTH ADAPTER")
-            if(!bluetoothAdapter.isEnabled) {
-                val enableBTIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                enableBTLauncher.launch(enableBTIntent)
-            }
+            scanning = true
+            bluetoothLeScanner.startScan(scanCallback)
+        } else {
+            scanning = false
+            bluetoothLeScanner.stopScan(scanCallback)
         }
     }
 }
-
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
