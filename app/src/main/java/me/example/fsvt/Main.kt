@@ -48,7 +48,7 @@ class Main : ComponentActivity() {
         setContentView(R.layout.main)
 
         // 3) Fetch Object References
-        bStart = findViewById(R.id.StartButton)
+        bStart = findViewById(R.id.InitButton)
         tvStatus = findViewById(R.id.BLE_STATUS)
         tvList = findViewById(R.id.BLE_LIST)
 
@@ -90,7 +90,7 @@ class Main : ComponentActivity() {
                 //status = true
             }
             tvList.text = deviceList.toString()
-            tvStatus.setText(R.string.connected_status)
+            tvStatus.setText(R.string.ui_on_status)
         }
 
         lifecycleScope.launch {
