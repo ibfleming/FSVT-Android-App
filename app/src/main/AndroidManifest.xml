@@ -27,16 +27,14 @@
         android:icon="@mipmap/ic_launcher"
         android:label="FSVT"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.Main"
         android:supportsRtl="true"
-        android:theme="@style/Theme.FVSTApp"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.FVSTApp">
+            android:name=".Main"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
