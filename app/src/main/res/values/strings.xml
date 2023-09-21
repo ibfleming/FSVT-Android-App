@@ -6,4 +6,7 @@
     <string name="ui_stop">Stop</string>
     <string name="ui_off_status">Disconnected</string>
     <string name="ui_on_status">Connected</string>
+    <string name="copyright">© 2023 – 2023 https://github.com/ibfleming/FSVT-Android-App.git - All Rights Reserved.</string>
+    <string name="ui_found_devices">Found Device(s):</string>
+    <string name="ui_scanning_status">Scanning…</string>
 </resources>
