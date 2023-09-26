@@ -12,13 +12,16 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.github.mikephil.charting.charts.LineChart
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 
 // MAC ADDRESS OF HM10: B0:D2:78:32:F5:7F
 // © 2023 - 2023 https://github.com/ibfleming/FSVT-Android-App.git - All Rights Reserved.
@@ -32,10 +35,12 @@ class Main : ComponentActivity() {
     private val status: Boolean = false
 
     // 1) Create U.I. Objects
-    private lateinit var bInit : Button
+    private lateinit var bInit : ImageButton
     private lateinit var bStart : Button
+    private lateinit var bStop : Button
     private lateinit var tvStatus : TextView
     private lateinit var tvList : TextView
+    private lateinit var lineChart : LineChart
 
     // 2) Create Bluetooth Objects
     private lateinit var bleManager : BLEManager
@@ -69,8 +74,12 @@ class Main : ComponentActivity() {
         // 3) Fetch Object References
         bInit = findViewById(R.id.InitButton)
         bStart = findViewById(R.id.StartButton)
+        bStop = findViewById(R.id.StopButton)
         tvStatus = findViewById(R.id.BLE_STATUS)
         tvList = findViewById(R.id.BLE_LIST)
+        lineChart = findViewById(R.id.chart)
+
+        GraphActivity(lineChart).createGraph()
 
         // 4) Fetch B.T. Object References
         bluetoothAdapter = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter

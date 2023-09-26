@@ -2,11 +2,12 @@
     <string name="app_name">FVST App</string>
     <string name="ui_title">FVST Test App</string>
     <string name="ui_init">Init</string>
-    <string name="ui_start">Start</string>
-    <string name="ui_stop">Stop</string>
+    <string name="ui_start">Run</string>
+    <string name="ui_stop">Halt</string>
     <string name="ui_off_status">Disconnected</string>
     <string name="ui_on_status">Connected</string>
-    <string name="copyright">© 2023 – 2023 https://github.com/ibfleming/FSVT-Android-App.git - All Rights Reserved.</string>
+    <string name="copyright">© 2023 – 2023 FSVT - All Rights Reserved.</string>
     <string name="ui_found_devices">Found Device(s):</string>
     <string name="ui_scanning_status">Scanning…</string>
+    <string name="bluetooth_logo">Bluetooth Logo</string>
 </resources>
