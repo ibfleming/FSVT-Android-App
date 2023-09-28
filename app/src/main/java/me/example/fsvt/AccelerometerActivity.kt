@@ -7,7 +7,10 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
+import android.widget.Button
 
 class AccelerometerActivity : Activity(), SensorEventListener {
 
@@ -16,12 +19,29 @@ class AccelerometerActivity : Activity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var accelerometer: Sensor
     private lateinit var graphActivity : GraphActivity
+    private var handlerThread = HandlerThread("AccelerometerActivity").apply { start() }
+    private val handler = Handler(handlerThread.looper)
+
     private var thread : Thread? = null
     private var plotData = true
+
+    private val accelerometerRunnable = Runnable {
+        while(true) {
+            plotData = true
+            try {
+                Thread.sleep(250)
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private lateinit var bStop : Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
+        bStop = findViewById(R.id.StopButton)
 
         // Initialize SensorManager and Accelerometer
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -32,6 +52,11 @@ class AccelerometerActivity : Activity(), SensorEventListener {
         graphActivity.createGraph()
 
         populateGraph()
+
+        bStop.setOnClickListener {
+            thread?.interrupt()
+            finish()
+        }
     }
 
     private fun populateGraph() {
@@ -39,15 +64,8 @@ class AccelerometerActivity : Activity(), SensorEventListener {
             thread!!.interrupt()
         }
 
-        thread = Thread() {
-            while( true ) {
-                plotData = true
-                try {
-                    Thread.sleep(1000)
-                } catch ( e: InterruptedException ) {
-                    e.printStackTrace()
-                }
-            }
+        thread = Thread {
+            handler.post(accelerometerRunnable)
         }
 
         thread!!.start()

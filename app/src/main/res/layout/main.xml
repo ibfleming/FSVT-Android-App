@@ -27,23 +27,27 @@
         android:id="@+id/Button_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
-        app:layout_constraintBottom_toTopOf="@+id/BLE_STATUS"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/Status_Wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.493"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/AppTitle"
-        app:layout_constraintVertical_bias="0.5">
+        app:layout_constraintTop_toBottomOf="@+id/AppTitle">
 
         <ImageButton
             android:id="@+id/InitButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginEnd="16dp"
             android:contentDescription="@string/bluetooth_logo"
             android:src="@drawable/bluetooth"
             android:text="@string/ui_init"
             android:textColor="#263238"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/StartButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5" />
@@ -52,70 +56,95 @@
             android:id="@+id/StartButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
+            android:layout_marginEnd="16dp"
             android:text="@string/ui_start"
-            android:textColor="#263238"
+            android:textColor="#000000"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/GraphButton"
+            app:layout_constraintStart_toEndOf="@+id/InitButton"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/GraphButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="@string/ui_graph"
+            android:textColor="#000000"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/StopButton"
-            app:layout_constraintStart_toEndOf="@+id/InitButton"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.5" />
+            app:layout_constraintStart_toEndOf="@+id/StartButton"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/StopButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/ui_graph"
-            android:textColor="#263238"
+            android:text="@string/ui_stop"
+            android:textColor="#000000"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.5" />
+            app:layout_constraintStart_toEndOf="@+id/GraphButton"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/BLE_STATUS"
+
+    <LinearLayout
+        android:id="@+id/Status_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/ui_off_status"
-        android:textColor="#263238"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper" />
+        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper">
 
+        <TextView
+            android:id="@+id/TV_STATUS_TITLE"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="@string/ui_status_header"
+            android:textColor="#000000" />
+
+        <TextView
+            android:id="@+id/BLE_STATUS"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/ui_off_status"
+            android:textColor="#000000" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/BLE_LIST"
-        android:layout_width="337dp"
-        android:layout_height="66dp"
-        android:layout_marginTop="24dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:background="#00000000"
         android:textColor="#263238"
         android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@+id/Copyright"
+        app:layout_constraintBottom_toTopOf="@+id/line_chart"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/line_chart"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/Status_Wrapper" />
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/line_chart"
         android:layout_width="fill_parent"
         android:layout_height="256dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toTopOf="@+id/Copyright"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/BLE_STATUS"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/BLE_LIST">
+
+    </com.github.mikephil.charting.charts.LineChart>
 
     <TextView
         android:id="@+id/Copyright"

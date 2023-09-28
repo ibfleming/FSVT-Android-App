@@ -37,6 +37,7 @@ class Main : ComponentActivity() {
     // 1) Create U.I. Objects
     private lateinit var bInit : ImageButton
     private lateinit var bStart : Button
+    private lateinit var bGraph : Button
     private lateinit var bStop : Button
     private lateinit var tvStatus : TextView
     private lateinit var tvList : TextView
@@ -74,6 +75,7 @@ class Main : ComponentActivity() {
         // 3) Fetch Object References
         bInit = findViewById(R.id.InitButton)
         bStart = findViewById(R.id.StartButton)
+        bGraph = findViewById(R.id.GraphButton)
         bStop = findViewById(R.id.StopButton)
         tvStatus = findViewById(R.id.BLE_STATUS)
         tvList = findViewById(R.id.BLE_LIST)
@@ -92,10 +94,12 @@ class Main : ComponentActivity() {
         }
 
         bStart.setOnClickListener { _ ->
-            startBLEScan()
+            Thread {
+                startBLEScan()
+            }.start()
         }
 
-        bStop.setOnClickListener {
+        bGraph.setOnClickListener {
             val intent = Intent(this, AccelerometerActivity::class.java)
             startActivity(intent)
         }

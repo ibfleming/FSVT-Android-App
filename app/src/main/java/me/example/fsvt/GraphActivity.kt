@@ -46,7 +46,7 @@ class GraphActivity(chart : LineChart) {
 
         // Legend Settings
         val l = lChart.legend
-        l.form = Legend.LegendForm.LINE
+        l.form = Legend.LegendForm.CIRCLE
         l.textColor = Color.WHITE
 
         // Axis Manipulation
@@ -109,6 +109,5 @@ class GraphActivity(chart : LineChart) {
         set.cubicIntensity = 0.2F
         return set
     }
-
 }
 
