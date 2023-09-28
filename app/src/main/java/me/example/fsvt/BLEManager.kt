@@ -9,7 +9,8 @@ import android.util.Log
 
 @SuppressLint("MissingPermission")
 
-class BLEManager(private val context: Context) {
+class BLEManager(private val context: Context)
+{
 
     private val tag = "BLE Manager"
 

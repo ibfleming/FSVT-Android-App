@@ -1,65 +1,114 @@
 package me.example.fsvt
 
 import android.graphics.Color
+import android.hardware.SensorEvent
+import android.util.Log
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.Description
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
-class GraphActivity(private val chart : LineChart) {
-    private val lineChart: LineChart = chart
-    private var xValues: List<String>? = null
+class GraphActivity(chart : LineChart) {
+
+    private val tag = "GraphActivity"
+
+    private val lChart: LineChart = chart
+
+    //private var graphThread: Thread? = null
+    //private var plotData = true
+
     fun createGraph() {
 
-        /*
-        val description = Description()
-        description.text = "PPM"
-        description.setPosition(500F, 20F)
-        lineChart.description = description
-        */
+        Log.d(tag, "createGraph(): Initializing Graph")
 
-        lineChart.axisRight.setDrawLabels(false)
-        lineChart.setDrawGridBackground(false)
+        // Description/Title
+        lChart.description.isEnabled = true
+        lChart.description.text = "Live Accelerometer Data"
+        lChart.description.textColor = Color.WHITE
 
-        xValues = listOf("0", "1", "2", "3")
+        // Touch Gestures, Scaling, Dragging (Interactions)
+        lChart.setTouchEnabled(true)
+        lChart.isDragEnabled = true
+        lChart.setScaleEnabled(true)
+        lChart.setDrawGridBackground(false)
+        lChart.setPinchZoom(true)
 
-        val xAxis = lineChart.xAxis
-        xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.valueFormatter = IndexAxisValueFormatter(xValues)
-        xAxis.labelCount = 0
-        xAxis.granularity = 1F
+        // Style
+        lChart.setBackgroundColor(Color.parseColor("#42A5F5"))
 
-        val yAxis = lineChart.axisLeft
-        yAxis.axisMinimum = 0F
-        yAxis.axisMaximum =100F
-        yAxis.axisLineWidth = 2F
-        yAxis.axisLineColor = Color.BLACK
-        yAxis.labelCount = 10
+        // Add empty set of data initially
+        val data = LineData()
+        data.setValueTextColor(Color.WHITE)
+        lChart.data = data
 
-        val entries1 = ArrayList<Entry>()
-        entries1.add(Entry(0F, 10F))
-        entries1.add(Entry(1F, 10F))
-        entries1.add(Entry(2F, 15F))
-        entries1.add(Entry(3F, 45F))
+        // Legend Settings
+        val l = lChart.legend
+        l.form = Legend.LegendForm.LINE
+        l.textColor = Color.WHITE
 
-        val entries2 = ArrayList<Entry>()
-        entries2.add(Entry(0F, 5F))
-        entries2.add(Entry(1F, 15F))
-        entries2.add(Entry(2F, 25F))
-        entries2.add(Entry(3F, 30F))
+        // Axis Manipulation
+        val axisX = lChart.xAxis
+        axisX.textColor = Color.WHITE
+        axisX.setDrawGridLines(true)
+        axisX.setAvoidFirstLastClipping(true)
+        axisX.position = XAxis.XAxisPosition.BOTTOM
+        axisX.isEnabled = true
 
-        val dataset1 = LineDataSet(entries1, "Maths")
-        dataset1.color = Color.BLUE
+        val axisLeft = lChart.axisLeft
+        axisLeft.textColor = Color.WHITE;
+        axisLeft.setDrawGridLines(false)
+        axisLeft.axisMaximum = 100F
+        axisLeft.granularity = 10F
+        axisLeft.axisMinimum = 0F
+        axisLeft.setDrawGridLines(true)
 
-        val dataset2 = LineDataSet(entries2, "Science")
-        dataset2.color = Color.RED
+        val axisRight = lChart.axisRight
+        axisRight.isEnabled = false;
 
-        val lineData = LineData(dataset1, dataset2)
-
-        lineChart.data = lineData
-        lineChart.invalidate()
+        lChart.axisLeft.setDrawGridLines(false)
+        lChart.xAxis.setDrawGridLines(false)
+        lChart.setDrawBorders(false)
     }
+
+    fun addEntry(e : SensorEvent) {
+
+        val data = lChart.data
+
+        if( data != null ) {
+            var set = data.getDataSetByIndex(0)
+            // set.addEntry(...)
+
+            if( set == null ) {
+                set = createSet()
+                data.addDataSet(set)
+            }
+
+            data.addEntry(Entry(set.entryCount.toFloat(), e.values[0] + 30F), 0)
+            data.notifyDataChanged()
+
+            lChart.notifyDataSetChanged()
+
+            lChart.setVisibleXRangeMaximum(150F)
+
+            lChart.moveViewToX(data.entryCount.toFloat())
+        }
+    }
+
+    private fun createSet() : LineDataSet {
+        val set = LineDataSet(null, "Probe 1")
+        set.axisDependency = YAxis.AxisDependency.LEFT
+        set.lineWidth = 2F
+        set.color = Color.BLUE
+        set.isHighlightEnabled = false
+        set.setDrawValues(false)
+        set.setDrawCircles(false)
+        set.mode = LineDataSet.Mode.CUBIC_BEZIER
+        set.cubicIntensity = 0.2F
+        return set
+    }
+
 }
+

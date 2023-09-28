@@ -66,7 +66,7 @@
             android:id="@+id/StopButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/ui_stop"
+            android:text="@string/ui_graph"
             android:textColor="#263238"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -87,29 +87,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper" />
 
+
     <TextView
         android:id="@+id/BLE_LIST"
-        android:layout_width="333dp"
-        android:layout_height="127dp"
+        android:layout_width="337dp"
+        android:layout_height="66dp"
         android:layout_marginTop="24dp"
         android:background="#00000000"
         android:textColor="#263238"
         android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/Copyright"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/BLE_STATUS" />
-
+        app:layout_constraintTop_toBottomOf="@+id/line_chart"
+        app:layout_constraintVertical_bias="0.0" />
 
     <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/chart"
+        android:id="@+id/line_chart"
         android:layout_width="fill_parent"
-        android:layout_height="450dp"
+        android:layout_height="256dp"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toTopOf="@+id/Copyright"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/BLE_LIST" />
+        app:layout_constraintTop_toBottomOf="@+id/BLE_STATUS"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/Copyright"

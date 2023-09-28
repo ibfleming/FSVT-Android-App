@@ -10,7 +10,8 @@ import android.os.Looper
 import android.util.Log
 
 @SuppressLint("MissingPermission")
-class BLEScanner(private val bluetoothAdapter: BluetoothAdapter) {
+class BLEScanner(private val bluetoothAdapter: BluetoothAdapter)
+{
 
     private val tag = "BLE Scanner"
     private val handler = Handler(Looper.getMainLooper())

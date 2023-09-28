@@ -67,7 +67,7 @@ class Main : ComponentActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.i(tag, "APP INITIALIZED")
+        Log.i(tag, "App Initialized!")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
 
@@ -77,14 +77,14 @@ class Main : ComponentActivity() {
         bStop = findViewById(R.id.StopButton)
         tvStatus = findViewById(R.id.BLE_STATUS)
         tvList = findViewById(R.id.BLE_LIST)
-        lineChart = findViewById(R.id.chart)
-
-        GraphActivity(lineChart).createGraph()
+        lineChart = findViewById(R.id.line_chart)
 
         // 4) Fetch B.T. Object References
         bluetoothAdapter = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
         bleScanner = BLEScanner(bluetoothAdapter)
         bleManager = BLEManager(this)
+
+
 
         // ... Respectively, the Start button will be pressed...
         bInit.setOnClickListener{ _ ->
@@ -93,6 +93,11 @@ class Main : ComponentActivity() {
 
         bStart.setOnClickListener { _ ->
             startBLEScan()
+        }
+
+        bStop.setOnClickListener {
+            val intent = Intent(this, AccelerometerActivity::class.java)
+            startActivity(intent)
         }
     }
 
