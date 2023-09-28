@@ -8,11 +8,11 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,21 +32,24 @@ class Main : ComponentActivity() {
     private val tag = "IAN"
 
     // Bluetooth Connection STATUS
-    private val status: Boolean = false
+    private var bluetoothOn = false
+    private var locationOn = false
+    //private var connected = false
 
     // 1) Create U.I. Objects
-    private lateinit var bInit : ImageButton
-    private lateinit var bStart : Button
+    private lateinit var bConnect : Button
     private lateinit var bGraph : Button
     private lateinit var bStop : Button
     private lateinit var tvStatus : TextView
-    private lateinit var tvList : TextView
-    private lateinit var lineChart : LineChart
+    private lateinit  var bleList : TextView
+    private lateinit var graph : LineChart
 
     // 2) Create Bluetooth Objects
     private lateinit var bleManager : BLEManager
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var bleScanner : BLEScanner
+    private var accelerometerActivity: AccelerometerActivity? = null
+    private var graphActivity : GraphActivity? = null
 
     private val requestLocationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -62,6 +65,7 @@ class Main : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if( result.resultCode == RESULT_OK ) {
                 // Bluetooth is enabled, start scanning
+                bluetoothOn = true
             } else {
                 // Bluetooth is disabled
             }
@@ -73,35 +77,41 @@ class Main : ComponentActivity() {
         setContentView(R.layout.main)
 
         // 3) Fetch Object References
-        bInit = findViewById(R.id.InitButton)
-        bStart = findViewById(R.id.StartButton)
-        bGraph = findViewById(R.id.GraphButton)
-        bStop = findViewById(R.id.StopButton)
-        tvStatus = findViewById(R.id.BLE_STATUS)
-        tvList = findViewById(R.id.BLE_LIST)
-        lineChart = findViewById(R.id.line_chart)
+        bConnect = findViewById(R.id.bConnect)
+        bGraph = findViewById(R.id.bGraph)
+        bStop = findViewById(R.id.bStop)
+        tvStatus = findViewById(R.id.tvBLEStatus)
+        bleList = findViewById(R.id.bleList)
+        graph = findViewById(R.id.G_Main)
 
         // 4) Fetch B.T. Object References
         bluetoothAdapter = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
         bleScanner = BLEScanner(bluetoothAdapter)
         bleManager = BLEManager(this)
 
-
+        graphActivity = GraphActivity(graph)
+        graphActivity!!.createGraph()
+        accelerometerActivity = AccelerometerActivity(graphActivity!!)
 
         // ... Respectively, the Start button will be pressed...
-        bInit.setOnClickListener{ _ ->
-            checkLocationPermission()
-        }
 
-        bStart.setOnClickListener { _ ->
-            Thread {
-                startBLEScan()
-            }.start()
+        bConnect.setOnClickListener { _ ->
+            startBLEScan()
         }
 
         bGraph.setOnClickListener {
-            val intent = Intent(this, AccelerometerActivity::class.java)
-            startActivity(intent)
+            accelerometerActivity!!.onCreate(this)
+        }
+
+        bStop.setOnClickListener {
+            accelerometerActivity!!.stopPopulating()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if(!bluetoothOn && !locationOn) {
+            checkLocationPermission()
         }
     }
 
@@ -123,6 +133,7 @@ class Main : ComponentActivity() {
         val isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
         if( isLocationEnabled ) {
+            locationOn = true
             checkBluetoothStatus()
         }
         else {
@@ -139,9 +150,11 @@ class Main : ComponentActivity() {
             val intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
             startActivity(intent)
             dialog.dismiss()
+            checkLocationPermission()
         }
         builder.setNegativeButton("Cancel") { dialog, _ ->
             dialog.dismiss()
+            checkLocationPermission()
         }
         builder.setCancelable(false)
         builder.show()
@@ -152,6 +165,7 @@ class Main : ComponentActivity() {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             requestEnableBTLauncher.launch(enableBtIntent)
         } else {
+            bluetoothOn = true
         }
     }
 
@@ -180,8 +194,8 @@ class Main : ComponentActivity() {
             delay(SCAN_PERIOD)
             bleScanner.stopScan()
             tvStatus.setText(R.string.ui_found_devices)
-            tvList.text = deviceList.toString()
 
+            bleList.text = deviceList.toString()
             val deviceNameString = buildString {
                 append("\n")
                 for(deviceName in deviceList) {
@@ -189,7 +203,9 @@ class Main : ComponentActivity() {
                 }
             }
 
-            tvList.text = deviceNameString
+            bleList.text = deviceNameString
+            tvStatus.setText(R.string.ui_on_status)
+            tvStatus.setTextColor(Color.GREEN)
         }
     }
 

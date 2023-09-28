@@ -6,7 +6,7 @@
     android:padding="30dp">
 
     <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/line_chart"
+        android:id="@+id/G_Main"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
