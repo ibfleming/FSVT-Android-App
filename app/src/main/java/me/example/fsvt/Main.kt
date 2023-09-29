@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -30,6 +31,8 @@ import kotlinx.coroutines.launch
 class Main : ComponentActivity() {
 
     private val tag = "IAN"
+    private val macAddress = "B4:52:A9:04:28:DC"
+    private val isConnected = false
 
     // Bluetooth Connection STATUS
     private var bluetoothOn = false
@@ -90,7 +93,7 @@ class Main : ComponentActivity() {
         bleManager = BLEManager(this)
 
         graphActivity = GraphActivity(graph)
-        graphActivity!!.createGraph()
+
         accelerometerActivity = AccelerometerActivity(graphActivity!!)
 
         // ... Respectively, the Start button will be pressed...
@@ -170,67 +173,36 @@ class Main : ComponentActivity() {
     }
 
     private fun startBLEScan() {
-        val deviceList = HashSet<String>() // <--- FOR DEBUGGING
+        var theBLEDevice : BluetoothDevice? = null
+        var foundDevice = false
 
         tvStatus.setText(R.string.ui_scanning_status)
+        tvStatus.setTextColor(Color.BLUE)
         bleScanner.startScan { scanResults ->
             // Handle the list of scan results here
             for(result in scanResults) {
-                val device = result.device
-                val deviceName = device.name
-
-                if (!deviceName.isNullOrBlank() && deviceName != "null") {
-                    deviceList.add(deviceName + " " + device.address)
+                if( result.device.address == macAddress  ) {
+                    theBLEDevice = result.device
+                    foundDevice = true
                 }
-
-                if( device.address == "40:6E:21:FC:26:71" ) {
-                    Log.i(tag, "FOUND FVST DEVICE!")
-                }
-
             }
         }
 
         lifecycleScope.launch {
             delay(SCAN_PERIOD)
             bleScanner.stopScan()
-            tvStatus.setText(R.string.ui_found_devices)
 
-            bleList.text = deviceList.toString()
-            val deviceNameString = buildString {
-                append("\n")
-                for(deviceName in deviceList) {
-                    append("$deviceName\n")
-                }
+            if( foundDevice ) {
+                Log.i(tag, "Found the designated BLE device!")
+                Log.i(tag, "Connecting to ${theBLEDevice?.name} [${theBLEDevice?.address}]")
+                theBLEDevice?.let { bleManager.connectToDevice(it, tvStatus) }
             }
 
-            bleList.text = deviceNameString
-            tvStatus.setText(R.string.ui_on_status)
-            tvStatus.setTextColor(Color.GREEN)
         }
     }
 
     companion object {
-        private const val SCAN_PERIOD: Long = 5000 // 5sec
+        private const val SCAN_PERIOD: Long = 3000 // 5sec
     }
 }
-
-
-
-/*  ON BUTTON PRESS LISTENER EXAMPLE
-bStart.setOnClickListener{ _ ->
-    if( !bluetoothAdapter.isEnabled ) {
-        val enableBTIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-        enableBluetoothLauncher.launch(enableBTIntent)
-    }
-}
-
-bShowDevices.setOnClickListener{ _ ->
-    val sb = StringBuilder()
-    bondedDevices = bluetoothAdapter.bondedDevices
-    for( temp in (bondedDevices as MutableSet<BluetoothDevice>?)!!) {
-        sb.append("\n" + temp.name + "\n")
-    }
-    tvDevices.text = sb.toString()
-}
-*/
 

@@ -3,7 +3,9 @@ package me.example.fsvt
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
+import android.graphics.Color
 import android.util.Log
+import android.widget.TextView
 import java.util.UUID
 
 // MAC ADDRESS OF HM10: B0:D2:78:32:F5:7F
@@ -14,7 +16,10 @@ class BLEManager(private val context: Context)
 {
 
     private val tag = "BLE Manager"
+    private val serviceUUID = "0000FFE0-0000-1000-8000-00805F9B34FB"
+    private val characteristicUUID = "0000FFE1-0000-1000-8000-00805F9B34FB"
 
+    private lateinit var tvStatus : TextView
     private var bluetoothAdapter: BluetoothAdapter
     private var bluetoothGatt: BluetoothGatt? = null
 
@@ -23,7 +28,8 @@ class BLEManager(private val context: Context)
         bluetoothAdapter = bluetoothManager.adapter
     }
 
-    fun connectToDevice(device: BluetoothDevice) {
+    fun connectToDevice(device: BluetoothDevice, textView: TextView) {
+        tvStatus = textView
         bluetoothGatt = device.connectGatt(context, false, gattCallback)
     }
 
@@ -43,8 +49,8 @@ class BLEManager(private val context: Context)
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // Services discovered, you can now work with them
 
-                val service = gatt?.getService(UUID.fromString("0xFFE0"))
-                val characteristic = service?.getCharacteristic(UUID.fromString("0xFFE1"))
+                val service = gatt?.getService(UUID.fromString(serviceUUID))
+                val characteristic = service?.getCharacteristic(UUID.fromString(characteristicUUID))
 
                 gatt?.readCharacteristic(characteristic)
             } else {

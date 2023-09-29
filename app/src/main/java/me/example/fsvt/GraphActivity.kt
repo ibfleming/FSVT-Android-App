@@ -18,14 +18,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 class GraphActivity(chart : LineChart) {
 
     private val tag = "GraphActivity"
-
     private val lChart: LineChart = chart
-
-    private val probe1Set = createSet("Probe 1", Color.BLUE)
-    private val probe2Set = createSet("Probe 2", Color.GREEN)
-
-    //private var graphThread: Thread? = null
-    //private var plotData = true
 
     fun createGraph() {
 
@@ -49,6 +42,8 @@ class GraphActivity(chart : LineChart) {
         // Add empty set of data initially
         val data = LineData()
         data.setValueTextColor(Color.WHITE)
+        val probe1Set = createSet("Probe 1", Color.BLUE)
+        val probe2Set = createSet("Probe 2", Color.GREEN)
         data.addDataSet(probe1Set)
         data.addDataSet(probe2Set)
         lChart.data = data
@@ -60,6 +55,7 @@ class GraphActivity(chart : LineChart) {
 
         // Axis Manipulation
         val axisX = lChart.xAxis
+        axisX.granularity = 1F
         axisX.textColor = Color.WHITE
         axisX.setDrawGridLines(true)
         axisX.setAvoidFirstLastClipping(true)
@@ -94,11 +90,11 @@ class GraphActivity(chart : LineChart) {
                 else if( dataSetIndex == 1 ) {
                     data.addEntry(Entry(set.entryCount.toFloat(), e.values[0] + 3), dataSetIndex)
                 }
-                data.notifyDataChanged()
 
+                data.notifyDataChanged()
                 lChart.notifyDataSetChanged()
 
-                lChart.setVisibleXRangeMaximum(100F)
+                lChart.setVisibleXRangeMaximum(60F)
                 lChart.moveViewToX(data.entryCount.toFloat())
             }
         }
@@ -110,21 +106,20 @@ class GraphActivity(chart : LineChart) {
         set.lineWidth = 2F
         set.color = color
         set.isHighlightEnabled = false
-        set.setDrawValues(false)
+        set.setDrawValues(true)
         set.setDrawCircles(false)
-        set.mode = LineDataSet.Mode.CUBIC_BEZIER
+        set.mode = LineDataSet.Mode.LINEAR
         set.cubicIntensity = 0.2F
         return set
     }
 
     fun clearGraph() {
-        probe1Set.clear()
-        probe2Set.clear()
-        lChart.data.notifyDataChanged()
-        lChart.notifyDataSetChanged()
-        lChart.resetViewPortOffsets()
-        lChart.moveViewToX(0F)
-        lChart.invalidate()
+        if (lChart.data != null) {
+            lChart.data.dataSets.clear()
+            lChart.data.notifyDataChanged()
+            lChart.notifyDataSetChanged()
+            lChart.invalidate()
+        }
     }
 }
 

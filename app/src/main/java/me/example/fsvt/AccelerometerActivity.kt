@@ -27,7 +27,7 @@ class AccelerometerActivity(
         while(true) {
             plotData = true
             try {
-                Thread.sleep(10)
+                Thread.sleep(1000)
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
@@ -39,6 +39,8 @@ class AccelerometerActivity(
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+
+        graphActivity.createGraph()
         populateGraph()
     }
 

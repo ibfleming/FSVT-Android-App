@@ -54,12 +54,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/ui_off_status"
-            android:textColor="#263238"
+            android:textColor="#D32F2F"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/tvStatus"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="TextContrastCheck" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
