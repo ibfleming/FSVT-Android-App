@@ -2,8 +2,8 @@
     <string name="app_name">FVST App</string>
     <string name="ui_title">FVST Test App</string>
     <string name="ui_connect">Connect</string>
-    <string name="ui_start">Run</string>
-    <string name="ui_stop">Reset</string>
+    <string name="ui_start">Start</string>
+    <string name="ui_stop">Stop</string>
     <string name="ui_status_header">Status:</string>
     <string name="ui_off_status">Disconnected</string>
     <string name="ui_on_status">Connected</string>

@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("MissingPermission")
 class Main : ComponentActivity() {
 
-    private val tag = "IAN"
+    private val tag = "Main"
     private val macAddress = "B4:52:A9:04:28:DC"
     private val isConnected = false
 
@@ -103,10 +103,20 @@ class Main : ComponentActivity() {
         }
 
         bGraph.setOnClickListener {
+            if( bleManager.isDeviceConnected() ) {
+                Log.i(tag, "Sending Start to BLE")
+                bleManager.writeCommandToBLE("S")
+            }
             accelerometerActivity!!.onCreate(this)
         }
 
         bStop.setOnClickListener {
+            if( bleManager.isDeviceConnected() ) {
+                Log.i(tag, "Sending Stop to BLE")
+                for( i in 1..3 ) {
+                    bleManager.writeCommandToBLE("E")
+                }
+            }
             accelerometerActivity!!.stopPopulating()
         }
     }
@@ -196,6 +206,12 @@ class Main : ComponentActivity() {
                 Log.i(tag, "Found the designated BLE device!")
                 Log.i(tag, "Connecting to ${theBLEDevice?.name} [${theBLEDevice?.address}]")
                 theBLEDevice?.let { bleManager.connectToDevice(it, tvStatus) }
+            }
+
+            delay(500)
+            if( bleManager.isDeviceConnected() ) {
+                tvStatus.setText(R.string.ui_on_status)
+                tvStatus.setTextColor(Color.MAGENTA)
             }
 
         }
