@@ -54,6 +54,7 @@ class BLEManager(private val context: Context)
                 service = gatt?.getService(UUID.fromString(serviceUUID))!!
                 Log.i(tag, service.toString())
                 characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID))!!
+                Log.i(tag, service.includedServices.toString())
                 Log.i(tag, characteristic.toString())
 
             } else {

@@ -56,17 +56,3 @@ class BLEScanner(private val bluetoothAdapter: BluetoothAdapter)
         private const val SCAN_PERIOD: Long = 5000 // 5sec
     }
 }
-
-/* THIS SEGMENT GOES INTO MainActivity.kt
-
-val bleScanner = BleScanner(bluetoothAdapter)
-
-bleScanner.startScan { scanResult ->
-    // Handle the list of scan results here
-    for( result in ScanResults) {
-        val device: BluetoothDevice = result.device
-        // Process device information as needed
-        // Check if one of these devices is the device we want to connect to...
-    }
-
- */

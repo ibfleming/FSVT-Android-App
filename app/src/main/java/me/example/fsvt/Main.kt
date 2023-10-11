@@ -13,6 +13,7 @@ import android.graphics.Color
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -109,6 +110,7 @@ class Main : ComponentActivity() {
             }
             accelerometerActivity!!.onCreate(this)
         }
+        //bGraph.isClickable = false
 
         bStop.setOnClickListener {
             if( bleManager.isDeviceConnected() ) {
@@ -119,6 +121,7 @@ class Main : ComponentActivity() {
             }
             accelerometerActivity!!.stopPopulating()
         }
+        //bStop.isClickable = false
     }
 
     override fun onResume() {
@@ -213,8 +216,23 @@ class Main : ComponentActivity() {
                 tvStatus.setText(R.string.ui_on_status)
                 tvStatus.setTextColor(Color.MAGENTA)
             }
-
+            else {
+                tvStatus.setText(R.string.ui_off_status)
+                tvStatus.setTextColor(Color.RED)
+                showFailureToConnectPrompt()
+            }
         }
+    }
+
+    private fun showFailureToConnectPrompt() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Failed to find device!")
+        builder.setMessage("Please ensure primary module is powered on before connecting from the app.")
+        builder.setNegativeButton("Close") { dialog, _ ->
+            dialog.dismiss()
+        }
+        builder.setCancelable(false)
+        builder.show()
     }
 
     companion object {
