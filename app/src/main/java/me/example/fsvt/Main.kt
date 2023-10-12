@@ -13,7 +13,6 @@ import android.graphics.Color
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -33,7 +32,6 @@ class Main : ComponentActivity() {
 
     private val tag = "Main"
     private val macAddress = "B4:52:A9:04:28:DC"
-    private val isConnected = false
 
     // Bluetooth Connection STATUS
     private var bluetoothOn = false
@@ -52,6 +50,7 @@ class Main : ComponentActivity() {
     private lateinit var bleManager : BLEManager
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var bleScanner : BLEScanner
+    private lateinit var device : BluetoothDevice
     private var accelerometerActivity: AccelerometerActivity? = null
     private var graphActivity : GraphActivity? = null
 
@@ -95,7 +94,7 @@ class Main : ComponentActivity() {
 
         graphActivity = GraphActivity(graph)
 
-        accelerometerActivity = AccelerometerActivity(graphActivity!!)
+        //accelerometerActivity = AccelerometerActivity(graphActivity!!)
 
         // ... Respectively, the Start button will be pressed...
 
@@ -106,20 +105,20 @@ class Main : ComponentActivity() {
         bGraph.setOnClickListener {
             if( bleManager.isDeviceConnected() ) {
                 Log.i(tag, "Sending Start to BLE")
-                bleManager.writeCommandToBLE("S")
+                bleManager.write("S".toByteArray())
             }
-            accelerometerActivity!!.onCreate(this)
+            //accelerometerActivity!!.onCreate(this)
         }
         //bGraph.isClickable = false
 
         bStop.setOnClickListener {
             if( bleManager.isDeviceConnected() ) {
                 Log.i(tag, "Sending Stop to BLE")
-                for( i in 1..3 ) {
-                    bleManager.writeCommandToBLE("E")
+                for( i in 1..20 ) {
+                    bleManager.write("E".toByteArray())
                 }
             }
-            accelerometerActivity!!.stopPopulating()
+            //accelerometerActivity!!.stopPopulating()
         }
         //bStop.isClickable = false
     }
@@ -186,7 +185,6 @@ class Main : ComponentActivity() {
     }
 
     private fun startBLEScan() {
-        var theBLEDevice : BluetoothDevice? = null
         var foundDevice = false
 
         tvStatus.setText(R.string.ui_scanning_status)
@@ -195,7 +193,7 @@ class Main : ComponentActivity() {
             // Handle the list of scan results here
             for(result in scanResults) {
                 if( result.device.address == macAddress  ) {
-                    theBLEDevice = result.device
+                    device = result.device
                     foundDevice = true
                 }
             }
@@ -206,9 +204,7 @@ class Main : ComponentActivity() {
             bleScanner.stopScan()
 
             if( foundDevice ) {
-                Log.i(tag, "Found the designated BLE device!")
-                Log.i(tag, "Connecting to ${theBLEDevice?.name} [${theBLEDevice?.address}]")
-                theBLEDevice?.let { bleManager.connectToDevice(it, tvStatus) }
+                bleManager.connectToDevice(device, tvStatus)
             }
 
             delay(500)
