@@ -7,7 +7,13 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.Log
 
+/**
+ *  TEMPORARY!
+ *  Simply serves as a means to test live data feedback
+ *  into a line graph.
+ */
 class AccelerometerActivity(
     private val graphActivity: GraphActivity
 ) : SensorEventListener {
@@ -39,6 +45,7 @@ class AccelerometerActivity(
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+        Log.i(tag, "ACCELEROMETER LISTENER REGISTERED")
 
         graphActivity.createGraph()
         populateGraph()

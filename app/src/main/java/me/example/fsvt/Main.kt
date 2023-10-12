@@ -26,9 +26,10 @@ import kotlinx.coroutines.launch
 
 // MAC ADDRESS OF HM10: B0:D2:78:32:F5:7F
 // © 2023 - 2023 https://github.com/ibfleming/FSVT-Android-App.git - All Rights Reserved.
+// SCAN PERIOD = 3 seconds
 
 @SuppressLint("MissingPermission")
-class Main : ComponentActivity() {
+class Main : ComponentActivity(), BLECallback {
 
     private val tag = "Main"
     private val macAddress = "B4:52:A9:04:28:DC"
@@ -36,14 +37,13 @@ class Main : ComponentActivity() {
     // Bluetooth Connection STATUS
     private var bluetoothOn = false
     private var locationOn = false
-    //private var connected = false
 
     // 1) Create U.I. Objects
     private lateinit var bConnect : Button
     private lateinit var bGraph : Button
     private lateinit var bStop : Button
     private lateinit var tvStatus : TextView
-    private lateinit  var bleList : TextView
+    private lateinit  var bleData : TextView
     private lateinit var graph : LineChart
 
     // 2) Create Bluetooth Objects
@@ -51,9 +51,12 @@ class Main : ComponentActivity() {
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var bleScanner : BLEScanner
     private lateinit var device : BluetoothDevice
+
+    // 2.1) Graph Objects
     private var accelerometerActivity: AccelerometerActivity? = null
     private var graphActivity : GraphActivity? = null
 
+    // ACTIVITIES
     private val requestLocationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if( isGranted ) {
@@ -73,9 +76,9 @@ class Main : ComponentActivity() {
                 // Bluetooth is disabled
             }
         }
-
+    //
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.i(tag, "App Initialized!")
+        Log.i(tag, "MAIN INITIALIZED")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
 
@@ -84,20 +87,20 @@ class Main : ComponentActivity() {
         bGraph = findViewById(R.id.bGraph)
         bStop = findViewById(R.id.bStop)
         tvStatus = findViewById(R.id.tvBLEStatus)
-        bleList = findViewById(R.id.bleList)
+        bleData = findViewById(R.id.dataStream)
         graph = findViewById(R.id.G_Main)
 
         // 4) Fetch B.T. Object References
         bluetoothAdapter = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
         bleScanner = BLEScanner(bluetoothAdapter)
         bleManager = BLEManager(this)
+        bleManager.setCallback(this)
 
+        // 4.1) Initialize Graph object
         graphActivity = GraphActivity(graph)
+        accelerometerActivity = AccelerometerActivity(graphActivity!!)
 
-        //accelerometerActivity = AccelerometerActivity(graphActivity!!)
-
-        // ... Respectively, the Start button will be pressed...
-
+        // ON CLICK LISTENERS
         bConnect.setOnClickListener { _ ->
             startBLEScan()
         }
@@ -107,26 +110,33 @@ class Main : ComponentActivity() {
                 Log.i(tag, "Sending Start to BLE")
                 bleManager.write("S".toByteArray())
             }
-            //accelerometerActivity!!.onCreate(this)
+            accelerometerActivity!!.onCreate(this)
         }
-        //bGraph.isClickable = false
 
         bStop.setOnClickListener {
-            if( bleManager.isDeviceConnected() ) {
+            if (bleManager.isDeviceConnected()) {
                 Log.i(tag, "Sending Stop to BLE")
-                for( i in 1..20 ) {
+                for( i in 1..3) {
                     bleManager.write("E".toByteArray())
                 }
             }
-            //accelerometerActivity!!.stopPopulating()
+            accelerometerActivity!!.stopPopulating()
         }
-        //bStop.isClickable = false
     }
 
     override fun onResume() {
         super.onResume()
         if(!bluetoothOn && !locationOn) {
             checkLocationPermission()
+        }
+    }
+
+    /**
+     *  Update UI (a TextView) with the incoming data from BLE
+     */
+    override fun onDataReceived(data: String) {
+        runOnUiThread {
+            bleData.text = data
         }
     }
 
@@ -204,10 +214,10 @@ class Main : ComponentActivity() {
             bleScanner.stopScan()
 
             if( foundDevice ) {
-                bleManager.connectToDevice(device, tvStatus)
+                bleManager.connectToDevice(device)
             }
 
-            delay(500)
+            delay(1000)
             if( bleManager.isDeviceConnected() ) {
                 tvStatus.setText(R.string.ui_on_status)
                 tvStatus.setTextColor(Color.MAGENTA)
@@ -232,7 +242,7 @@ class Main : ComponentActivity() {
     }
 
     companion object {
-        private const val SCAN_PERIOD: Long = 3000 // 5sec
+        private const val SCAN_PERIOD: Long = 3000 // 3sec
     }
 }
 

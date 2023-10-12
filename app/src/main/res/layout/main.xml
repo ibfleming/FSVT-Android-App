@@ -124,10 +124,11 @@
         android:id="@+id/G_Main"
         android:layout_width="fill_parent"
         android:layout_height="296dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Functions_Wrapper">
+        app:layout_constraintTop_toBottomOf="@+id/Data_Wrapper">
 
     </com.github.mikephil.charting.charts.LineChart>
 
@@ -143,13 +144,45 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/bleList"
-        android:layout_width="373dp"
-        android:layout_height="217dp"
-        app:layout_constraintBottom_toTopOf="@+id/Copyright"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/Data_Wrapper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/G_Main" />
+        app:layout_constraintTop_toBottomOf="@+id/Functions_Wrapper">
+
+        <TextView
+            android:id="@+id/dataLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/data_label"
+            android:textColor="#263238"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/dataStream"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/dataStream"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text="@string/empty_buffer"
+            android:textColor="#FF9100"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/dataLabel"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
