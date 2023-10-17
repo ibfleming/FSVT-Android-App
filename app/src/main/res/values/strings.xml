@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">TheFSVTApp</string>
+    <string name="Connect_Button">Connect</string>
+    <string name="Connected_Button">Connected</string>
+    <string name="Start_Program">Start</string>
+    <string name="Stop_Program">STOP</string>
+    <string name="Disconnect_Button">Disconnect</string>
+    <string name="Input_Hint">File name</string>
+    <string name="Probe1_Label">Probe 1:</string>
+    <string name="Probe2_Label">Probe 2:</string>
+    <string name="Probe_Data">Empty</string>
+</resources>
