@@ -99,6 +99,23 @@ object ConnectionManager {
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
         }
+
+        /*******************************************
+         * On Change
+         *******************************************/
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray
+        ) {
+            /** NOT WORKING **/
+            if( characteristic === readCharacteristic ) {
+                val data = String(readCharacteristic!!.value.map { it.toInt().toChar() }.toCharArray())
+                Timber.d("[READ] -> $data")
+            }
+            TODO("READ FROM BLE")
+        }
     }
 
     /*******************************************
@@ -159,12 +176,12 @@ object ConnectionManager {
     private class OurHM10Device : DeviceDelegate() {
         @SuppressLint("MissingPermission")
         override fun connectCharacteristics(service: BluetoothGattService) {
-            Timber.d("Service: CC254x UART (our HM-10 module)")
+            Timber.w("Service: CC254x UART (our HM-10 module)")
             readCharacteristic = service.getCharacteristic(BLUETOOTH_LE_CHAR_RW)
             writeCharacteristic = service.getCharacteristic(BLUETOOTH_LE_CHAR_RW)
             if( readCharacteristic != null && writeCharacteristic != null ) {
                 if( bluetoothGatt?.setCharacteristicNotification(readCharacteristic, true)!! ) {
-                    Timber.d("The read characteristic has notification enabled...")
+                    Timber.w("The read characteristic has notification enabled...")
                     _isConnected.postValue(true)
                 }
             }
