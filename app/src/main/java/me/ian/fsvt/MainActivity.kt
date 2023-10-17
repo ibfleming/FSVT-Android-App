@@ -18,6 +18,8 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.Build
+import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.delay
 import me.ian.fsvt.bluetooth.ConnectionManager
 import timber.log.Timber
 
@@ -35,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private var isRunning = false
+    private var isRunning : Boolean = false
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -71,18 +73,54 @@ class MainActivity : AppCompatActivity() {
 
         Timber.tag(tag).d("MainActivity Initialized!")
 
+        /*******************************************
+         * Observe Connection State of Device
+         *******************************************/
+
         ConnectionManager.isConnected.observe(this) { isConnected ->
             if (isConnected) {
                 binding.ConnectButton.setText(R.string.Connected_Button)
             }
+            else {
+                binding.ConnectButton.setText(R.string.Connect_Button)
+                runOnUiThread {
+                    alert {
+                        title = "Disconnected"
+                        message = "The device disconnected unexpectedly from the app. " +
+                                  "Please connect to the device again."
+                        isCancelable = false
+                        positiveButton(android.R.string.ok) { /* nop */ }
+                    }.show()
+                }
+            }
         }
+
+        /*******************************************
+         * Observe Live Probe Data
+         *******************************************/
+
+        ConnectionManager.probe1Data.observe(this) { data ->
+            if( !data.isNullOrBlank() ) {
+                binding.Probe1Data.text = data
+            }
+        }
+
+        ConnectionManager.probe2Data.observe(this) { data ->
+            if( !data.isNullOrBlank() ) {
+                binding.Probe2Data.text = data
+            }
+        }
+
+        /*******************************************
+         * Button Click Listeners
+         *******************************************/
 
         binding.ConnectButton.setOnClickListener { startScan() }
 
         binding.TestButton.setOnClickListener {
             if (ConnectionManager.isConnected.value == true) {
                 if (isRunning) {
-                    ConnectionManager.sendEndCommand()
+                    ConnectionManager.sendStopCommand()
                     binding.TestButton.setText(R.string.Start_Program)
                     isRunning = false
                     Timber.tag(tag).d("Sending Stop Command!")

@@ -12,8 +12,14 @@ import java.util.UUID
 
 private val BLUETOOTH_LE_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
 private val BLUETOOTH_LE_CHAR_RW = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
+private const val MAX_ATTEMPTS = 5
+private const val TIMEOUT_DURATION = 1000L
 
 object ConnectionManager {
+
+    private const val tag = "ConnectionManager"
+    private val handler = Handler(Looper.getMainLooper())
+    private var receivedAcknowledgement : Boolean = false
 
     /*******************************************
      * Properties
@@ -26,7 +32,8 @@ object ConnectionManager {
 
     /*
     This variable is set based if the device that is being
-    connected established connection with the characteristics successfully
+    connected established connection with the characteristics successfully.
+    Using LiveData.
     */
     private val _isConnected = MutableLiveData<Boolean>()
     val isConnected: LiveData<Boolean> get() = _isConnected
@@ -59,6 +66,8 @@ object ConnectionManager {
                 }
             } else {
                 Timber.e("Failure to connect to Gatt!")
+                Timber.e("Device disconnected!")
+                _isConnected.postValue(false)
             }
         }
 
@@ -97,6 +106,11 @@ object ConnectionManager {
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Timber.d("Characteristic write successful!")
+            } else {
+                Timber.e("Characteristic write failed with status: $status")
+            }
             super.onCharacteristicWrite(gatt, characteristic, status)
         }
 
@@ -104,17 +118,47 @@ object ConnectionManager {
          * On Change
          *******************************************/
 
+        @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
-            value: ByteArray
         ) {
-            /** NOT WORKING **/
-            if( characteristic === readCharacteristic ) {
-                val data = String(readCharacteristic!!.value.map { it.toInt().toChar() }.toCharArray())
-                Timber.d("[READ] -> $data")
+            if( characteristic === readCharacteristic) {
+                @Suppress("DEPRECATION") val data = readCharacteristic!!.value
+                val dataArray = CharArray(data.size) { data[it].toInt().toChar() }
+                val msg = String(dataArray)
+
+                if( msg == "A" ) {
+                    Timber.d( "[READ ACKNOWLEDGEMENT] -> '$msg'")
+                    receivedAcknowledgement = true
+                    probe1Data.postValue("Empty")
+                    probe2Data.postValue("Empty")
+                }
+                else {
+                    Timber.d( "[READ TDS] -> $msg")
+                    processData(msg)
+                }
             }
-            TODO("READ FROM BLE")
+        }
+    }
+
+    /*******************************************
+     * Process the Data from BLE Device
+     *******************************************/
+
+    val probe1Data = MutableLiveData<String>()
+    val probe2Data = MutableLiveData<String>()
+
+    private fun processData(data : String) {
+        val divided = data.split(":")
+        if(divided.size == 2) {
+            val probe1Temp = divided[0].trim()
+            val probe2Temp = divided[1].trim()
+
+            // CSV IMPLEMENTATIONS HERE -> ADD TO FILE?
+
+            probe1Data.postValue(probe1Temp + "ppm")
+            probe2Data.postValue(probe2Temp + "ppm")
         }
     }
 
@@ -135,8 +179,29 @@ object ConnectionManager {
         writeCommand('S')
     }
 
-    fun sendEndCommand() {
-        writeCommand('E')
+    fun sendStopCommand() {
+        var attempts = 0
+
+        fun keepSendingStop() {
+
+            if (attempts < MAX_ATTEMPTS) {
+                writeCommand('E')
+
+                handler.postDelayed({
+                    if (receivedAcknowledgement) {
+                        // Acknowledgement received
+                        receivedAcknowledgement = false
+                    } else {
+                        // No acknowledgment received, retry...
+                        attempts++
+                        keepSendingStop()
+                    }
+                }, TIMEOUT_DURATION)
+            } else {
+                // Maximum attempts reached, handle error or timeout
+            }
+        }
+        keepSendingStop()
     }
 
     /*******************************************
@@ -148,7 +213,7 @@ object ConnectionManager {
         bluetoothGatt?.disconnect()
         bluetoothGatt?.close()
         bluetoothGatt = null
-
+        _isConnected.postValue(false)
     }
 
     /*******************************************
