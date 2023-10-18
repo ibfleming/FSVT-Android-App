@@ -4,11 +4,14 @@ import android.graphics.Color
 import android.graphics.Typeface
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
-import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import timber.log.Timber
 import kotlin.math.roundToInt
 
 enum class ChartType {
@@ -62,6 +65,7 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     xAxis.textColor = Color.WHITE
     xAxis.granularity = 1F
     xAxis.valueFormatter = XAxisFormatter()
+    xAxis.mAxisMinimum = 0F
 
     val axisLeft = chart.axisLeft
     axisLeft.axisLineWidth = 2F
@@ -87,10 +91,35 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     chart.isKeepPositionOnRotation = true
     chart.isDragDecelerationEnabled = false
 
-    // Set empty data
-    val emptyData = LineData()
-    chart.data = emptyData
-    chart.invalidate()
+    // Chart data
+    initializeLineData(chart)
+}
+
+private fun initializeLineData(chart: LineChart) {
+    val data = chart.data
+    if( data == null ) {
+        Timber.d("Initializing the Charts data.")
+        val set = createSet()                                                       // (1) Create a set
+        val dataSets : ArrayList<ILineDataSet> = ArrayList()                        // (2) Create a variable that holds the set(s)
+        dataSets.add(set)                                                           // (3) Add our empty set to the data sets
+        val emptyData = LineData(dataSets)                                          // (4) Add the data sets to the chart data
+        chart.data = emptyData                                                      // (5) Apply that data to the chart's data
+        chart.invalidate()                                                          // (6) Update graph view
+    }
+}
+
+private fun createSet(): LineDataSet {
+    // Should we name these sets unique to the chart?
+    val set = LineDataSet(emptyList<Entry>(), "Data")
+    //val set = LineDataSet(createMockData(), "Data")
+    // Line Styling (line that represents the data on the x-y planes)
+    set.mode = LineDataSet.Mode.LINEAR
+    set.axisDependency = YAxis.AxisDependency.LEFT
+    set.color = Color.WHITE
+    set.lineWidth = 2F
+    set.setDrawValues(true)
+    set.setDrawCircles(false)
+    return set
 }
 
 fun createMockData() : ArrayList<Entry> {

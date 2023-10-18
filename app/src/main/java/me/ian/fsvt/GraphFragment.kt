@@ -7,10 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import me.ian.fsvt.bluetooth.ConnectionManager
 import me.ian.fsvt.databinding.FragmentGraphBinding
-import kotlin.math.roundToInt
+import timber.log.Timber
 
 class GraphFragment : Fragment() {
 
@@ -64,6 +68,10 @@ class GraphFragment : Fragment() {
         val dataSets : ArrayList<ILineDataSet> = ArrayList()
         dataSets.add(mockDataSet)
         val data = LineData(dataSets)
+        probe1Chart.data = data
+        probe2Chart.data = data
+        probe1Chart.invalidate()
+        probe2Chart.invalidate()
         */
     }
 
@@ -75,20 +83,30 @@ class GraphFragment : Fragment() {
     /*******************************************
      * Private functions
      *******************************************/
-    private fun invalidateGraphs() {
-        probe1Chart.invalidate()
-        probe2Chart.invalidate()
-    }
 
     private fun addProbeData(chart: LineChart, value: Float) {
         val data = chart.data
-        if( data != null ) {
-            val set = data.getDataSetByIndex(0)
-            if( set != null ) {
-                data.addEntry(Entry(set.entryCount.toFloat(), value), 0)
+
+        Timber.d("addProbeData(): Read y-value: $value")
+
+        /*if( data != null ) {
+            var set = data.getDataSetByIndex(0)
+
+            if( set == null ) {
+                Timber.w("Chart data has no set. Creating one...")
+                set = createSet()
+                data.addDataSet(set)
+            }
+
+            val x = set.entryCount.toFloat()
+            val y = value
+            if( y != -1F ) {
+                data.addEntry(Entry(x, y), 0)
+                Timber.d("Adding entry to chart. x: $x, y: $y")
                 data.notifyDataChanged()
                 chart.notifyDataSetChanged()
+                chart.invalidate()
             }
-        }
+        }*/
     }
 }

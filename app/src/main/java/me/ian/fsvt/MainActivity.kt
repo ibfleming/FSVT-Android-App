@@ -230,7 +230,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 delay(SCAN_PERIOD)
                 stopScan()
-                if(scanResults.isEmpty()) {
+                if(ConnectionManager.isConnected.value == false) {
                     showDeviceNotFoundAlert()
                     binding.ConnectButton.text = "Connect"
                 }

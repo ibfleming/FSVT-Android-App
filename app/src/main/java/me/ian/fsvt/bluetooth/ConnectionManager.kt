@@ -131,8 +131,6 @@ object ConnectionManager {
                 if( msg == "A" ) {
                     Timber.d( "[READ ACKNOWLEDGEMENT] -> '$msg'")
                     receivedAcknowledgement = true
-                    probe1Data.postValue(-1F)
-                    probe2Data.postValue(-1F)
                 }
                 else {
                     Timber.d( "[READ TDS] -> $msg")
@@ -152,13 +150,24 @@ object ConnectionManager {
     private fun processData(data : String) {
         val divided = data.split(":")
         if(divided.size == 2) {
-            val probe1Temp = divided[0].trim().toFloat()
-            val probe2Temp = divided[1].trim().toFloat()
+            val probe1Temp = divided[0].trim()
+            val probe2Temp = divided[1].trim()
 
-            // CSV IMPLEMENTATIONS HERE -> ADD TO FILE?
+            try {
+                val probe1Value = probe1Temp.toFloat()
+                val probe2Value = probe2Temp.toFloat()
 
-            probe1Data.postValue(probe1Temp)
-            probe2Data.postValue(probe2Temp)
+                // CSV IMPLEMENTATIONS HERE -> ADD TO FILE?
+
+                probe1Data.postValue(probe1Value)
+                probe2Data.postValue(probe2Value)
+
+            } catch (e: NumberFormatException) {
+                Timber.e("Error parsing data: $data")
+            }
+        }
+        else {
+            Timber.e("Invalid data format: $data")
         }
     }
 
