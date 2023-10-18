@@ -25,6 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TheFSVTApp"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".GraphFragment" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

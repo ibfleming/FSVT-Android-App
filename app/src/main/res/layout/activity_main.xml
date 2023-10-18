@@ -9,9 +9,10 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Button_Wrapper"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/Input_Box"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,93 +52,100 @@
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/Input_Box"
         android:layout_width="0dp"
-        android:layout_height="54dp"
+        android:layout_height="48dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="72dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/Input_Hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/Input_Hint" />
+            android:hint="@string/Input_Hint"
+            android:maxWidth="488dp"
+            tools:ignore="VisualLintTextFieldSize" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <LinearLayout
-        android:id="@+id/Data_Wrapper"
+    <FrameLayout
+        android:id="@+id/Graph_Container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5"
-        tools:visibility="gone" />
-
-    <LinearLayout
-        android:id="@+id/Probe1_Wrapper"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:padding="4dp"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toTopOf="@+id/Data_Wrapper"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Input_Box">
 
-        <TextView
-            android:id="@+id/Probe1_Label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/Probe1_Label"
-            android:textColor="#4DB6AC" />
-
-        <TextView
-            android:id="@+id/Probe1_Data"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:text="@string/Probe_Data" />
-    </LinearLayout>
+    </FrameLayout>
 
     <LinearLayout
-        android:id="@+id/Probe2_Wrapper"
+        android:id="@+id/Data_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal"
-        android:padding="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Probe1_Wrapper">
+        app:layout_constraintStart_toStartOf="parent">
 
-        <TextView
-            android:id="@+id/Probe2_Label"
+        <LinearLayout
+            android:id="@+id/Probe1_Wrapper"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/Probe2_Label"
-            android:textColor="#FFB74D" />
+            android:orientation="horizontal"
+            android:padding="4dp">
 
-        <TextView
-            android:id="@+id/Probe2_Data"
+            <TextView
+                android:id="@+id/Probe1_Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/Probe1_Label"
+                android:textColor="#4DB6AC" />
+
+            <TextView
+                android:id="@+id/Probe1_Data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="@string/Probe_Data" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/Probe2_Wrapper"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:text="@string/Probe_Data" />
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/Probe2_Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/Probe2_Label"
+                android:textColor="#FFB74D" />
+
+            <TextView
+                android:id="@+id/Probe2_Data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="@string/Probe_Data" />
+
+        </LinearLayout>
+
     </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

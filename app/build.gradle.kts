@@ -48,6 +48,7 @@ dependencies {
     implementation("org.jetbrains.anko:anko:0.10.8")
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     //noinspection GradleDependency
     implementation("androidx.core:core-ktx:1.9.0")

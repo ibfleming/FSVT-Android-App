@@ -18,8 +18,6 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.Build
-import androidx.lifecycle.MutableLiveData
-import kotlinx.coroutines.delay
 import me.ian.fsvt.bluetooth.ConnectionManager
 import timber.log.Timber
 
@@ -72,6 +70,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(view)
 
         Timber.tag(tag).d("MainActivity Initialized!")
+
+        /*******************************************
+         * TESTING: Run Graph Fragment
+         *******************************************/
+        supportFragmentManager.beginTransaction().replace(R.id.Graph_Container, GraphFragment()).addToBackStack(null).commit()
 
         /*******************************************
          * Observe Connection State of Device
