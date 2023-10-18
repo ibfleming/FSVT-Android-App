@@ -3,16 +3,36 @@ package me.ian.fsvt
 import android.graphics.Color
 import android.graphics.Typeface
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.formatter.ValueFormatter
+import kotlin.math.roundToInt
 
 enum class ChartType {
     Probe1,
     Probe2
 }
 
+private class XAxisFormatter : ValueFormatter() {
+    // May not be necessary as the granularity is set to 1F
+    override fun getAxisLabel(value: Float, axis: AxisBase?): String {
+        return "${value.roundToInt()}s"
+    }
+}
+
+private class YAxisFormatter : ValueFormatter() {
+    override fun getAxisLabel(value: Float, axis: AxisBase?): String {
+        return "${value.toInt()}"
+    }
+}
+
 fun applyGraphStyling(chart: LineChart, probe: ChartType) {
+
+    // Hardware Acceleration
+    chart.setHardwareAccelerationEnabled(true)
 
     // No Data Styling
     chart.setNoDataText("< Empty Chart >")
@@ -22,8 +42,8 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     // Description Styling
     val desc = chart.description
     desc.text = "Probe ${when (probe) {
-        ChartType.Probe1 -> "1"
-        ChartType.Probe2 -> "2"
+        ChartType.Probe1 -> "1 (Empty)"
+        ChartType.Probe2 -> "2 (Empty)"
     }}"
     desc.textColor = Color.GRAY
     desc.textSize = 16F
@@ -40,11 +60,14 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     xAxis.axisLineWidth = 2F
     xAxis.axisLineColor = Color.WHITE
     xAxis.textColor = Color.WHITE
+    xAxis.granularity = 1F
+    xAxis.valueFormatter = XAxisFormatter()
 
     val axisLeft = chart.axisLeft
     axisLeft.axisLineWidth = 2F
     axisLeft.axisLineColor = Color.WHITE
     axisLeft.textColor = Color.WHITE
+    axisLeft.valueFormatter = YAxisFormatter()
 
     val axisRight = chart.axisRight
     axisRight.isEnabled = false
@@ -55,6 +78,19 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     axisLeft.setDrawGridLines(false)
     xAxis.setDrawGridLines(false)
 
+    // Chart Behavior
+    chart.setPinchZoom(false)
+    chart.setScaleEnabled(true)
+    chart.setTouchEnabled(false)
+    chart.isDragEnabled = false
+    chart.isAutoScaleMinMaxEnabled = true
+    chart.isKeepPositionOnRotation = true
+    chart.isDragDecelerationEnabled = false
+
+    // Set empty data
+    val emptyData = LineData()
+    chart.data = emptyData
+    chart.invalidate()
 }
 
 fun createMockData() : ArrayList<Entry> {

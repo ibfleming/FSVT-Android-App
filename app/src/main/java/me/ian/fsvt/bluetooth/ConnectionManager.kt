@@ -131,8 +131,8 @@ object ConnectionManager {
                 if( msg == "A" ) {
                     Timber.d( "[READ ACKNOWLEDGEMENT] -> '$msg'")
                     receivedAcknowledgement = true
-                    probe1Data.postValue("Empty")
-                    probe2Data.postValue("Empty")
+                    probe1Data.postValue(-1F)
+                    probe2Data.postValue(-1F)
                 }
                 else {
                     Timber.d( "[READ TDS] -> $msg")
@@ -146,19 +146,19 @@ object ConnectionManager {
      * Process the Data from BLE Device
      *******************************************/
 
-    val probe1Data = MutableLiveData<String>()
-    val probe2Data = MutableLiveData<String>()
+    val probe1Data = MutableLiveData<Float>()
+    val probe2Data = MutableLiveData<Float>()
 
     private fun processData(data : String) {
         val divided = data.split(":")
         if(divided.size == 2) {
-            val probe1Temp = divided[0].trim()
-            val probe2Temp = divided[1].trim()
+            val probe1Temp = divided[0].trim().toFloat()
+            val probe2Temp = divided[1].trim().toFloat()
 
             // CSV IMPLEMENTATIONS HERE -> ADD TO FILE?
 
-            probe1Data.postValue(probe1Temp + "ppm")
-            probe2Data.postValue(probe2Temp + "ppm")
+            probe1Data.postValue(probe1Temp)
+            probe2Data.postValue(probe2Temp)
         }
     }
 

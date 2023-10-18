@@ -18,12 +18,16 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.Build
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import me.ian.fsvt.bluetooth.ConnectionManager
 import timber.log.Timber
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
 private const val LOCATION_PERMISSION_REQUEST_CODE = 2
 private const val MAC = "B4:52:A9:04:28:DC"
+private const val SCAN_PERIOD = 3000L
 
 class MainActivity : AppCompatActivity() {
 
@@ -103,14 +107,14 @@ class MainActivity : AppCompatActivity() {
          *******************************************/
 
         ConnectionManager.probe1Data.observe(this) { data ->
-            if( !data.isNullOrBlank() ) {
-                binding.Probe1Data.text = data
+            if( data != -1F ) {
+                binding.Probe1Data.text = data.toInt().toString()
             }
         }
 
         ConnectionManager.probe2Data.observe(this) { data ->
-            if( !data.isNullOrBlank() ) {
-                binding.Probe2Data.text = data
+            if( data != -1F ) {
+                binding.Probe2Data.text =  data.toInt().toString()
             }
         }
 
@@ -221,6 +225,17 @@ class MainActivity : AppCompatActivity() {
             val scanFilters = mutableListOf(scanFilter)
             bleScanner.startScan(scanFilters, scanSettings, scanCallback)
             isScanning = true
+            binding.ConnectButton.text = "Scanning..."
+
+            lifecycleScope.launch {
+                delay(SCAN_PERIOD)
+                stopScan()
+                if(scanResults.isEmpty()) {
+                    showDeviceNotFoundAlert()
+                    binding.ConnectButton.text = "Connect"
+                }
+            }
+
         }
     }
 
@@ -230,6 +245,18 @@ class MainActivity : AppCompatActivity() {
             Timber.tag(tag).d("Stopped BLE scan!")
             bleScanner.stopScan(scanCallback)
             isScanning = false
+        }
+    }
+
+    private fun showDeviceNotFoundAlert() {
+        runOnUiThread {
+            alert {
+                title = "No device found"
+                message = "Could not find the specified device. " +
+                        "Please ensure the devices are powered on and try again."
+                isCancelable = false
+                positiveButton(android.R.string.ok) { /* nop */ }
+            }.show()
         }
     }
 
@@ -254,6 +281,14 @@ class MainActivity : AppCompatActivity() {
 
         override fun onScanFailed(errorCode: Int) {
             Timber.tag(tag).e("Scan Failed! CODE: $errorCode")
+            runOnUiThread {
+                alert {
+                    title = "Scanning error"
+                    message = "Scanning procedure failed unexpectedly. Please try again."
+                    isCancelable = false
+                    positiveButton(android.R.string.ok) { /* nop */ }
+                }.show()
+            }
         }
     }
 
