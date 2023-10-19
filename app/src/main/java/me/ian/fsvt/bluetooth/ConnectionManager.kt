@@ -5,15 +5,17 @@ import android.bluetooth.*
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import androidx.core.os.postDelayed
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.delay
 import timber.log.Timber
 import java.util.UUID
 
 private val BLUETOOTH_LE_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
 private val BLUETOOTH_LE_CHAR_RW = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
 private const val MAX_ATTEMPTS = 5
-private const val TIMEOUT_DURATION = 1000L
+private const val TIMEOUT_DURATION = 500L
 
 object ConnectionManager {
 
