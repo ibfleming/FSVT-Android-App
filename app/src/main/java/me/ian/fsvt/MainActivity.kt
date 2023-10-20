@@ -18,6 +18,9 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import androidx.core.os.postDelayed
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -215,6 +218,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private var scanTimeoutHandler = Handler(Looper.getMainLooper())
+
     @SuppressLint("MissingPermission")
     private fun startScan() {
         Timber.tag(tag).d("Started BLE scan!")
@@ -225,17 +230,13 @@ class MainActivity : AppCompatActivity() {
             val scanFilters = mutableListOf(scanFilter)
             bleScanner.startScan(scanFilters, scanSettings, scanCallback)
             isScanning = true
-            binding.ConnectButton.text = "Scanning..."
+            binding.ConnectButton.setText(R.string.Scanning_Button)
 
-            lifecycleScope.launch {
-                delay(SCAN_PERIOD)
-                stopScan()
-                if(ConnectionManager.isConnected.value == false) {
-                    showDeviceNotFoundAlert()
-                    binding.ConnectButton.text = "Connect"
-                }
-            }
-
+            scanTimeoutHandler.postDelayed({
+                stopScan();
+                showDeviceNotFoundAlert()
+                binding.ConnectButton.setText(R.string.Connect_Button)
+            }, SCAN_PERIOD)
         }
     }
 
@@ -245,6 +246,7 @@ class MainActivity : AppCompatActivity() {
             Timber.tag(tag).d("Stopped BLE scan!")
             bleScanner.stopScan(scanCallback)
             isScanning = false
+            scanTimeoutHandler.removeCallbacksAndMessages(null)
         }
     }
 

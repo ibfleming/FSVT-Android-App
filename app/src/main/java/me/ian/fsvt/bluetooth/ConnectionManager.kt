@@ -14,8 +14,6 @@ import java.util.UUID
 
 private val BLUETOOTH_LE_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
 private val BLUETOOTH_LE_CHAR_RW = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
-private const val MAX_ATTEMPTS = 5
-private const val TIMEOUT_DURATION = 500L
 
 object ConnectionManager {
 
@@ -64,12 +62,12 @@ object ConnectionManager {
 
                 } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                     Timber.e("Device disconnected!")
-                    _isConnected.postValue(false)
+                    handleUnexpectedDisconnect()
                 }
             } else {
                 Timber.e("Failure to connect to Gatt!")
                 Timber.e("Device disconnected!")
-                _isConnected.postValue(false)
+                handleUnexpectedDisconnect()
             }
         }
 
@@ -82,6 +80,7 @@ object ConnectionManager {
             }
             else {
                 Timber.e("onServicesDiscovered received $status")
+                handleUnexpectedDisconnect()
             }
         }
 
@@ -120,26 +119,39 @@ object ConnectionManager {
          * On Change
          *******************************************/
 
+        val probe1Data = MutableLiveData<Float>()
+        val probe2Data = MutableLiveData<Float>()
+
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
         ) {
             if( characteristic === readCharacteristic) {
-                @Suppress("DEPRECATION") val data = readCharacteristic!!.value
-                val dataArray = CharArray(data.size) { data[it].toInt().toChar() }
-                val msg = String(dataArray)
+                val data = readCharacteristic!!.value
+                val msg = String(data.map { it.toInt().toChar() }.toCharArray())
 
-                if( msg == "A" ) {
-                    Timber.d( "[READ ACKNOWLEDGEMENT] -> '$msg'")
-                    receivedAcknowledgement = true
-                }
-                else {
-                    Timber.d( "[READ TDS] -> $msg")
-                    processData(msg)
+                when (msg) {
+                    "A" -> {
+                        Timber.w( "[ACKNOWLEDGE] -> '$msg'")
+                        receivedAcknowledgement = true
+                    }
+                    else -> {
+                        Timber.d( "[TDS] -> $msg")
+                        // Process data...
+                        processData(msg)
+                    }
                 }
             }
         }
+    }
+
+    private fun handleUnexpectedDisconnect() {
+        bluetoothGatt = null
+        readCharacteristic = null
+        writeCharacteristic = null
+        hm10Delegate = null
+        _isConnected.postValue(false)
     }
 
     /*******************************************
@@ -150,19 +162,15 @@ object ConnectionManager {
     val probe2Data = MutableLiveData<Float>()
 
     private fun processData(data : String) {
-        val divided = data.split(":")
-        if(divided.size == 2) {
-            val probe1Temp = divided[0].trim()
-            val probe2Temp = divided[1].trim()
-
+        val values = data.split(":").map { it.trim() }
+        if(values.size == 2) {
             try {
-                val probe1Value = probe1Temp.toFloat()
-                val probe2Value = probe2Temp.toFloat()
+                val p1Value = values[0].toFloat()
+                val p2Value = values[1].toFloat()
 
                 // CSV IMPLEMENTATIONS HERE -> ADD TO FILE?
-
-                probe1Data.postValue(probe1Value)
-                probe2Data.postValue(probe2Value)
+                probe1Data.postValue(p1Value)
+                probe2Data.postValue(p2Value)
 
             } catch (e: NumberFormatException) {
                 Timber.e("Error parsing data: $data")
@@ -189,6 +197,9 @@ object ConnectionManager {
     fun sendStartCommand() {
         writeCommand('S')
     }
+
+    private const val MAX_ATTEMPTS = 3
+    private const val TIMEOUT_DURATION = 100L
 
     fun sendStopCommand() {
         var attempts = 0

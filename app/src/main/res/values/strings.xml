@@ -2,6 +2,7 @@
     <string name="app_name">TheFSVTApp</string>
     <string name="Connect_Button">Connect</string>
     <string name="Connected_Button">Connected</string>
+    <string name="Scanning_Button">Scanning…</string>
     <string name="Start_Program">Start</string>
     <string name="Stop_Program">STOP</string>
     <string name="Disconnect_Button">Disconnect</string>
