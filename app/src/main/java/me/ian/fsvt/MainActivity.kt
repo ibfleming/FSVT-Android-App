@@ -11,16 +11,20 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
+import android.view.View.*
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import me.ian.fsvt.bluetooth.ConnectionManager
 import me.ian.fsvt.databinding.ActivityMainBinding
-import org.jetbrains.anko.alert
+import org.jetbrains.anko.*
 import timber.log.Timber
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
@@ -41,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private var _isRunning   : Boolean = false
     private var _isConnected : Boolean = false
     private var _isScanning  : Boolean = false
+    private var _isFileInit  : Boolean = false
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -86,11 +91,12 @@ class MainActivity : AppCompatActivity() {
 
         ConnectionManager.isConnected.observe(this) { isConnected ->
             if (isConnected) {
-                binding.ConnectButton.setText(R.string.Connected_Button)
+                binding.ConnectButton.backgroundColor = R.color.connected_color
+                binding.StartButton.isEnabled = true
                 _isConnected = true
             }
             else {
-                binding.ConnectButton.setText(R.string.Connect_Button)
+                binding.ConnectButton.backgroundColor = Color.TRANSPARENT
                 _isConnected = false
                 runOnUiThread {
                     alert {
@@ -126,34 +132,41 @@ class MainActivity : AppCompatActivity() {
 
         binding.ConnectButton.setOnClickListener { startScan() }
 
-        binding.TestButton.setOnClickListener {
+        //binding.StartButton.isEnabled = false
+        binding.StartButton.setOnClickListener {
+            promptFileName()
             if (ConnectionManager.isConnected.value == true) {
-                if (_isRunning) {
-                    ConnectionManager.sendStopCommand()
-                    binding.TestButton.setText(R.string.Start_Program)
-                    _isRunning = false
-                    Timber.tag(tag).d("Sending Stop Command!")
-                    graphFragment?.resetGraphData()
-                } else {
+                if(!_isRunning) {
+                    //
+                    Timber.tag(tag).d("START")
                     ConnectionManager.sendStartCommand()
-                    binding.TestButton.setText(R.string.Stop_Program)
+                    binding.StartButton.isEnabled = false
+                    binding.StopButton.isEnabled = true
                     _isRunning = true
-                    Timber.tag(tag).d("Sending Start Command!")
+                }
+            }
+        }
+
+        binding.StopButton.isEnabled = false
+        binding.StopButton.setOnClickListener {
+            if( ConnectionManager.isConnected.value == true ) {
+                if(_isRunning) {
+                    Timber.tag(tag).d("STOP")
+                    ConnectionManager.sendStopCommand()
+                    //graphFragment?.resetGraphData()
+                    binding.StopButton.isEnabled = false
+                    binding.StartButton.isEnabled = true
+                    _isRunning = false
                 }
             }
         }
 
         binding.ResetButton.setOnClickListener {
             if( _isConnected && !_isRunning ) {
-                Timber.d("SUCCESS")
+                TODO()
             }
         }
 
-        /*binding.DisconnectButton.setOnClickListener {
-            if (ConnectionManager.isConnected.value == true) {
-                ConnectionManager.disconnect()
-            }
-        }*/
     }
 
     override fun onResume() {
@@ -196,6 +209,27 @@ class MainActivity : AppCompatActivity() {
      * Private functions
      *******************************************/
 
+    private fun promptFileName() {
+        alert {
+            customView {
+                verticalLayout {
+                    padding = dip(16)
+
+                    // Create a TextInputEditText
+                    val textInput = editText {
+                        hint = "Enter your name"
+                    }.lparams(width = matchParent)
+
+                    // Submit
+                    positiveButton("Submit") {
+                        val enteredText = textInput.text.toString()
+                        toast("Name: $enteredText")
+                    }
+                }
+            }
+        }.show()
+    }
+
     @SuppressLint("MissingPermission")
     private fun promptEnableBluetooth() {
         if (!bluetoothAdapter.isEnabled) {
@@ -236,13 +270,12 @@ class MainActivity : AppCompatActivity() {
             val scanFilters = mutableListOf(scanFilter)
             bleScanner.startScan(scanFilters, scanSettings, scanCallback)
             _isScanning = true
-            binding.ConnectButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
-            //binding.ConnectButton.setText(R.string.Scanning_Button)
+            binding.ConnectButton.backgroundColor = R.color.scan_color
 
             scanTimeoutHandler.postDelayed({
-                stopScan();
+                stopScan()
                 showDeviceNotFoundAlert()
-                binding.ConnectButton.setText(R.string.Connect_Button)
+                binding.ConnectButton.backgroundColor = Color.TRANSPARENT
             }, SCAN_PERIOD)
         }
     }

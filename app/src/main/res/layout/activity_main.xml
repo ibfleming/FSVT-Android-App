@@ -5,14 +5,16 @@
     android:id="@+id/Main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:outlineProvider="bounds"
     tools:context=".MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Button_Wrapper"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/Input_Box"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,6 +25,8 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="#8001579B"
+            android:outlineProvider="bounds"
             android:padding="0dp"
             android:paddingStart="9dp"
             android:paddingEnd="9dp"
@@ -30,84 +34,92 @@
             app:iconPadding="0dp"
             app:iconSize="24dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/Test_Button"
+            app:layout_constraintEnd_toStartOf="@+id/Settings_Button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="SpeakableTextPresentCheck" />
 
         <Button
-            android:id="@+id/Test_Button"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:id="@+id/Settings_Button"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/Start_Program"
+            android:padding="0dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            app:icon="@drawable/settings"
+            app:iconPadding="0dp"
+            app:iconSize="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/Start_Button"
+            app:layout_constraintStart_toEndOf="@+id/Connect_Button"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="SpeakableTextPresentCheck" />
+
+        <Button
+            android:id="@+id/Start_Button"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#8033691E"
+            android:padding="0dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            app:icon="@drawable/start_test"
+            app:iconPadding="0dp"
+            app:iconSize="30dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/Stop_Button"
+            app:layout_constraintStart_toEndOf="@+id/Settings_Button"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="SpeakableTextPresentCheck,DuplicateClickableBoundsCheck,VisualLintOverlap" />
+
+        <Button
+            android:id="@+id/Stop_Button"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#80B71C1C"
+            android:padding="0dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            app:icon="@drawable/stop_test"
+            app:iconPadding="0dp"
+            app:iconSize="30dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Reset_Button"
-            app:layout_constraintStart_toEndOf="@+id/Connect_Button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toEndOf="@+id/Start_Button"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="SpeakableTextPresentCheck" />
 
         <Button
             android:id="@+id/Reset_Button"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="@string/Reset_Button"
+            android:padding="0dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            app:icon="@drawable/reset_test"
+            app:iconPadding="0dp"
+            app:iconSize="24dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/Test_Button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toEndOf="@+id/Stop_Button"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="SpeakableTextPresentCheck" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/Input_Box"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper"
-        tools:visibility="gone">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/Input_Hint"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/Input_Hint"
-            android:maxWidth="488dp"
-            tools:ignore="VisualLintTextFieldSize" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <FrameLayout
-        android:id="@+id/Graph_Container"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1"
-        app:layout_constraintBottom_toTopOf="@+id/Data_Wrapper"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Input_Box">
-
-    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/Data_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="8dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="0dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper">
 
         <LinearLayout
             android:id="@+id/Probe1_Wrapper"
@@ -122,7 +134,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/Probe1_Label"
-                android:textColor="#4DB6AC" />
+                android:textColor="#81C784"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/Probe1_Data"
@@ -130,7 +143,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_weight="1"
-                android:text="@string/Probe_Data" />
+                android:text="@string/Probe_Data"
+                android:textSize="12sp" />
 
         </LinearLayout>
 
@@ -147,7 +161,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/Probe2_Label"
-                android:textColor="#FFB74D" />
+                android:textColor="#81C784"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/Probe2_Data"
@@ -155,10 +170,36 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_weight="1"
-                android:text="@string/Probe_Data" />
+                android:text="@string/Probe_Data"
+                android:textSize="12sp" />
 
         </LinearLayout>
 
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/Graph_Container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toTopOf="@+id/Copyright"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Data_Wrapper">
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/Copyright"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/copyright"
+        android:textColor="#78909C"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Graph_Container" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

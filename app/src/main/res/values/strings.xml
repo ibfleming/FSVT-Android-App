@@ -11,4 +11,5 @@
     <string name="Probe1_Label">Probe 1:</string>
     <string name="Probe2_Label">Probe 2:</string>
     <string name="Probe_Data">Empty</string>
+    <string name="copyright">© 2023 FSVT - All Rights Reserved.</string>
 </resources>

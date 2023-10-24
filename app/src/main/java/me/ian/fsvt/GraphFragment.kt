@@ -97,10 +97,12 @@ class GraphFragment : Fragment() {
      *******************************************/
 
     fun resetGraphData() {
+        probe1Chart.data.dataSets.clear()
         probe1Chart.data?.clearValues()
         probe1Chart.notifyDataSetChanged()
         probe1Chart.invalidate()
 
+        probe2Chart.data.dataSets.clear()
         probe2Chart.data?.clearValues()
         probe2Chart.notifyDataSetChanged()
         probe2Chart.invalidate()
