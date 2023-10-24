@@ -20,9 +20,10 @@ class GraphFragment : Fragment() {
     private var _binding : FragmentGraphBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var probe1Chart : LineChart
-    private lateinit var probe2Chart : LineChart
-
+    companion object {
+        private lateinit var probe1Chart : LineChart
+        private lateinit var probe2Chart : LineChart
+    }
 
     /*******************************************
      * Activity functions
@@ -81,16 +82,27 @@ class GraphFragment : Fragment() {
             if (firstDataReceivedTime == null) {
                 firstDataReceivedTime = currentTime
             }
-            val elapsedTimeInSeconds = (currentTime - firstDataReceivedTime!!) / 1000
+            val x = (currentTime - (firstDataReceivedTime ?: currentTime)).toFloat() / 1000
 
-            val x = elapsedTimeInSeconds.toFloat()
-            val y = value
-
-            Timber.w("x: $x, y: $y")
-            data.addEntry(Entry(x, y), 0)
+            Timber.w("x: $x, y: $value")
+            data.addEntry(Entry(x, value), 0)
             data.notifyDataChanged()
             chart.notifyDataSetChanged()
             chart.invalidate()
         }
+    }
+
+    /*******************************************
+     * Public functions
+     *******************************************/
+
+    fun resetGraphData() {
+        probe1Chart.data?.clearValues()
+        probe1Chart.notifyDataSetChanged()
+        probe1Chart.invalidate()
+
+        probe2Chart.data?.clearValues()
+        probe2Chart.notifyDataSetChanged()
+        probe2Chart.invalidate()
     }
 }

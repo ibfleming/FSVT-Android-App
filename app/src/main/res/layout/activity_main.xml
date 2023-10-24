@@ -20,32 +20,44 @@
 
         <Button
             android:id="@+id/Connect_Button"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/Connect_Button"
+            android:padding="0dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            app:icon="@drawable/bluetooth"
+            app:iconPadding="0dp"
+            app:iconSize="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/Test_Button"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="SpeakableTextPresentCheck" />
 
         <Button
             android:id="@+id/Test_Button"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="8dp"
             android:text="@string/Start_Program"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/Reset_Button"
+            app:layout_constraintStart_toEndOf="@+id/Connect_Button"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
-            android:id="@+id/Disconnect_Button"
+            android:id="@+id/Reset_Button"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/Disconnect_Button"
-            android:visibility="gone"
+            android:layout_marginStart="12dp"
+            android:text="@string/Reset_Button"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="parent" />
+            app:layout_constraintStart_toEndOf="@+id/Test_Button"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -56,10 +68,12 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper">
+        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper"
+        tools:visibility="gone">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/Input_Hint"
@@ -146,6 +160,5 @@
         </LinearLayout>
 
     </LinearLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

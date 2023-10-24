@@ -1,30 +1,26 @@
 package me.ian.fsvt
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.*
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import me.ian.fsvt.databinding.ActivityMainBinding
-import org.jetbrains.anko.alert
-import android.Manifest
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.core.os.postDelayed
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import me.ian.fsvt.bluetooth.ConnectionManager
+import me.ian.fsvt.databinding.ActivityMainBinding
+import org.jetbrains.anko.alert
 import timber.log.Timber
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
@@ -42,7 +38,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private var isRunning : Boolean = false
+    private var _isRunning   : Boolean = false
+    private var _isConnected : Boolean = false
+    private var _isScanning  : Boolean = false
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -52,8 +50,6 @@ class MainActivity : AppCompatActivity() {
     private val bleScanner by lazy {
         bluetoothAdapter.bluetoothLeScanner
     }
-
-    private var isScanning = false
 
     private val scanSettings = ScanSettings.Builder()
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -82,6 +78,7 @@ class MainActivity : AppCompatActivity() {
          * TESTING: Run Graph Fragment
          *******************************************/
         supportFragmentManager.beginTransaction().replace(R.id.Graph_Container, GraphFragment()).addToBackStack(null).commit()
+        val graphFragment = supportFragmentManager.findFragmentById(R.id.Graph_Container) as? GraphFragment
 
         /*******************************************
          * Observe Connection State of Device
@@ -90,9 +87,11 @@ class MainActivity : AppCompatActivity() {
         ConnectionManager.isConnected.observe(this) { isConnected ->
             if (isConnected) {
                 binding.ConnectButton.setText(R.string.Connected_Button)
+                _isConnected = true
             }
             else {
                 binding.ConnectButton.setText(R.string.Connect_Button)
+                _isConnected = false
                 runOnUiThread {
                     alert {
                         title = "Disconnected"
@@ -129,25 +128,32 @@ class MainActivity : AppCompatActivity() {
 
         binding.TestButton.setOnClickListener {
             if (ConnectionManager.isConnected.value == true) {
-                if (isRunning) {
+                if (_isRunning) {
                     ConnectionManager.sendStopCommand()
                     binding.TestButton.setText(R.string.Start_Program)
-                    isRunning = false
+                    _isRunning = false
                     Timber.tag(tag).d("Sending Stop Command!")
+                    graphFragment?.resetGraphData()
                 } else {
                     ConnectionManager.sendStartCommand()
                     binding.TestButton.setText(R.string.Stop_Program)
-                    isRunning = true
+                    _isRunning = true
                     Timber.tag(tag).d("Sending Start Command!")
                 }
             }
         }
 
-        binding.DisconnectButton.setOnClickListener {
+        binding.ResetButton.setOnClickListener {
+            if( _isConnected && !_isRunning ) {
+                Timber.d("SUCCESS")
+            }
+        }
+
+        /*binding.DisconnectButton.setOnClickListener {
             if (ConnectionManager.isConnected.value == true) {
                 ConnectionManager.disconnect()
             }
-        }
+        }*/
     }
 
     override fun onResume() {
@@ -229,8 +235,9 @@ class MainActivity : AppCompatActivity() {
             scanResults.clear()
             val scanFilters = mutableListOf(scanFilter)
             bleScanner.startScan(scanFilters, scanSettings, scanCallback)
-            isScanning = true
-            binding.ConnectButton.setText(R.string.Scanning_Button)
+            _isScanning = true
+            binding.ConnectButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+            //binding.ConnectButton.setText(R.string.Scanning_Button)
 
             scanTimeoutHandler.postDelayed({
                 stopScan();
@@ -242,10 +249,10 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun stopScan() {
-        if (isScanning) {
+        if (_isScanning) {
             Timber.tag(tag).d("Stopped BLE scan!")
             bleScanner.stopScan(scanCallback)
-            isScanning = false
+            _isScanning = false
             scanTimeoutHandler.removeCallbacksAndMessages(null)
         }
     }

@@ -3,8 +3,9 @@
     <string name="Connect_Button">Connect</string>
     <string name="Connected_Button">Connected</string>
     <string name="Scanning_Button">Scanning…</string>
+    <string name="Reset_Button">Reset</string>
     <string name="Start_Program">Start</string>
-    <string name="Stop_Program">STOP</string>
+    <string name="Stop_Program">Halt</string>
     <string name="Disconnect_Button">Disconnect</string>
     <string name="Input_Hint">File name</string>
     <string name="Probe1_Label">Probe 1:</string>

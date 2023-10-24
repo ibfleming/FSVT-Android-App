@@ -5,10 +5,8 @@ import android.bluetooth.*
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import androidx.core.os.postDelayed
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import kotlinx.coroutines.delay
 import timber.log.Timber
 import java.util.UUID
 
@@ -86,19 +84,6 @@ object ConnectionManager {
 
 
         /*******************************************
-         * On Read
-         *******************************************/
-
-        override fun onCharacteristicRead(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic,
-            value: ByteArray,
-            status: Int
-        ) {
-            super.onCharacteristicRead(gatt, characteristic, value, status)
-        }
-
-        /*******************************************
          * On Write
          *******************************************/
 
@@ -129,9 +114,8 @@ object ConnectionManager {
         ) {
             if( characteristic === readCharacteristic) {
                 val data = readCharacteristic!!.value
-                val msg = String(data.map { it.toInt().toChar() }.toCharArray())
 
-                when (msg) {
+                when (val msg = String(data.map { it.toInt().toChar() }.toCharArray())) {
                     "A" -> {
                         Timber.w( "[ACKNOWLEDGE] -> '$msg'")
                         receivedAcknowledgement = true
@@ -198,14 +182,13 @@ object ConnectionManager {
         writeCommand('S')
     }
 
-    private const val MAX_ATTEMPTS = 3
-    private const val TIMEOUT_DURATION = 100L
+    private const val MAX_ATTEMPTS = 100
+    private const val TIMEOUT_DURATION = 10L
 
     fun sendStopCommand() {
         var attempts = 0
 
         fun keepSendingStop() {
-
             if (attempts < MAX_ATTEMPTS) {
                 writeCommand('E')
 
@@ -220,7 +203,7 @@ object ConnectionManager {
                     }
                 }, TIMEOUT_DURATION)
             } else {
-                // Maximum attempts reached, handle error or timeout
+                Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts.")
             }
         }
         keepSendingStop()

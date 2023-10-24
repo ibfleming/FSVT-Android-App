@@ -1,6 +1,7 @@
 package me.ian.fsvt
 
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
@@ -10,9 +11,12 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import com.github.mikephil.charting.utils.MPPointF
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
+
 
 enum class ChartType {
     Probe1,
@@ -28,75 +32,93 @@ private class XAxisFormatter : ValueFormatter() {
 
 private class YAxisFormatter : ValueFormatter() {
     override fun getAxisLabel(value: Float, axis: AxisBase?): String {
-        return "${value.toInt()}"
+        return if (value >= 0) {
+            "${value.toInt()}"
+        } else {
+            ""
+        }
     }
 }
 
 fun applyGraphStyling(chart: LineChart, probe: ChartType) {
 
-    // Hardware Acceleration
-    chart.setHardwareAccelerationEnabled(true)
-
-    // No Data Styling
-    chart.setNoDataText("< Empty Chart >")
-    chart.setNoDataTextColor(Color.WHITE)
-    chart.setNoDataTextTypeface(Typeface.MONOSPACE)
-
-    // Description Styling
+    // Description
     val desc = chart.description
-    desc.text = "Probe ${when (probe) {
-        ChartType.Probe1 -> "1 (Empty)"
-        ChartType.Probe2 -> "2 (Empty)"
-    }}"
-    desc.textColor = Color.GRAY
-    desc.textSize = 16F
-    desc.yOffset = 4F
-    desc.typeface = Typeface.MONOSPACE
+    desc.apply {
+        text = "Probe ${when (probe) {
+            ChartType.Probe1 -> "1"
+            ChartType.Probe2 -> "2"
+        }}"
+        textColor = Color.GRAY
+        yOffset = 15F
+        textSize = 12F
+        typeface = Typeface.MONOSPACE
+    }
     chart.description = desc
 
-    // Legend Styling
-    chart.legend.isEnabled = false
 
-    // Axis Styling
+    // X Axis
     val xAxis = chart.xAxis
-    xAxis.position = XAxis.XAxisPosition.BOTTOM
-    xAxis.axisLineWidth = 2F
-    xAxis.axisLineColor = Color.WHITE
-    xAxis.textColor = Color.WHITE
-    xAxis.valueFormatter = XAxisFormatter()
-    xAxis.mAxisMinimum = 0F
+    xAxis.apply {
+        position = XAxis.XAxisPosition.BOTTOM
+        granularity = 1F
+        axisMinimum = 0F
+        axisLineWidth = 2F
+        axisLineColor = Color.WHITE
+        textColor = Color.WHITE
+        valueFormatter = XAxisFormatter()
+    }
 
+    // Y Axis (left axis)
     val axisLeft = chart.axisLeft
-    axisLeft.mAxisMinimum = 0F
-    axisLeft.mAxisMaximum = 999F
-    axisLeft.axisLineWidth = 2F
-    axisLeft.axisLineColor = Color.WHITE
-    axisLeft.textColor = Color.WHITE
-    axisLeft.valueFormatter = YAxisFormatter()
+    axisLeft.apply {
+        granularity = 25F
+        axisMinimum = -5F
+        axisMaximum = 250F
+        axisLineWidth = 2F
+        axisLineColor = Color.WHITE
+        textColor = Color.WHITE
+        valueFormatter = YAxisFormatter()
+    }
 
+    // Right Axis
     val axisRight = chart.axisRight
-    axisRight.isEnabled = false
+    axisRight.apply {
+        isEnabled = false
+    }
 
     // Chart Styling
-    chart.setDrawGridBackground(false)
-    chart.setDrawBorders(false)
     axisLeft.setDrawGridLines(false)
     xAxis.setDrawGridLines(false)
 
-    // Chart Behavior
-    chart.setPinchZoom(false)
-    chart.setScaleEnabled(true)
-    chart.setTouchEnabled(false)
-    chart.isDragEnabled = false
-    chart.isAutoScaleMinMaxEnabled = true
-    chart.isKeepPositionOnRotation = true
-    chart.isDragDecelerationEnabled = false
+    // Chart Settings
+    chart.apply {
+        // "No Data" Styling
+        setNoDataText("< Empty Chart >")
+        setNoDataTextColor(Color.WHITE)
+        setNoDataTextTypeface(Typeface.MONOSPACE)
+        // Styling
+        legend.isEnabled = false
+        setDrawGridBackground(false)
+        setDrawBorders(false)
+        // Behavior
+        setPinchZoom(true)
+        setScaleEnabled(true)
+        setTouchEnabled(true)
+        isDragEnabled = true
+        isAutoScaleMinMaxEnabled = true
+        isKeepPositionOnRotation = true
+        isDragDecelerationEnabled = false
+        isHighlightPerDragEnabled = false
+        isHighlightPerTapEnabled = false
+        setHardwareAccelerationEnabled(true)
+    }
 
     // Chart data
     initializeLineData(chart)
 }
 
-private fun initializeLineData(chart: LineChart) {
+fun initializeLineData(chart: LineChart) {
     val data = chart.data
     if( data == null ) {
         val set = createSet()                                                       // (1) Create a set
@@ -116,7 +138,7 @@ fun createSet(): LineDataSet {
     set.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
     set.axisDependency = YAxis.AxisDependency.LEFT
     set.color = Color.RED
-    set.lineWidth = 1F
+    set.lineWidth = 0.5F
     set.setDrawValues(false)
     set.setDrawCircles(false)
     return set
@@ -124,6 +146,6 @@ fun createSet(): LineDataSet {
 
 fun createMockData() : ArrayList<Entry> {
     val dataValues = ArrayList<Entry>()
-    dataValues.add(Entry(0F, 0F))
+    dataValues.add(Entry(1F, 0F))
     return dataValues
 }
