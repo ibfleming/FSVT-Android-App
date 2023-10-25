@@ -16,9 +16,13 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.Gravity
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View.*
+import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -32,7 +36,7 @@ private const val LOCATION_PERMISSION_REQUEST_CODE = 2
 private const val MAC = "B4:52:A9:04:28:DC"
 private const val SCAN_PERIOD = 3000L
 
-class MainActivity : AppCompatActivity() {
+class MainActivity: AppCompatActivity() {
 
     private var tag = "MainActivity"
 
@@ -45,7 +49,9 @@ class MainActivity : AppCompatActivity() {
     private var _isRunning   : Boolean = false
     private var _isConnected : Boolean = false
     private var _isScanning  : Boolean = false
-    private var _isFileInit  : Boolean = false
+    private var _fileReady   : Boolean = false
+    private var _fileName    : String? = null
+
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -91,7 +97,7 @@ class MainActivity : AppCompatActivity() {
 
         ConnectionManager.isConnected.observe(this) { isConnected ->
             if (isConnected) {
-                binding.ConnectButton.backgroundColor = R.color.connected_color
+                binding.ConnectButton.backgroundColor = Color.parseColor("#33691E")
                 binding.StartButton.isEnabled = true
                 _isConnected = true
             }
@@ -111,7 +117,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         /*******************************************
-         * Observe Live Probe Data
+         * Observe Live Data
          *******************************************/
 
         ConnectionManager.probe1Data.observe(this) { data ->
@@ -132,12 +138,17 @@ class MainActivity : AppCompatActivity() {
 
         binding.ConnectButton.setOnClickListener { startScan() }
 
-        //binding.StartButton.isEnabled = false
+        binding.SettingsButton.setOnClickListener {
+            promptFileName { fileName ->
+                _fileName = fileName
+                _fileReady = true
+            }
+        }
+
+        binding.StartButton.isEnabled = false
         binding.StartButton.setOnClickListener {
-            promptFileName()
             if (ConnectionManager.isConnected.value == true) {
-                if(!_isRunning) {
-                    //
+                if( !_isRunning ) {
                     Timber.tag(tag).d("START")
                     ConnectionManager.sendStartCommand()
                     binding.StartButton.isEnabled = false
@@ -145,6 +156,7 @@ class MainActivity : AppCompatActivity() {
                     _isRunning = true
                 }
             }
+
         }
 
         binding.StopButton.isEnabled = false
@@ -153,7 +165,6 @@ class MainActivity : AppCompatActivity() {
                 if(_isRunning) {
                     Timber.tag(tag).d("STOP")
                     ConnectionManager.sendStopCommand()
-                    //graphFragment?.resetGraphData()
                     binding.StopButton.isEnabled = false
                     binding.StartButton.isEnabled = true
                     _isRunning = false
@@ -161,9 +172,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        binding.ResetButton.isEnabled = false
         binding.ResetButton.setOnClickListener {
             if( _isConnected && !_isRunning ) {
-                TODO()
+                graphFragment?.resetGraphData()
             }
         }
 
@@ -209,25 +221,41 @@ class MainActivity : AppCompatActivity() {
      * Private functions
      *******************************************/
 
-    private fun promptFileName() {
-        alert {
-            customView {
-                verticalLayout {
-                    padding = dip(16)
+    private fun promptFileName(callback: (String) -> Unit) {
+        val builder = AlertDialog.Builder(this)
+        val inflater = layoutInflater
 
-                    // Create a TextInputEditText
-                    val textInput = editText {
-                        hint = "Enter your name"
-                    }.lparams(width = matchParent)
+        val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
+        builder.setView(dialogView)
 
-                    // Submit
-                    positiveButton("Submit") {
-                        val enteredText = textInput.text.toString()
-                        toast("Name: $enteredText")
-                    }
-                }
+        val editText = dialogView.findViewById<EditText>(R.id.Input_Box)
+        val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
+        submit.isEnabled = false
+
+        val dialog = builder.create()
+
+        // Request focus on the EditText
+        editText.requestFocus()
+
+        submit.setOnClickListener{
+            val enteredText = editText.text.toString().trim().replace("\\s+".toRegex(), "")
+            if( enteredText.isNotBlank() ) {
+                Toast.makeText(this, "Name: $enteredText", Toast.LENGTH_LONG).show()
+                dialog.dismiss()
+                callback(enteredText)
             }
-        }.show()
+        }
+
+        editText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun afterTextChanged(p0: Editable?) {
+                submit.isEnabled = !p0.isNullOrBlank()
+            }
+        })
+        dialog.show()
     }
 
     @SuppressLint("MissingPermission")
