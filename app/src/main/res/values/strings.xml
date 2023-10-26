@@ -7,12 +7,18 @@
     <string name="Start_Program">Start</string>
     <string name="Stop_Program">Halt</string>
     <string name="Disconnect_Button">Disconnect</string>
-    <string name="Dialog_Title">Enter file name and distance</string>
+    <string name="Dialog_Title">Enter the file name, distance, and unit</string>
     <string name="Title_Hint">File name</string>
     <string name="Distance_Hint">Distance</string>
     <string name="Dialog_Submit">Submit</string>
+    <string name="Dialog_Cancel">Cancel</string>
     <string name="Probe1_Label">Probe 1:</string>
     <string name="Probe2_Label">Probe 2:</string>
     <string name="Probe_Data">Empty</string>
+    <string name="Unit_Type">Feet/Meter</string>
+    <string name="Velocity_Label">Velocity:</string>
+    <string name="Velocity_Empty">null</string>
+    <string name="Velocity_Feet">%s ft/s</string>
+    <string name="Velocity_Meters">%s m/s</string>
     <string name="copyright">© 2023 FSVT - All Rights Reserved.</string>
 </resources>

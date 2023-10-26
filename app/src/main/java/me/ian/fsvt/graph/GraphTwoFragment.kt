@@ -1,21 +1,38 @@
 package me.ian.fsvt.graph
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import me.ian.fsvt.R
 import timber.log.Timber
 
-class GraphTwoFragment(private var chart: LineChart?, private var viewModel: GraphDataViewModel) : Fragment(R.layout.fragment_graph_two) {
+class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
 
     private var firstDataReceivedTime: Long? = null
+    private var chart: LineChart? = null
     private lateinit var dataViewModel: GraphDataViewModel
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = inflater.inflate(R.layout.fragment_graph_two, container, false)
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+        return view
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        dataViewModel = viewModel
+        dataViewModel = ViewModelProvider(requireActivity())[GraphDataViewModel::class.java]
+
         dataViewModel.dataPoint2.observe(viewLifecycleOwner) { value ->
             updateChart(value)
         }
@@ -80,5 +97,14 @@ class GraphTwoFragment(private var chart: LineChart?, private var viewModel: Gra
         }
 
         return null
+    }
+
+    companion object {
+        fun newInstance(chart: LineChart?, viewModel: GraphDataViewModel): GraphTwoFragment {
+            val fragment = GraphTwoFragment()
+            fragment.chart = chart
+            fragment.dataViewModel = viewModel
+            return fragment
+        }
     }
 }

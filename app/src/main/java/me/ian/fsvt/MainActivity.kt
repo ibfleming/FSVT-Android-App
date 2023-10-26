@@ -20,13 +20,14 @@ import android.text.TextWatcher
 import android.view.View.*
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
-import kotlinx.coroutines.delay
+import com.google.android.material.switchmaterial.SwitchMaterial
 import me.ian.fsvt.bluetooth.ConnectionManager
 import me.ian.fsvt.databinding.ActivityMainBinding
 import me.ian.fsvt.graph.GraphDataViewModel
@@ -49,17 +50,18 @@ class MainActivity: AppCompatActivity() {
      *******************************************/
 
     private lateinit var binding: ActivityMainBinding
-    private var graphOne : LineChart? = null
-    private var graphTwo : LineChart? = null
+
+    private var graphOne                  : LineChart? = null
+    private var graphTwo                  : LineChart? = null
     private lateinit var graphOneFragment : GraphOneFragment
-    private lateinit var graphTwoFragment: GraphTwoFragment
-    private val graphDataViewModel = GraphDataViewModel()
+    private lateinit var graphTwoFragment : GraphTwoFragment
 
     private var _isRunning   : Boolean = false
     private var _isConnected : Boolean = false
     private var _fileReady   : Boolean = false
     private var _fileName    : String? = null
     private var _distance    : Float = 0.0f
+    private var _unitType = "feet"
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -97,8 +99,9 @@ class MainActivity: AppCompatActivity() {
          * Initialize Graph Fragments
          *******************************************/
 
-        graphOneFragment = GraphOneFragment(graphOne, graphDataViewModel)
-        graphTwoFragment = GraphTwoFragment(graphTwo, graphDataViewModel)
+        val graphDataViewModel = GraphDataViewModel()
+        graphOneFragment = GraphOneFragment.newInstance(graphOne, graphDataViewModel)
+        graphTwoFragment = GraphTwoFragment.newInstance(graphTwo, graphDataViewModel)
         ConnectionManager.graphDataViewModel = graphDataViewModel
 
         supportFragmentManager.beginTransaction().apply {
@@ -109,6 +112,22 @@ class MainActivity: AppCompatActivity() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.GraphTwoFragment, graphTwoFragment)
             commit()
+        }
+
+        /*******************************************
+         * Observe Live Data
+         *******************************************/
+
+        graphDataViewModel.dataPoint1.observe(this) { data ->
+            if( data != -1F ) {
+                binding.Probe1Data.text = data.toInt().toString()
+            }
+        }
+
+        graphDataViewModel.dataPoint2.observe(this) { data ->
+            if( data != -1F ) {
+                binding.Probe2Data.text =  data.toInt().toString()
+            }
         }
 
         /*******************************************
@@ -137,35 +156,25 @@ class MainActivity: AppCompatActivity() {
         }
 
         /*******************************************
-         * Observe Live Data
-         *******************************************/
-
-        graphDataViewModel.dataPoint1.observe(this) { data ->
-            if( data != -1F ) {
-                binding.Probe1Data.text = data.toInt().toString()
-            }
-        }
-
-        graphDataViewModel.dataPoint2.observe(this) { data ->
-            if( data != -1F ) {
-                binding.Probe2Data.text =  data.toInt().toString()
-            }
-        }
-
-        /*******************************************
          * Button Click Listeners
          *******************************************/
 
+        /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener { startScan() }
 
+        /** SETTINGS BUTTON **/
         binding.SettingsButton.setOnClickListener {
-            promptFileName { fileName, distance ->
-                _fileName = fileName
-                _distance = distance
-                _fileReady = true
+            promptFileName { fileName, distance, unitType ->
+                if (fileName != null && distance != null && unitType != null ) {
+                    _fileName = fileName
+                    _distance = distance
+                    _unitType = unitType
+                    _fileReady = true
+            }
             }
         }
 
+        /** START BUTTON **/
         binding.StartButton.isEnabled = false
         binding.StartButton.setOnClickListener {
             if (ConnectionManager.isConnected.value == true) {
@@ -180,17 +189,14 @@ class MainActivity: AppCompatActivity() {
 
         }
 
+        /** STOP BUTTON **/
         binding.StopButton.isEnabled = false
         binding.StopButton.setOnClickListener {
             if( ConnectionManager.isConnected.value == true ) {
                 if(_isRunning) {
                     Timber.tag(tag).d("STOP")
                     ConnectionManager.sendStopCommand()
-
                     calculateVelocity()
-
-
-
                     binding.StopButton.isEnabled = false
                     binding.StartButton.isEnabled = true
                     _isRunning = false
@@ -198,6 +204,7 @@ class MainActivity: AppCompatActivity() {
             }
         }
 
+        /** RESET BUTTON **/
         binding.ResetButton.isEnabled = false
         binding.ResetButton.setOnClickListener {
             graphOneFragment.clearGraph()
@@ -244,72 +251,6 @@ class MainActivity: AppCompatActivity() {
     /*******************************************
      * Private functions
      *******************************************/
-
-    private fun promptFileName(callback: (String, Float) -> Unit) {
-        val builder = AlertDialog.Builder(this)
-        val inflater = layoutInflater
-
-        val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
-        builder.setView(dialogView)
-
-        val editTitle = dialogView.findViewById<EditText>(R.id.Input_Title)
-        val editDist = dialogView.findViewById<EditText>(R.id.Input_Distance)
-        val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
-        submit.isEnabled = false
-
-        val dialog = builder.create()
-
-        // Request focus on the EditText
-        editTitle.requestFocus()
-
-        fun isFloat(value: String): Boolean {
-            return try {
-                value.toFloat()
-                true
-            } catch (e: NumberFormatException) {
-                false
-            }
-        }
-
-        fun updateSubmitButtonState() {
-            val titleText = editTitle.text.toString().trim()
-            val distText = editDist.text.toString().trim()
-
-            submit.isEnabled = titleText.isNotEmpty() && distText.isNotEmpty() && isFloat(distText)
-        }
-
-        submit.setOnClickListener {
-            val enteredText = editTitle.text.toString().trim().replace("\\s+".toRegex(), "")
-            val enteredDist = editDist.text.toString().toFloat()
-
-            Toast.makeText(this, "Name: $enteredText, Distance: $enteredDist", Toast.LENGTH_LONG).show()
-            dialog.dismiss()
-            callback(enteredText, enteredDist)
-        }
-
-
-        editTitle.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-            override fun afterTextChanged(p0: Editable?) {
-                updateSubmitButtonState()
-            }
-        })
-
-        editDist.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-            override fun afterTextChanged(p0: Editable?) {
-                updateSubmitButtonState()
-            }
-        })
-
-        dialog.show()
-    }
 
     @SuppressLint("MissingPermission")
     private fun promptEnableBluetooth() {
@@ -365,18 +306,6 @@ class MainActivity: AppCompatActivity() {
         scanTimeoutHandler.removeCallbacksAndMessages(null)
     }
 
-    private fun showDeviceNotFoundAlert() {
-        runOnUiThread {
-            alert {
-                title = "No device found"
-                message = "Could not find the specified device. " +
-                        "Please ensure the devices are powered on and try again."
-                isCancelable = false
-                positiveButton(android.R.string.ok) { /* nop */ }
-            }.show()
-        }
-    }
-
     /*******************************************
      * Callback bodies
      *******************************************/
@@ -430,10 +359,136 @@ class MainActivity: AppCompatActivity() {
         val graph2X = graph2Pair?.first ?: Float.NaN
 
         val deltaTime = graph2X - graph1X
-        val velocity = _distance / deltaTime
+
+        val velocity = if( _unitType == "meters" ) {
+            val distanceMeters = _distance * 0.3048
+            (distanceMeters / deltaTime).toFloat()
+        } else {
+            _distance / deltaTime
+        }
 
         Timber.d("(1) Max Pair: " + graph1Pair.toString())
         Timber.d("(2) Max Pair: " + graph2Pair.toString())
         Timber.d("VELOCITY: $velocity")
+
+        showVelocityDialog(velocity)
     }
+
+    /*******************************************
+     * Custom Dialog Alerts
+     *******************************************/
+
+    private fun showVelocityDialog(v: Float) {
+        val builder = AlertDialog.Builder(this)
+        val inflater = layoutInflater
+
+        val dialogView = inflater.inflate(R.layout.layout_velocity_dialog, null)
+        builder.setView(dialogView)
+
+        val tvVelocity = dialogView.findViewById<TextView>(R.id.Velocity)
+        val velocityText : String = if( _unitType == "meters" ) {
+            getString(R.string.Velocity_Meters, v.toString())
+        } else {
+            getString(R.string.Velocity_Feet, v.toString())
+        }
+        tvVelocity.text = velocityText
+
+        builder.setPositiveButton("OK") { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        builder.create().show()
+    }
+
+    private fun promptFileName(callback: (String?, Float?, String?) -> Unit) {
+        val builder = AlertDialog.Builder(this)
+        val inflater = layoutInflater
+
+        val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
+        builder.setView(dialogView)
+
+        var unitType = "feet"
+
+        val editTitle = dialogView.findViewById<EditText>(R.id.Input_Title)
+        val editDist = dialogView.findViewById<EditText>(R.id.Input_Distance)
+        val switchUnit = dialogView.findViewById<SwitchMaterial>(R.id.Unit_Type_Switch)
+        val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
+        val cancel = dialogView.findViewById<Button>(R.id.Cancel_Button)
+        submit.isEnabled = false
+
+        val dialog = builder.create()
+
+        // Request focus on the EditText
+        editTitle.requestFocus()
+
+        fun isFloat(value: String): Boolean {
+            return try {
+                value.toFloat()
+                true
+            } catch (e: NumberFormatException) {
+                false
+            }
+        }
+
+        fun updateSubmitButtonState() {
+            val titleText = editTitle.text.toString().trim()
+            val distText = editDist.text.toString().trim()
+
+            submit.isEnabled = titleText.isNotEmpty() && distText.isNotEmpty() && isFloat(distText)
+        }
+
+        switchUnit.setOnCheckedChangeListener { _, isChecked ->
+            unitType = if (isChecked) "meters" else "feet"
+        }
+
+        submit.setOnClickListener {
+            val enteredText = editTitle.text.toString().trim().replace("\\s+".toRegex(), "")
+            val enteredDist = editDist.text.toString().toFloat()
+
+            Toast.makeText(this, "Name: $enteredText\nDistance: $enteredDist\nUnit: $unitType", Toast.LENGTH_LONG).show()
+            dialog.dismiss()
+            callback(enteredText, enteredDist, unitType)
+        }
+
+        cancel.setOnClickListener {
+            dialog.dismiss()
+            callback(null, null, null)
+        }
+
+        editTitle.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun afterTextChanged(p0: Editable?) {
+                updateSubmitButtonState()
+            }
+        })
+
+        editDist.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun afterTextChanged(p0: Editable?) {
+                updateSubmitButtonState()
+            }
+        })
+
+        dialog.show()
+    }
+
+    private fun showDeviceNotFoundAlert() {
+        runOnUiThread {
+            alert {
+                title = "No device found"
+                message = "Could not find the specified device. " +
+                        "Please ensure the devices are powered on and try again."
+                isCancelable = false
+                positiveButton(android.R.string.ok) { /* nop */ }
+            }.show()
+        }
+    }
+
+
 }

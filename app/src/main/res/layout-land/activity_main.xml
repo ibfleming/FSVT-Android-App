@@ -9,15 +9,14 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Button_Wrapper"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/Graph_Wrapper"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
         <Button
             android:id="@+id/Connect_Button"
@@ -30,8 +29,6 @@
             app:icon="@drawable/bluetooth"
             app:iconPadding="0dp"
             app:iconSize="42dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/Settings_Button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="SpeakableTextPresentCheck" />
@@ -46,10 +43,8 @@
             app:icon="@drawable/settings"
             app:iconPadding="0dp"
             app:iconSize="42dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/Start_Button"
-            app:layout_constraintStart_toEndOf="@+id/Connect_Button"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Connect_Button"
             tools:ignore="SpeakableTextPresentCheck" />
 
         <Button
@@ -62,10 +57,8 @@
             app:icon="@drawable/start_test"
             app:iconPadding="0dp"
             app:iconSize="42dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/Stop_Button"
-            app:layout_constraintStart_toEndOf="@+id/Settings_Button"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Settings_Button"
             tools:ignore="SpeakableTextPresentCheck,DuplicateClickableBoundsCheck,VisualLintOverlap" />
 
         <Button
@@ -78,10 +71,8 @@
             app:icon="@drawable/stop_test"
             app:iconPadding="0dp"
             app:iconSize="42dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/Reset_Button"
-            app:layout_constraintStart_toEndOf="@+id/Start_Button"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Start_Button"
             tools:ignore="SpeakableTextPresentCheck" />
 
         <Button
@@ -94,10 +85,8 @@
             app:icon="@drawable/reset_test"
             app:iconPadding="0dp"
             app:iconSize="42dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/Stop_Button"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Stop_Button"
             tools:ignore="SpeakableTextPresentCheck" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -106,9 +95,11 @@
         android:id="@+id/Data_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical"
         android:padding="0dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/Graph_Wrapper"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper">
 
@@ -168,34 +159,33 @@
 
     </LinearLayout>
 
+
     <LinearLayout
         android:id="@+id/Graph_Wrapper"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
-        android:orientation="vertical"
+        android:orientation="horizontal"
+        android:padding="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Data_Wrapper">
+        app:layout_constraintStart_toEndOf="@+id/Data_Wrapper"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/GraphOneFragment"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             tools:layout="@layout/fragment_graph_two" />
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/GraphTwoFragment"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             tools:layout="@layout/fragment_graph_two" />
 
     </LinearLayout>
-
 
     <TextView
         android:id="@+id/Copyright"
