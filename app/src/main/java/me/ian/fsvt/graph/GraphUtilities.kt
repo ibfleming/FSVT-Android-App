@@ -1,7 +1,6 @@
-package me.ian.fsvt
+package me.ian.fsvt.graph
 
 import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.Typeface
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
@@ -11,11 +10,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import com.github.mikephil.charting.utils.MPPointF
-import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
 
 enum class ChartType {
@@ -40,11 +35,11 @@ private class YAxisFormatter : ValueFormatter() {
     }
 }
 
-fun applyGraphStyling(chart: LineChart, probe: ChartType) {
+fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
 
     // Description
-    val desc = chart.description
-    desc.apply {
+    val desc = chart?.description
+    desc?.apply {
         text = "Probe ${when (probe) {
             ChartType.Probe1 -> "1"
             ChartType.Probe2 -> "2"
@@ -54,12 +49,12 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
         textSize = 12F
         typeface = Typeface.MONOSPACE
     }
-    chart.description = desc
+    chart?.description = desc
 
 
     // X Axis
-    val xAxis = chart.xAxis
-    xAxis.apply {
+    val xAxis = chart?.xAxis
+    xAxis?.apply {
         position = XAxis.XAxisPosition.BOTTOM
         granularity = 1F
         axisMinimum = 0F
@@ -70,8 +65,8 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     }
 
     // Y Axis (left axis)
-    val axisLeft = chart.axisLeft
-    axisLeft.apply {
+    val axisLeft = chart?.axisLeft
+    axisLeft?.apply {
         granularity = 25F
         axisMinimum = -5F
         axisMaximum = 250F
@@ -82,17 +77,17 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     }
 
     // Right Axis
-    val axisRight = chart.axisRight
-    axisRight.apply {
+    val axisRight = chart?.axisRight
+    axisRight?.apply {
         isEnabled = false
     }
 
     // Chart Styling
-    axisLeft.setDrawGridLines(false)
-    xAxis.setDrawGridLines(false)
+    axisLeft?.setDrawGridLines(false)
+    xAxis?.setDrawGridLines(false)
 
     // Chart Settings
-    chart.apply {
+    chart?.apply {
         // "No Data" Styling
         setNoDataText("< Empty Chart >")
         setNoDataTextColor(Color.WHITE)
@@ -118,15 +113,15 @@ fun applyGraphStyling(chart: LineChart, probe: ChartType) {
     initializeLineData(chart)
 }
 
-fun initializeLineData(chart: LineChart) {
-    val data = chart.data
+fun initializeLineData(chart: LineChart?) {
+    val data = chart?.data
     if( data == null ) {
-        val set = createSet()                                                       // (1) Create a set
-        val dataSets : ArrayList<ILineDataSet> = ArrayList()                        // (2) Create a variable that holds the set(s)
-        dataSets.add(set)                                                           // (3) Add our empty set to the data sets
-        val emptyData = LineData(set)                                               // (4) Add the data sets to the chart data
-        chart.data = emptyData                                                      // (5) Apply that data to the chart's data
-        chart.invalidate()                                                          // (6) Update graph view
+        val set = createSet()                                       // (1) Create a set
+        val dataSets : ArrayList<ILineDataSet> = ArrayList()        // (2) Create a variable that holds the set(s)
+        dataSets.add(set)                                           // (3) Add our empty set to the data sets
+        val emptyData = LineData(set)                               // (4) Add the data sets to the chart data
+        chart?.data = emptyData                                     // (5) Apply that data to the chart's data
+        chart?.invalidate()                                         // (6) Update graph view
     }
 }
 

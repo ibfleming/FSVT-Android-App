@@ -25,14 +25,11 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#8001579B"
             android:outlineProvider="bounds"
-            android:padding="0dp"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
+            android:padding="6dp"
             app:icon="@drawable/bluetooth"
             app:iconPadding="0dp"
-            app:iconSize="24dp"
+            app:iconSize="42dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Settings_Button"
             app:layout_constraintStart_toStartOf="parent"
@@ -44,12 +41,10 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="0dp"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
+            android:padding="6dp"
             app:icon="@drawable/settings"
             app:iconPadding="0dp"
-            app:iconSize="24dp"
+            app:iconSize="42dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Start_Button"
             app:layout_constraintStart_toEndOf="@+id/Connect_Button"
@@ -61,13 +56,10 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#8033691E"
-            android:padding="0dp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
+            android:padding="6dp"
             app:icon="@drawable/start_test"
             app:iconPadding="0dp"
-            app:iconSize="30dp"
+            app:iconSize="42dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Stop_Button"
             app:layout_constraintStart_toEndOf="@+id/Settings_Button"
@@ -79,13 +71,10 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#80B71C1C"
-            android:padding="0dp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
+            android:padding="6dp"
             app:icon="@drawable/stop_test"
             app:iconPadding="0dp"
-            app:iconSize="30dp"
+            app:iconSize="42dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Reset_Button"
             app:layout_constraintStart_toEndOf="@+id/Start_Button"
@@ -97,12 +86,10 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="0dp"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
+            android:padding="6dp"
             app:icon="@drawable/reset_test"
             app:iconPadding="0dp"
-            app:iconSize="24dp"
+            app:iconSize="42dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/Stop_Button"
@@ -177,29 +164,48 @@
 
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/Graph_Container"
+    <LinearLayout
+        android:id="@+id/Graph_Wrapper"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        app:layout_constraintBottom_toTopOf="@+id/Copyright"
+        android:layout_marginBottom="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Data_Wrapper">
 
-    </FrameLayout>
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/GraphOneFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            tools:layout="@layout/fragment_graph_two" />
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/GraphTwoFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            tools:layout="@layout/fragment_graph_two" />
+
+    </LinearLayout>
+
 
     <TextView
         android:id="@+id/Copyright"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:text="@string/copyright"
         android:textColor="#78909C"
         android:textSize="12sp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Graph_Container" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

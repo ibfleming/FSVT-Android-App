@@ -7,8 +7,9 @@
     <string name="Start_Program">Start</string>
     <string name="Stop_Program">Halt</string>
     <string name="Disconnect_Button">Disconnect</string>
-    <string name="Dialog_Title">Enter file name.</string>
-    <string name="Input_Hint">File name</string>
+    <string name="Dialog_Title">Enter file name and distance</string>
+    <string name="Title_Hint">File name</string>
+    <string name="Distance_Hint">Distance</string>
     <string name="Dialog_Submit">Submit</string>
     <string name="Probe1_Label">Probe 1:</string>
     <string name="Probe2_Label">Probe 2:</string>

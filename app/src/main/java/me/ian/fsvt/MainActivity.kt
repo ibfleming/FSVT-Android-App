@@ -11,7 +11,6 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -26,8 +25,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.github.mikephil.charting.charts.LineChart
+import kotlinx.coroutines.delay
 import me.ian.fsvt.bluetooth.ConnectionManager
 import me.ian.fsvt.databinding.ActivityMainBinding
+import me.ian.fsvt.graph.GraphDataViewModel
+import me.ian.fsvt.graph.GraphOneFragment
+import me.ian.fsvt.graph.GraphTwoFragment
 import org.jetbrains.anko.*
 import timber.log.Timber
 
@@ -45,13 +49,17 @@ class MainActivity: AppCompatActivity() {
      *******************************************/
 
     private lateinit var binding: ActivityMainBinding
+    private var graphOne : LineChart? = null
+    private var graphTwo : LineChart? = null
+    private lateinit var graphOneFragment : GraphOneFragment
+    private lateinit var graphTwoFragment: GraphTwoFragment
+    private val graphDataViewModel = GraphDataViewModel()
 
     private var _isRunning   : Boolean = false
     private var _isConnected : Boolean = false
-    private var _isScanning  : Boolean = false
     private var _fileReady   : Boolean = false
     private var _fileName    : String? = null
-
+    private var _distance    : Float = 0.0f
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -86,10 +94,22 @@ class MainActivity: AppCompatActivity() {
         Timber.tag(tag).d("MainActivity Initialized!")
 
         /*******************************************
-         * TESTING: Run Graph Fragment
+         * Initialize Graph Fragments
          *******************************************/
-        supportFragmentManager.beginTransaction().replace(R.id.Graph_Container, GraphFragment()).addToBackStack(null).commit()
-        val graphFragment = supportFragmentManager.findFragmentById(R.id.Graph_Container) as? GraphFragment
+
+        graphOneFragment = GraphOneFragment(graphOne, graphDataViewModel)
+        graphTwoFragment = GraphTwoFragment(graphTwo, graphDataViewModel)
+        ConnectionManager.graphDataViewModel = graphDataViewModel
+
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.GraphOneFragment, graphOneFragment)
+            commit()
+        }
+
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.GraphTwoFragment, graphTwoFragment)
+            commit()
+        }
 
         /*******************************************
          * Observe Connection State of Device
@@ -97,12 +117,12 @@ class MainActivity: AppCompatActivity() {
 
         ConnectionManager.isConnected.observe(this) { isConnected ->
             if (isConnected) {
-                binding.ConnectButton.backgroundColor = Color.parseColor("#33691E")
+                binding.ConnectButton.setBackgroundColor(ContextCompat.getColor(this, R.color.connect_color))
                 binding.StartButton.isEnabled = true
+                binding.ResetButton.isEnabled = true
                 _isConnected = true
             }
             else {
-                binding.ConnectButton.backgroundColor = Color.TRANSPARENT
                 _isConnected = false
                 runOnUiThread {
                     alert {
@@ -120,13 +140,13 @@ class MainActivity: AppCompatActivity() {
          * Observe Live Data
          *******************************************/
 
-        ConnectionManager.probe1Data.observe(this) { data ->
+        graphDataViewModel.dataPoint1.observe(this) { data ->
             if( data != -1F ) {
                 binding.Probe1Data.text = data.toInt().toString()
             }
         }
 
-        ConnectionManager.probe2Data.observe(this) { data ->
+        graphDataViewModel.dataPoint2.observe(this) { data ->
             if( data != -1F ) {
                 binding.Probe2Data.text =  data.toInt().toString()
             }
@@ -139,8 +159,9 @@ class MainActivity: AppCompatActivity() {
         binding.ConnectButton.setOnClickListener { startScan() }
 
         binding.SettingsButton.setOnClickListener {
-            promptFileName { fileName ->
+            promptFileName { fileName, distance ->
                 _fileName = fileName
+                _distance = distance
                 _fileReady = true
             }
         }
@@ -165,6 +186,11 @@ class MainActivity: AppCompatActivity() {
                 if(_isRunning) {
                     Timber.tag(tag).d("STOP")
                     ConnectionManager.sendStopCommand()
+
+                    calculateVelocity()
+
+
+
                     binding.StopButton.isEnabled = false
                     binding.StartButton.isEnabled = true
                     _isRunning = false
@@ -174,11 +200,9 @@ class MainActivity: AppCompatActivity() {
 
         binding.ResetButton.isEnabled = false
         binding.ResetButton.setOnClickListener {
-            if( _isConnected && !_isRunning ) {
-                graphFragment?.resetGraphData()
-            }
+            graphOneFragment.clearGraph()
+            graphTwoFragment.clearGraph()
         }
-
     }
 
     override fun onResume() {
@@ -221,40 +245,69 @@ class MainActivity: AppCompatActivity() {
      * Private functions
      *******************************************/
 
-    private fun promptFileName(callback: (String) -> Unit) {
+    private fun promptFileName(callback: (String, Float) -> Unit) {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
 
         val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
         builder.setView(dialogView)
 
-        val editText = dialogView.findViewById<EditText>(R.id.Input_Box)
+        val editTitle = dialogView.findViewById<EditText>(R.id.Input_Title)
+        val editDist = dialogView.findViewById<EditText>(R.id.Input_Distance)
         val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
         submit.isEnabled = false
 
         val dialog = builder.create()
 
         // Request focus on the EditText
-        editText.requestFocus()
+        editTitle.requestFocus()
 
-        submit.setOnClickListener{
-            val enteredText = editText.text.toString().trim().replace("\\s+".toRegex(), "")
-            if( enteredText.isNotBlank() ) {
-                Toast.makeText(this, "Name: $enteredText", Toast.LENGTH_LONG).show()
-                dialog.dismiss()
-                callback(enteredText)
+        fun isFloat(value: String): Boolean {
+            return try {
+                value.toFloat()
+                true
+            } catch (e: NumberFormatException) {
+                false
             }
         }
 
-        editText.addTextChangedListener(object : TextWatcher {
+        fun updateSubmitButtonState() {
+            val titleText = editTitle.text.toString().trim()
+            val distText = editDist.text.toString().trim()
+
+            submit.isEnabled = titleText.isNotEmpty() && distText.isNotEmpty() && isFloat(distText)
+        }
+
+        submit.setOnClickListener {
+            val enteredText = editTitle.text.toString().trim().replace("\\s+".toRegex(), "")
+            val enteredDist = editDist.text.toString().toFloat()
+
+            Toast.makeText(this, "Name: $enteredText, Distance: $enteredDist", Toast.LENGTH_LONG).show()
+            dialog.dismiss()
+            callback(enteredText, enteredDist)
+        }
+
+
+        editTitle.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
 
             override fun afterTextChanged(p0: Editable?) {
-                submit.isEnabled = !p0.isNullOrBlank()
+                updateSubmitButtonState()
             }
         })
+
+        editDist.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+
+            override fun afterTextChanged(p0: Editable?) {
+                updateSubmitButtonState()
+            }
+        })
+
         dialog.show()
     }
 
@@ -297,25 +350,19 @@ class MainActivity: AppCompatActivity() {
             scanResults.clear()
             val scanFilters = mutableListOf(scanFilter)
             bleScanner.startScan(scanFilters, scanSettings, scanCallback)
-            _isScanning = true
-            binding.ConnectButton.backgroundColor = R.color.scan_color
 
             scanTimeoutHandler.postDelayed({
                 stopScan()
                 showDeviceNotFoundAlert()
-                binding.ConnectButton.backgroundColor = Color.TRANSPARENT
             }, SCAN_PERIOD)
         }
     }
 
     @SuppressLint("MissingPermission")
     private fun stopScan() {
-        if (_isScanning) {
-            Timber.tag(tag).d("Stopped BLE scan!")
-            bleScanner.stopScan(scanCallback)
-            _isScanning = false
-            scanTimeoutHandler.removeCallbacksAndMessages(null)
-        }
+        Timber.tag(tag).d("Stopped BLE scan!")
+        bleScanner.stopScan(scanCallback)
+        scanTimeoutHandler.removeCallbacksAndMessages(null)
     }
 
     private fun showDeviceNotFoundAlert() {
@@ -373,5 +420,20 @@ class MainActivity: AppCompatActivity() {
 
     private fun Activity.requestPermission(permission: String, requestCode: Int) {
         ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
+    }
+
+    private fun calculateVelocity() {
+        val graph1Pair = graphOneFragment.findMaxEntry()
+        val graph2Pair = graphTwoFragment.findMaxEntry()
+
+        val graph1X = graph1Pair?.first ?: Float.NaN
+        val graph2X = graph2Pair?.first ?: Float.NaN
+
+        val deltaTime = graph2X - graph1X
+        val velocity = _distance / deltaTime
+
+        Timber.d("(1) Max Pair: " + graph1Pair.toString())
+        Timber.d("(2) Max Pair: " + graph2Pair.toString())
+        Timber.d("VELOCITY: $velocity")
     }
 }

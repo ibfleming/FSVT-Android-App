@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import me.ian.fsvt.graph.GraphDataViewModel
 import timber.log.Timber
 import java.util.UUID
 
@@ -15,7 +16,8 @@ private val BLUETOOTH_LE_CHAR_RW = UUID.fromString("0000ffe1-0000-1000-8000-0080
 
 object ConnectionManager {
 
-    private const val tag = "ConnectionManager"
+    lateinit var graphDataViewModel: GraphDataViewModel
+
     private val handler = Handler(Looper.getMainLooper())
     private var receivedAcknowledgement : Boolean = false
 
@@ -82,7 +84,6 @@ object ConnectionManager {
             }
         }
 
-
         /*******************************************
          * On Write
          *******************************************/
@@ -103,9 +104,6 @@ object ConnectionManager {
         /*******************************************
          * On Change
          *******************************************/
-
-        val probe1Data = MutableLiveData<Float>()
-        val probe2Data = MutableLiveData<Float>()
 
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(
@@ -141,21 +139,13 @@ object ConnectionManager {
     /*******************************************
      * Process the Data from BLE Device
      *******************************************/
-
-    val probe1Data = MutableLiveData<Float>()
-    val probe2Data = MutableLiveData<Float>()
-
     private fun processData(data : String) {
         val values = data.split(":").map { it.trim() }
         if(values.size == 2) {
             try {
                 val p1Value = values[0].toFloat()
                 val p2Value = values[1].toFloat()
-
-                // CSV IMPLEMENTATIONS HERE -> ADD TO FILE?
-                probe1Data.postValue(p1Value)
-                probe2Data.postValue(p2Value)
-
+                graphDataViewModel.updateGraphs(p1Value, p2Value)
             } catch (e: NumberFormatException) {
                 Timber.e("Error parsing data: $data")
             }
