@@ -11,6 +11,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -33,8 +34,10 @@ import me.ian.fsvt.databinding.ActivityMainBinding
 import me.ian.fsvt.graph.GraphDataViewModel
 import me.ian.fsvt.graph.GraphOneFragment
 import me.ian.fsvt.graph.GraphTwoFragment
+import me.ian.fsvt.graph.MyObjects
 import org.jetbrains.anko.*
 import timber.log.Timber
+import kotlin.math.abs
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
 private const val LOCATION_PERMISSION_REQUEST_CODE = 2
@@ -50,11 +53,6 @@ class MainActivity: AppCompatActivity() {
      *******************************************/
 
     private lateinit var binding: ActivityMainBinding
-
-    private var graphOne                  : LineChart? = null
-    private var graphTwo                  : LineChart? = null
-    private lateinit var graphOneFragment : GraphOneFragment
-    private lateinit var graphTwoFragment : GraphTwoFragment
 
     private var _isRunning   : Boolean = false
     private var _isConnected : Boolean = false
@@ -99,18 +97,18 @@ class MainActivity: AppCompatActivity() {
          * Initialize Graph Fragments
          *******************************************/
 
-        val graphDataViewModel = GraphDataViewModel()
-        graphOneFragment = GraphOneFragment.newInstance(graphOne, graphDataViewModel)
-        graphTwoFragment = GraphTwoFragment.newInstance(graphTwo, graphDataViewModel)
-        ConnectionManager.graphDataViewModel = graphDataViewModel
+        MyObjects.graphDataViewModel = GraphDataViewModel()
+        MyObjects.graphOneFragment = GraphOneFragment()
+        MyObjects.graphTwoFragment = GraphTwoFragment()
+        ConnectionManager.graphDataViewModel = MyObjects.graphDataViewModel
 
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.GraphOneFragment, graphOneFragment)
+        supportFragmentManager.beginTransaction().apply {MyObjects
+            replace(R.id.GraphOneFragment, MyObjects.graphOneFragment)
             commit()
         }
 
         supportFragmentManager.beginTransaction().apply {
-            replace(R.id.GraphTwoFragment, graphTwoFragment)
+            replace(R.id.GraphTwoFragment, MyObjects.graphTwoFragment)
             commit()
         }
 
@@ -118,13 +116,13 @@ class MainActivity: AppCompatActivity() {
          * Observe Live Data
          *******************************************/
 
-        graphDataViewModel.dataPoint1.observe(this) { data ->
+        MyObjects.graphDataViewModel.dataPoint1.observe(this) { data ->
             if( data != -1F ) {
                 binding.Probe1Data.text = data.toInt().toString()
             }
         }
 
-        graphDataViewModel.dataPoint2.observe(this) { data ->
+        MyObjects.graphDataViewModel.dataPoint2.observe(this) { data ->
             if( data != -1F ) {
                 binding.Probe2Data.text =  data.toInt().toString()
             }
@@ -207,8 +205,8 @@ class MainActivity: AppCompatActivity() {
         /** RESET BUTTON **/
         binding.ResetButton.isEnabled = false
         binding.ResetButton.setOnClickListener {
-            graphOneFragment.clearGraph()
-            graphTwoFragment.clearGraph()
+            MyObjects.graphOneFragment.clearGraph()
+            MyObjects.graphTwoFragment.clearGraph()
         }
     }
 
@@ -352,15 +350,15 @@ class MainActivity: AppCompatActivity() {
     }
 
     private fun calculateVelocity() {
-        val graph1Pair = graphOneFragment.findMaxEntry()
-        val graph2Pair = graphTwoFragment.findMaxEntry()
+        val graph1Pair = MyObjects.graphOneFragment.findMaxEntry()
+        val graph2Pair = MyObjects.graphTwoFragment.findMaxEntry()
 
         val graph1X = graph1Pair?.first ?: Float.NaN
         val graph2X = graph2Pair?.first ?: Float.NaN
 
-        val deltaTime = graph2X - graph1X
+        val deltaTime = abs(graph2X - graph1X)
 
-        val velocity = if( _unitType == "meters" ) {
+        var velocity = if( _unitType == "meters" ) {
             val distanceMeters = _distance * 0.3048
             (distanceMeters / deltaTime).toFloat()
         } else {
@@ -370,6 +368,10 @@ class MainActivity: AppCompatActivity() {
         Timber.d("(1) Max Pair: " + graph1Pair.toString())
         Timber.d("(2) Max Pair: " + graph2Pair.toString())
         Timber.d("VELOCITY: $velocity")
+
+        if( velocity.isNaN() || velocity.isInfinite() ) {
+            velocity = 0.0f
+        }
 
         showVelocityDialog(velocity)
     }
@@ -386,11 +388,14 @@ class MainActivity: AppCompatActivity() {
         builder.setView(dialogView)
 
         val tvVelocity = dialogView.findViewById<TextView>(R.id.Velocity)
-        val velocityText : String = if( _unitType == "meters" ) {
-            getString(R.string.Velocity_Meters, v.toString())
-        } else {
-            getString(R.string.Velocity_Feet, v.toString())
-        }
+
+        val velocityText : String =
+            if( _unitType == "meters" ) {
+                getString(R.string.Velocity_Meters, String.format("%.2f", v))
+            } else {
+                getString(R.string.Velocity_Feet, String.format("%.2f", v))
+            }
+
         tvVelocity.text = velocityText
 
         builder.setPositiveButton("OK") { dialog, _ ->

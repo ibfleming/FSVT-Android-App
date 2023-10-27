@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TheFSVTApp</string>
+    <string name="app_name">FSVT App</string>
     <string name="Connect_Button">Connect</string>
     <string name="Connected_Button">Connected</string>
     <string name="Scanning_Button">Scanning…</string>

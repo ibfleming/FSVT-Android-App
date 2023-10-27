@@ -14,9 +14,17 @@ import timber.log.Timber
 
 class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
 
-    private var firstDataReceivedTime: Long? = null
-    private var chart: LineChart? = null
-    private lateinit var dataViewModel: GraphDataViewModel
+    /*******************************************
+     * Properties
+     *******************************************/
+
+    private var chart                  : LineChart? = null
+    private lateinit var dataViewModel : GraphDataViewModel
+    private var firstDataReceivedTime  : Long? = null
+
+    /*******************************************
+     * Fragment function overrides
+     *******************************************/
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -25,13 +33,15 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_graph_two, container, false)
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+
+        chart = MyObjects.graphTwo
+        dataViewModel = MyObjects.graphDataViewModel
+
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        dataViewModel = ViewModelProvider(requireActivity())[GraphDataViewModel::class.java]
 
         dataViewModel.dataPoint2.observe(viewLifecycleOwner) { value ->
             updateChart(value)
