@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import me.ian.fsvt.R
@@ -18,7 +17,7 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
      * Properties
      *******************************************/
 
-    private var chart                  : LineChart? = null
+    private lateinit var chart : LineChart
     private lateinit var dataViewModel : GraphDataViewModel
     private var firstDataReceivedTime  : Long? = null
 
@@ -47,12 +46,11 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
             updateChart(value)
         }
 
-        chart = view.findViewById(R.id.GraphTwo)
         applyGraphStyling(chart, ChartType.Probe2)
     }
 
     private fun updateChart(value: Float) {
-        val data = chart?.data
+        val data = chart.data
 
         if (data != null) {
             var set = data.getDataSetByIndex(0)
@@ -71,21 +69,21 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
             Timber.w("x: $x, y: $value")
             data.addEntry(Entry(x, value), 0)
             data.notifyDataChanged()
-            chart?.notifyDataSetChanged()
-            chart?.invalidate()
+            chart.notifyDataSetChanged()
+            chart.invalidate()
         }
     }
 
     fun clearGraph() {
         firstDataReceivedTime = null
-        chart?.clear()
+        chart.clear()
         initializeLineData(chart)
-        chart?.notifyDataSetChanged()
-        chart?.invalidate()
+        chart.notifyDataSetChanged()
+        chart.invalidate()
     }
 
     fun findMaxEntry(): Pair<Float, Float>? {
-        val data = chart?.data
+        val data = chart.data
 
         if (data != null && data.dataSetCount > 0) {
             val set = data.getDataSetByIndex(0)
@@ -101,20 +99,9 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
                         maxY = entry.y
                     }
                 }
-
                 return Pair(maxX, maxY)
             }
         }
-
         return null
-    }
-
-    companion object {
-        fun newInstance(chart: LineChart?, viewModel: GraphDataViewModel): GraphTwoFragment {
-            val fragment = GraphTwoFragment()
-            fragment.chart = chart
-            fragment.dataViewModel = viewModel
-            return fragment
-        }
     }
 }

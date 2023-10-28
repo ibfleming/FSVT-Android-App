@@ -1,6 +1,6 @@
 package me.ian.fsvt
 
-import android.Manifest
+ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.*
@@ -11,7 +11,6 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -27,7 +26,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.github.mikephil.charting.charts.LineChart
 import com.google.android.material.switchmaterial.SwitchMaterial
 import me.ian.fsvt.bluetooth.ConnectionManager
 import me.ian.fsvt.databinding.ActivityMainBinding
@@ -97,6 +95,8 @@ class MainActivity: AppCompatActivity() {
          * Initialize Graph Fragments
          *******************************************/
 
+        MyObjects.graphOne = binding.GraphOneFragment.findViewById(R.id.GraphOne)
+        MyObjects.graphTwo = binding.GraphTwoFragment.findViewById(R.id.GraphTwo)
         MyObjects.graphDataViewModel = GraphDataViewModel()
         MyObjects.graphOneFragment = GraphOneFragment()
         MyObjects.graphTwoFragment = GraphTwoFragment()

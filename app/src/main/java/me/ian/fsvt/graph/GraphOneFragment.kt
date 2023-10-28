@@ -17,7 +17,7 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
      * Properties
      *******************************************/
 
-    private var chart                  : LineChart? = null
+    private lateinit var chart : LineChart
     private lateinit var dataViewModel : GraphDataViewModel
     private var firstDataReceivedTime  : Long? = null
 
@@ -46,12 +46,11 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
             updateChart(value)
         }
 
-        chart = view.findViewById(R.id.GraphOne)
         applyGraphStyling(chart, ChartType.Probe1)
     }
 
     private fun updateChart(value: Float) {
-        val data = chart?.data
+        val data = chart.data
 
         if (data != null) {
             var set = data.getDataSetByIndex(0)
@@ -70,21 +69,21 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
             Timber.w("x: $x, y: $value")
             data.addEntry(Entry(x, value), 0)
             data.notifyDataChanged()
-            chart?.notifyDataSetChanged()
-            chart?.invalidate()
+            chart.notifyDataSetChanged()
+            chart.invalidate()
         }
     }
 
     fun clearGraph() {
         firstDataReceivedTime = null
-        chart?.clear()
+        chart.clear()
         initializeLineData(chart)
-        chart?.notifyDataSetChanged()
-        chart?.invalidate()
+        chart.notifyDataSetChanged()
+        chart.invalidate()
     }
 
     fun findMaxEntry(): Pair<Float, Float>? {
-        val data = chart?.data
+        val data = chart.data
 
         if (data != null && data.dataSetCount > 0) {
             val set = data.getDataSetByIndex(0)
