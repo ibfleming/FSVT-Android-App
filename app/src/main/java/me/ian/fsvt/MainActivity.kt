@@ -95,8 +95,6 @@ class MainActivity: AppCompatActivity() {
          * Initialize Graph Fragments
          *******************************************/
 
-        MyObjects.graphOne = binding.GraphOneFragment.findViewById(R.id.GraphOne)
-        MyObjects.graphTwo = binding.GraphTwoFragment.findViewById(R.id.GraphTwo)
         MyObjects.graphDataViewModel = GraphDataViewModel()
         MyObjects.graphOneFragment = GraphOneFragment()
         MyObjects.graphTwoFragment = GraphTwoFragment()

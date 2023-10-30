@@ -33,7 +33,7 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
         val view = inflater.inflate(R.layout.fragment_graph_one, container, false)
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
-        chart = MyObjects.graphOne
+        MyObjects.graphOne = view.findViewById(R.id.GraphOne)
         dataViewModel = MyObjects.graphDataViewModel
 
         return view
@@ -46,6 +46,7 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
             updateChart(value)
         }
 
+        chart = MyObjects.graphOne
         applyGraphStyling(chart, ChartType.Probe1)
     }
 
