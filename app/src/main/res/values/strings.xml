@@ -9,4 +9,6 @@
     <string name="copyright">© 2023 – 2023 https://github.com/ibfleming/FSVT-Android-App.git - All Rights Reserved.</string>
     <string name="ui_found_devices">Found Device(s):</string>
     <string name="ui_scanning_status">Scanning…</string>
+    <string name="write_output">Write</string>
+    <string name="filename">File Name</string>
 </resources>

@@ -12,6 +12,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +37,8 @@ class Main : ComponentActivity() {
     private lateinit var bStart : Button
     private lateinit var tvStatus : TextView
     private lateinit var tvList : TextView
+    private lateinit var writeOut : Button
+    private lateinit var fileName : EditText
 
     // 2) Create Bluetooth Objects
     private lateinit var bleManager : BLEManager
@@ -71,6 +74,8 @@ class Main : ComponentActivity() {
         bStart = findViewById(R.id.StartButton)
         tvStatus = findViewById(R.id.BLE_STATUS)
         tvList = findViewById(R.id.BLE_LIST)
+        writeOut = findViewById(R.id.WriteButton)
+        fileName = findViewById(R.id.filename)
 
         // 4) Fetch B.T. Object References
         bluetoothAdapter = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
@@ -84,6 +89,12 @@ class Main : ComponentActivity() {
 
         bStart.setOnClickListener { _ ->
             startBLEScan()
+        }
+
+        // functions called when Write button is pressed
+        writeOut.setOnClickListener { _ ->
+            val name = fileName.text.toString()
+            CSVProcessing.outTest(dataList, name)
         }
     }
 
