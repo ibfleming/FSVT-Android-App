@@ -57,7 +57,6 @@ fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
     xAxis?.apply {
         position = XAxis.XAxisPosition.BOTTOM
         granularity = 1F
-        axisMinimum = 0F
         axisLineWidth = 2F
         axisLineColor = Color.WHITE
         textColor = Color.WHITE

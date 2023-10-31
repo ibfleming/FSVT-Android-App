@@ -5,21 +5,18 @@ import android.bluetooth.*
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import me.ian.fsvt.graph.GraphDataViewModel
+import me.ian.fsvt.graph.MyObjects
 import timber.log.Timber
 import java.util.UUID
 
-private val BLUETOOTH_LE_SERVICE = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
-private val BLUETOOTH_LE_CHAR_RW = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
+private val bluetoothService = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
+private val bluetoothCharRW  = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
 
 object ConnectionManager {
 
-    lateinit var graphDataViewModel: GraphDataViewModel
-
     private val handler = Handler(Looper.getMainLooper())
-    private var receivedAcknowledgement : Boolean = false
+    private var viewModel: GraphDataViewModel = MyObjects.graphDataViewModel
 
     /*******************************************
      * Properties
@@ -29,15 +26,7 @@ object ConnectionManager {
     private var readCharacteristic: BluetoothGattCharacteristic? = null
     private var writeCharacteristic: BluetoothGattCharacteristic? = null
     private var hm10Delegate: DeviceDelegate? = null
-
-    /*
-    This variable is set based if the device that is being
-    connected established connection with the characteristics successfully.
-    Using LiveData.
-    */
-    private val _isConnected = MutableLiveData<Boolean>()
-    val isConnected: LiveData<Boolean> get() = _isConnected
-
+    private var receivedAcknowledgement : Boolean = false
 
     /*******************************************
      * Connecting and Callback
@@ -53,7 +42,6 @@ object ConnectionManager {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    Timber.w("Successfully connected!")
                     bluetoothGatt = gatt
 
                     Handler(Looper.getMainLooper()).post {
@@ -115,12 +103,11 @@ object ConnectionManager {
 
                 when (val msg = String(data.map { it.toInt().toChar() }.toCharArray())) {
                     "A" -> {
-                        Timber.w( "[ACKNOWLEDGE] -> '$msg'")
+                        Timber.w( "[READ ACKNOWLEDGE] -> '$msg'")
                         receivedAcknowledgement = true
                     }
                     else -> {
-                        Timber.d( "[TDS] -> $msg")
-                        // Process data...
+                        Timber.d( "[READ TDS] -> '$msg'")
                         processData(msg)
                     }
                 }
@@ -133,7 +120,7 @@ object ConnectionManager {
         readCharacteristic = null
         writeCharacteristic = null
         hm10Delegate = null
-        _isConnected.postValue(false)
+        viewModel.setConnectionStatus(false)
     }
 
     /*******************************************
@@ -145,7 +132,7 @@ object ConnectionManager {
             try {
                 val p1Value = values[0].toFloat()
                 val p2Value = values[1].toFloat()
-                graphDataViewModel.updateGraphs(p1Value, p2Value)
+                viewModel.updateGraphs(p1Value, p2Value)
             } catch (e: NumberFormatException) {
                 Timber.e("Error parsing data: $data")
             }
@@ -208,7 +195,7 @@ object ConnectionManager {
         bluetoothGatt?.disconnect()
         bluetoothGatt?.close()
         bluetoothGatt = null
-        _isConnected.postValue(false)
+        viewModel.setConnectionStatus(false)
     }
 
     /*******************************************
@@ -218,7 +205,7 @@ object ConnectionManager {
     private fun connectCharacteristics(gatt: BluetoothGatt) {
         for( service in gatt.services ) {
             when( service.uuid ) {
-                BLUETOOTH_LE_SERVICE -> {
+                bluetoothService -> {
                     hm10Delegate = OurHM10Device()
                     (hm10Delegate as OurHM10Device).connectCharacteristics(service)
                 }
@@ -237,12 +224,12 @@ object ConnectionManager {
         @SuppressLint("MissingPermission")
         override fun connectCharacteristics(service: BluetoothGattService) {
             Timber.w("Service: CC254x UART (our HM-10 module)")
-            readCharacteristic = service.getCharacteristic(BLUETOOTH_LE_CHAR_RW)
-            writeCharacteristic = service.getCharacteristic(BLUETOOTH_LE_CHAR_RW)
+            readCharacteristic = service.getCharacteristic(bluetoothCharRW)
+            writeCharacteristic = service.getCharacteristic(bluetoothCharRW)
             if( readCharacteristic != null && writeCharacteristic != null ) {
                 if( bluetoothGatt?.setCharacteristicNotification(readCharacteristic, true)!! ) {
                     Timber.w("The read characteristic has notification enabled...")
-                    _isConnected.postValue(true)
+                    viewModel.setConnectionStatus(true)
                 }
             }
         }

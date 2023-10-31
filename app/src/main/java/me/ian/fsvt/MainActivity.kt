@@ -11,7 +11,8 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
+ import android.graphics.Color
+ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -29,11 +30,14 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
 import me.ian.fsvt.bluetooth.ConnectionManager
 import me.ian.fsvt.databinding.ActivityMainBinding
-import me.ian.fsvt.graph.GraphDataViewModel
+ import me.ian.fsvt.graph.ConnectionState
+ import me.ian.fsvt.graph.DeviceState
+ import me.ian.fsvt.graph.GraphDataViewModel
 import me.ian.fsvt.graph.GraphOneFragment
 import me.ian.fsvt.graph.GraphTwoFragment
 import me.ian.fsvt.graph.MyObjects
-import org.jetbrains.anko.*
+ import me.ian.fsvt.graph.UnitType
+ import org.jetbrains.anko.*
 import timber.log.Timber
 import kotlin.math.abs
 
@@ -51,13 +55,6 @@ class MainActivity: AppCompatActivity() {
      *******************************************/
 
     private lateinit var binding: ActivityMainBinding
-
-    private var _isRunning   : Boolean = false
-    private var _isConnected : Boolean = false
-    private var _fileReady   : Boolean = false
-    private var _fileName    : String? = null
-    private var _distance    : Float = 0.0f
-    private var _unitType = "feet"
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -98,7 +95,6 @@ class MainActivity: AppCompatActivity() {
         MyObjects.graphDataViewModel = GraphDataViewModel()
         MyObjects.graphOneFragment = GraphOneFragment()
         MyObjects.graphTwoFragment = GraphTwoFragment()
-        ConnectionManager.graphDataViewModel = MyObjects.graphDataViewModel
 
         supportFragmentManager.beginTransaction().apply {MyObjects
             replace(R.id.GraphOneFragment, MyObjects.graphOneFragment)
@@ -111,41 +107,43 @@ class MainActivity: AppCompatActivity() {
         }
 
         /*******************************************
-         * Observe Live Data
+         * Observe Live Data for TextView (OPTIONAL?)
          *******************************************/
 
         MyObjects.graphDataViewModel.dataPoint1.observe(this) { data ->
-            if( data != -1F ) {
-                binding.Probe1Data.text = data.toInt().toString()
-            }
+            binding.Probe1Data.text = data.toInt().toString()
         }
 
         MyObjects.graphDataViewModel.dataPoint2.observe(this) { data ->
-            if( data != -1F ) {
-                binding.Probe2Data.text =  data.toInt().toString()
-            }
+            binding.Probe2Data.text =  data.toInt().toString()
         }
 
         /*******************************************
          * Observe Connection State of Device
          *******************************************/
 
-        ConnectionManager.isConnected.observe(this) { isConnected ->
+        MyObjects.graphDataViewModel.isConnected.observe(this) { isConnected ->
+            /** Behavior of APP when we successfully connected **/
             if (isConnected) {
+                MyObjects.connectionState = ConnectionState.CONNECTED
                 binding.ConnectButton.setBackgroundColor(ContextCompat.getColor(this, R.color.connect_color))
-                binding.StartButton.isEnabled = true
-                binding.ResetButton.isEnabled = true
-                _isConnected = true
+                binding.SettingsButton.isEnabled = true
+                binding.StartButton.isEnabled    = true
+                binding.ResetButton.isEnabled    = true
             }
+            /** Behavior of APP when we disconnect **/
             else {
-                _isConnected = false
+                MyObjects.connectionState = ConnectionState.DISCONNECTED
+                binding.ConnectButton.backgroundColor = Color.TRANSPARENT
                 runOnUiThread {
                     alert {
                         title = "Disconnected"
                         message = "The device disconnected unexpectedly from the app. " +
                                   "Please connect to the device again."
                         isCancelable = false
-                        positiveButton(android.R.string.ok) { /* nop */ }
+                        positiveButton(android.R.string.ok) {
+                            resetApp()
+                        }
                     }.show()
                 }
             }
@@ -156,55 +154,66 @@ class MainActivity: AppCompatActivity() {
          *******************************************/
 
         /** CONNECT BUTTON **/
-        binding.ConnectButton.setOnClickListener { startScan() }
+        binding.ConnectButton.setOnClickListener {
+            startScan()
+        }
 
         /** SETTINGS BUTTON **/
+        binding.SettingsButton.isEnabled = false // Disable by default
         binding.SettingsButton.setOnClickListener {
             promptFileName { fileName, distance, unitType ->
                 if (fileName != null && distance != null && unitType != null ) {
-                    _fileName = fileName
-                    _distance = distance
-                    _unitType = unitType
-                    _fileReady = true
-            }
+                    MyObjects.fileName = fileName
+                    MyObjects.distance = distance
+                    MyObjects.unitType = unitType
+                }
             }
         }
 
         /** START BUTTON **/
-        binding.StartButton.isEnabled = false
+        binding.StartButton.isEnabled = false   // Disable by default
         binding.StartButton.setOnClickListener {
-            if (ConnectionManager.isConnected.value == true) {
-                if( !_isRunning ) {
-                    Timber.tag(tag).d("START")
-                    ConnectionManager.sendStartCommand()
+            if (MyObjects.connectionState == ConnectionState.CONNECTED) {
+                if( MyObjects.deviceState == DeviceState.STOPPED ) {
+                    Timber.tag(tag).d("[STARTING PROGRAM]")
+                    MyObjects.deviceState = DeviceState.RUNNING
                     binding.StartButton.isEnabled = false
                     binding.StopButton.isEnabled = true
-                    _isRunning = true
+                    ConnectionManager.sendStartCommand()
+                    if( MyObjects.firstDataReceivedTime == null ) {
+                        MyObjects.firstDataReceivedTime = System.currentTimeMillis()
+                    }
                 }
             }
-
+            else {
+                Timber.w("Device is not connected!")
+            }
         }
 
         /** STOP BUTTON **/
-        binding.StopButton.isEnabled = false
+        binding.StopButton.isEnabled = true    // Disable by default
         binding.StopButton.setOnClickListener {
-            if( ConnectionManager.isConnected.value == true ) {
-                if(_isRunning) {
-                    Timber.tag(tag).d("STOP")
-                    ConnectionManager.sendStopCommand()
-                    calculateVelocity()
+            calculateVelocity()
+            if( MyObjects.connectionState == ConnectionState.CONNECTED) {
+                if( MyObjects.deviceState == DeviceState.RUNNING) {
+                    Timber.tag(tag).d("[STOPPING PROGRAM]")
+                    MyObjects.deviceState = DeviceState.STOPPED
                     binding.StopButton.isEnabled = false
                     binding.StartButton.isEnabled = true
-                    _isRunning = false
+                    ConnectionManager.sendStopCommand()
+                    calculateVelocity()
                 }
             }
         }
 
         /** RESET BUTTON **/
-        binding.ResetButton.isEnabled = false
+        binding.ResetButton.isEnabled = false   // Disable by default
         binding.ResetButton.setOnClickListener {
-            MyObjects.graphOneFragment.clearGraph()
-            MyObjects.graphTwoFragment.clearGraph()
+            if( MyObjects.connectionState == ConnectionState.CONNECTED && MyObjects.deviceState == DeviceState.STOPPED ) {
+                MyObjects.graphOneFragment.clearGraph()
+                MyObjects.graphTwoFragment.clearGraph()
+                MyObjects.firstDataReceivedTime = null
+            }
         }
     }
 
@@ -356,22 +365,33 @@ class MainActivity: AppCompatActivity() {
 
         val deltaTime = abs(graph2X - graph1X)
 
-        var velocity = if( _unitType == "meters" ) {
-            val distanceMeters = _distance * 0.3048
+        // DEFAULT VALUE OF DISTANCE IS 0F
+        var velocity = if( MyObjects.unitType == UnitType.METERS ) {
+            val distanceMeters = MyObjects.distance * 0.3048
             (distanceMeters / deltaTime).toFloat()
         } else {
-            _distance / deltaTime
+            MyObjects.distance / deltaTime
         }
-
-        Timber.d("(1) Max Pair: " + graph1Pair.toString())
-        Timber.d("(2) Max Pair: " + graph2Pair.toString())
-        Timber.d("VELOCITY: $velocity")
 
         if( velocity.isNaN() || velocity.isInfinite() ) {
-            velocity = 0.0f
+            velocity = 0F
         }
 
+        Timber.d("------------------------------------------------------------")
+        Timber.d("\tVelocity: $velocity")
+        Timber.d("\t[Graph One] Max Pair: " + graph1Pair.toString())
+        Timber.d("\t[Graph Two] Max Pair: " + graph2Pair.toString())
+        Timber.d("------------------------------------------------------------")
+
         showVelocityDialog(velocity)
+    }
+
+    private fun resetApp() {
+        Timber.w("[RESET APP]")
+        MyObjects.resetValues()
+        binding.SettingsButton.isEnabled = false
+        binding.StartButton.isEnabled    = false
+        binding.ResetButton.isEnabled    = false
     }
 
     /*******************************************
@@ -388,7 +408,7 @@ class MainActivity: AppCompatActivity() {
         val tvVelocity = dialogView.findViewById<TextView>(R.id.Velocity)
 
         val velocityText : String =
-            if( _unitType == "meters" ) {
+            if( MyObjects.unitType == UnitType.METERS ) {
                 getString(R.string.Velocity_Meters, String.format("%.2f", v))
             } else {
                 getString(R.string.Velocity_Feet, String.format("%.2f", v))
@@ -403,15 +423,14 @@ class MainActivity: AppCompatActivity() {
         builder.create().show()
     }
 
-    private fun promptFileName(callback: (String?, Float?, String?) -> Unit) {
+    private fun promptFileName(callback: (String?, Float?, UnitType?) -> Unit) {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
 
         val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
         builder.setView(dialogView)
 
-        var unitType = "feet"
-
+        var unitType : UnitType? = null
         val editTitle = dialogView.findViewById<EditText>(R.id.Input_Title)
         val editDist = dialogView.findViewById<EditText>(R.id.Input_Distance)
         val switchUnit = dialogView.findViewById<SwitchMaterial>(R.id.Unit_Type_Switch)
@@ -441,7 +460,11 @@ class MainActivity: AppCompatActivity() {
         }
 
         switchUnit.setOnCheckedChangeListener { _, isChecked ->
-            unitType = if (isChecked) "meters" else "feet"
+            unitType = if( isChecked ) {
+                UnitType.METERS
+            } else {
+                UnitType.FEET
+            }
         }
 
         submit.setOnClickListener {
@@ -488,10 +511,8 @@ class MainActivity: AppCompatActivity() {
                 message = "Could not find the specified device. " +
                         "Please ensure the devices are powered on and try again."
                 isCancelable = false
-                positiveButton(android.R.string.ok) { /* nop */ }
+                positiveButton(android.R.string.ok) { resetApp() }
             }.show()
         }
     }
-
-
 }

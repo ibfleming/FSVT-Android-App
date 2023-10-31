@@ -1,6 +1,5 @@
 package me.ian.fsvt.graph
 
-import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,8 +17,6 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
      *******************************************/
 
     private lateinit var chart : LineChart
-    private lateinit var dataViewModel : GraphDataViewModel
-    private var firstDataReceivedTime  : Long? = null
 
     /*******************************************
      * Fragment function overrides
@@ -30,28 +27,23 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_graph_one, container, false)
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-
-        MyObjects.graphOne = view.findViewById(R.id.GraphOne)
-        dataViewModel = MyObjects.graphDataViewModel
-
-        return view
+        return inflater.inflate(R.layout.fragment_graph_one, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        dataViewModel.dataPoint1.observe(viewLifecycleOwner) { value ->
-            updateChart(value)
-        }
-
+        MyObjects.graphOne = view.findViewById(R.id.GraphOne)
         chart = MyObjects.graphOne
         applyGraphStyling(chart, ChartType.Probe1)
+
+        MyObjects.graphDataViewModel.dataPoint1.observe(viewLifecycleOwner) { value ->
+            updateChart(value)
+        }
     }
 
     private fun updateChart(value: Float) {
         val data = chart.data
+        var firstDataReceivedTime = MyObjects.firstDataReceivedTime
 
         if (data != null) {
             var set = data.getDataSetByIndex(0)
@@ -62,12 +54,15 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
             }
 
             val currentTime = System.currentTimeMillis()
+
+            /** Do this check just in case, but this value is set in MainActivity **/
             if (firstDataReceivedTime == null) {
                 firstDataReceivedTime = currentTime
             }
-            val x = (currentTime - (firstDataReceivedTime ?: currentTime)).toFloat() / 1000
 
-            Timber.w("x: $x, y: $value")
+            val x = (currentTime - firstDataReceivedTime).toFloat() / 1000
+
+            Timber.w("[Graph One] (update) -> (time: $x, tds: $value)")
             data.addEntry(Entry(x, value), 0)
             data.notifyDataChanged()
             chart.notifyDataSetChanged()
@@ -76,7 +71,6 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
     }
 
     fun clearGraph() {
-        firstDataReceivedTime = null
         chart.clear()
         initializeLineData(chart)
         chart.notifyDataSetChanged()

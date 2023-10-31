@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FSVT App</string>
+    <string name="app_name">Stream Velocity</string>
     <string name="Connect_Button">Connect</string>
     <string name="Connected_Button">Connected</string>
     <string name="Scanning_Button">Scanning…</string>
@@ -17,7 +17,7 @@
     <string name="Probe_Data">Empty</string>
     <string name="Unit_Type">Feet/Meter</string>
     <string name="Velocity_Label">Velocity:</string>
-    <string name="Velocity_Empty">null</string>
+    <string name="Velocity_Empty">Empty</string>
     <string name="Velocity_Feet">%s ft/s</string>
     <string name="Velocity_Meters">%s m/s</string>
     <string name="copyright">© 2023 FSVT - All Rights Reserved.</string>
