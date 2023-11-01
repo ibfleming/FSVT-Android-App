@@ -43,7 +43,7 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
 
     private fun updateChart(value: Float) {
         val data = chart.data
-        var firstDataReceivedTime = MyObjects.firstDataReceivedTime
+        var time = 0.0F
 
         if (data != null) {
             var set = data.getDataSetByIndex(0)
@@ -53,17 +53,16 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
                 data.addDataSet(set)
             }
 
-            val currentTime = System.currentTimeMillis()
-
-            /** Do this check just in case, but this value is set in MainActivity **/
-            if (firstDataReceivedTime == null) {
-                firstDataReceivedTime = currentTime
+            if( !MyObjects.firstReadInG2 ) {
+                MyObjects.firstReadInG2 = true
+            }
+            else {
+                val currentTime = System.currentTimeMillis()
+                time = (currentTime - MyObjects.startProgramTime!!).toFloat() / 1000
             }
 
-            val x = (currentTime - firstDataReceivedTime).toFloat() / 1000
-
-            Timber.w("[Graph Two] (update) -> (time: $x, tds: $value)")
-            data.addEntry(Entry(x, value), 0)
+            Timber.w("[Graph Two] (update) -> (time: ${"%.1f".format(time)}, tds: $value)")
+            data.addEntry(Entry("%.1f".format(time).toFloat(), value), 0)
             data.notifyDataChanged()
             chart.notifyDataSetChanged()
             chart.invalidate()
@@ -71,6 +70,7 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
     }
 
     fun clearGraph() {
+        MyObjects.firstReadInG2 = false
         chart.clear()
         initializeLineData(chart)
         chart.notifyDataSetChanged()

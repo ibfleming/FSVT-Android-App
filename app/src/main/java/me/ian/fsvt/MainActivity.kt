@@ -1,45 +1,47 @@
 package me.ian.fsvt
 
  import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.bluetooth.*
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
+ import android.annotation.SuppressLint
+ import android.app.Activity
+ import android.bluetooth.*
+ import android.bluetooth.le.ScanCallback
+ import android.bluetooth.le.ScanFilter
+ import android.bluetooth.le.ScanResult
+ import android.bluetooth.le.ScanSettings
+ import android.content.Context
+ import android.content.Intent
+ import android.content.pm.PackageManager
  import android.graphics.Color
  import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.View.*
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.google.android.material.switchmaterial.SwitchMaterial
-import me.ian.fsvt.bluetooth.ConnectionManager
-import me.ian.fsvt.databinding.ActivityMainBinding
+ import android.os.Bundle
+ import android.os.Handler
+ import android.os.Looper
+ import android.text.Editable
+ import android.text.TextWatcher
+ import android.view.Gravity
+ import android.view.View.*
+ import android.widget.Button
+ import android.widget.EditText
+ import android.widget.TextView
+ import android.widget.Toast
+ import androidx.appcompat.app.AlertDialog
+ import androidx.appcompat.app.AppCompatActivity
+ import androidx.core.app.ActivityCompat
+ import androidx.core.content.ContextCompat
+ import com.google.android.material.switchmaterial.SwitchMaterial
+ import me.ian.fsvt.bluetooth.ConnectionManager
+ import me.ian.fsvt.databinding.ActivityMainBinding
  import me.ian.fsvt.graph.ConnectionState
  import me.ian.fsvt.graph.DeviceState
  import me.ian.fsvt.graph.GraphDataViewModel
-import me.ian.fsvt.graph.GraphOneFragment
-import me.ian.fsvt.graph.GraphTwoFragment
-import me.ian.fsvt.graph.MyObjects
+ import me.ian.fsvt.graph.GraphOneFragment
+ import me.ian.fsvt.graph.GraphTwoFragment
+ import me.ian.fsvt.graph.MyObjects
  import me.ian.fsvt.graph.UnitType
  import org.jetbrains.anko.*
-import timber.log.Timber
-import kotlin.math.abs
+ import timber.log.Timber
+ import kotlin.math.abs
+
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
 private const val LOCATION_PERMISSION_REQUEST_CODE = 2
@@ -127,9 +129,11 @@ class MainActivity: AppCompatActivity() {
             if (isConnected) {
                 MyObjects.connectionState = ConnectionState.CONNECTED
                 binding.ConnectButton.setBackgroundColor(ContextCompat.getColor(this, R.color.connect_color))
+                binding.ConnectButton.isEnabled  = false
                 binding.SettingsButton.isEnabled = true
-                binding.StartButton.isEnabled    = true
-                binding.ResetButton.isEnabled    = true
+                runOnUiThread {
+                    Toast.makeText(this, "Device connected successfully!", Toast.LENGTH_SHORT).show()
+                }
             }
             /** Behavior of APP when we disconnect **/
             else {
@@ -161,11 +165,14 @@ class MainActivity: AppCompatActivity() {
         /** SETTINGS BUTTON **/
         binding.SettingsButton.isEnabled = false // Disable by default
         binding.SettingsButton.setOnClickListener {
-            promptFileName { fileName, distance, unitType ->
+            promptSettings { fileName, distance, unitType ->
                 if (fileName != null && distance != null && unitType != null ) {
                     MyObjects.fileName = fileName
                     MyObjects.distance = distance
                     MyObjects.unitType = unitType
+                    MyObjects.fileReady = true
+                    binding.StartButton.isEnabled = true
+                    binding.ResetButton.isEnabled = true
                 }
             }
         }
@@ -175,13 +182,19 @@ class MainActivity: AppCompatActivity() {
         binding.StartButton.setOnClickListener {
             if (MyObjects.connectionState == ConnectionState.CONNECTED) {
                 if( MyObjects.deviceState == DeviceState.STOPPED ) {
-                    Timber.tag(tag).d("[STARTING PROGRAM]")
-                    MyObjects.deviceState = DeviceState.RUNNING
-                    binding.StartButton.isEnabled = false
-                    binding.StopButton.isEnabled = true
-                    ConnectionManager.sendStartCommand()
-                    if( MyObjects.firstDataReceivedTime == null ) {
-                        MyObjects.firstDataReceivedTime = System.currentTimeMillis()
+                    if( MyObjects.fileReady ) {
+                        Timber.tag(tag).d("[STARTING PROGRAM]")
+                        MyObjects.deviceState = DeviceState.RUNNING
+                        binding.StartButton.isEnabled = false
+                        binding.StopButton.isEnabled = true
+                        ConnectionManager.sendStartCommand()
+
+                        /** Set the start time of the program here **/
+                        if( MyObjects.startProgramTime == null ) {
+                            MyObjects.startProgramTime = System.currentTimeMillis()
+                        }
+                    } else {
+                        // Dialog alert to prompt user for distance and filename, etc.
                     }
                 }
             }
@@ -191,9 +204,8 @@ class MainActivity: AppCompatActivity() {
         }
 
         /** STOP BUTTON **/
-        binding.StopButton.isEnabled = true    // Disable by default
+        binding.StopButton.isEnabled = false    // Disable by default
         binding.StopButton.setOnClickListener {
-            calculateVelocity()
             if( MyObjects.connectionState == ConnectionState.CONNECTED) {
                 if( MyObjects.deviceState == DeviceState.RUNNING) {
                     Timber.tag(tag).d("[STOPPING PROGRAM]")
@@ -212,7 +224,8 @@ class MainActivity: AppCompatActivity() {
             if( MyObjects.connectionState == ConnectionState.CONNECTED && MyObjects.deviceState == DeviceState.STOPPED ) {
                 MyObjects.graphOneFragment.clearGraph()
                 MyObjects.graphTwoFragment.clearGraph()
-                MyObjects.firstDataReceivedTime = null
+                MyObjects.startProgramTime = null
+                MyObjects.stopProgramTime  = null
             }
         }
     }
@@ -389,6 +402,7 @@ class MainActivity: AppCompatActivity() {
     private fun resetApp() {
         Timber.w("[RESET APP]")
         MyObjects.resetValues()
+        binding.ConnectButton.isEnabled  = true
         binding.SettingsButton.isEnabled = false
         binding.StartButton.isEnabled    = false
         binding.ResetButton.isEnabled    = false
@@ -423,26 +437,33 @@ class MainActivity: AppCompatActivity() {
         builder.create().show()
     }
 
-    private fun promptFileName(callback: (String?, Float?, UnitType?) -> Unit) {
+    private fun promptSettings(callback: (String?, Float?, UnitType?) -> Unit) {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
-
         val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
         builder.setView(dialogView)
-
-        var unitType : UnitType? = null
-        val editTitle = dialogView.findViewById<EditText>(R.id.Input_Title)
-        val editDist = dialogView.findViewById<EditText>(R.id.Input_Distance)
-        val switchUnit = dialogView.findViewById<SwitchMaterial>(R.id.Unit_Type_Switch)
-        val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
-        val cancel = dialogView.findViewById<Button>(R.id.Cancel_Button)
-        submit.isEnabled = false
-
         val dialog = builder.create()
 
-        // Request focus on the EditText
-        editTitle.requestFocus()
+        val unitTypeSwitch = dialogView.findViewById<SwitchMaterial>(R.id.Unit_Type_Switch)
+        val editTitle = dialogView.findViewById<EditText>(R.id.Input_Title)
+        val editDist = dialogView.findViewById<EditText>(R.id.Input_Distance)
+        val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
+        val cancel = dialogView.findViewById<Button>(R.id.Cancel_Button)
 
+        // Set default values if they exist
+        if (MyObjects.fileName != null) {
+            editTitle.setText(MyObjects.fileName)
+        }
+
+        // FEET by default, check if otherwise
+        unitTypeSwitch.isChecked = MyObjects.unitType == UnitType.METERS
+
+        // Check if distance isn't 0
+        if (MyObjects.distance != 0F) {
+            editDist.setText(MyObjects.distance.toString())
+        }
+
+        // Function to check if a string can be parsed to a float
         fun isFloat(value: String): Boolean {
             return try {
                 value.toFloat()
@@ -452,6 +473,7 @@ class MainActivity: AppCompatActivity() {
             }
         }
 
+        // Function to update the state of the Submit button
         fun updateSubmitButtonState() {
             val titleText = editTitle.text.toString().trim()
             val distText = editDist.text.toString().trim()
@@ -459,48 +481,46 @@ class MainActivity: AppCompatActivity() {
             submit.isEnabled = titleText.isNotEmpty() && distText.isNotEmpty() && isFloat(distText)
         }
 
-        switchUnit.setOnCheckedChangeListener { _, isChecked ->
-            unitType = if( isChecked ) {
-                UnitType.METERS
-            } else {
-                UnitType.FEET
-            }
+        // Switch change listener
+        unitTypeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            // Handle unit type change
+            // ...
         }
 
+        // Submit button click listener
+        if( !MyObjects.fileReady ) {
+            submit.isEnabled = false
+        }
         submit.setOnClickListener {
             val enteredText = editTitle.text.toString().trim().replace("\\s+".toRegex(), "")
             val enteredDist = editDist.text.toString().toFloat()
+            val enteredUnitType = if (unitTypeSwitch.isChecked) UnitType.METERS else UnitType.FEET
 
-            Toast.makeText(this, "Name: $enteredText\nDistance: $enteredDist\nUnit: $unitType", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Name: $enteredText\nDistance: $enteredDist\nUnit: $enteredUnitType", Toast.LENGTH_LONG).show()
             dialog.dismiss()
-            callback(enteredText, enteredDist, unitType)
+
+            callback(enteredText, enteredDist, enteredUnitType)
         }
 
+        // Cancel button click listener
         cancel.setOnClickListener {
             dialog.dismiss()
             callback(null, null, null)
         }
 
-        editTitle.addTextChangedListener(object : TextWatcher {
+        // EditText listeners
+        val textWatcher = object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
             override fun afterTextChanged(p0: Editable?) {
                 updateSubmitButtonState()
             }
-        })
+        }
 
-        editDist.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+        editTitle.addTextChangedListener(textWatcher)
+        editDist.addTextChangedListener(textWatcher)
 
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-
-            override fun afterTextChanged(p0: Editable?) {
-                updateSubmitButtonState()
-            }
-        })
-
+        // Show the dialog
         dialog.show()
     }
 

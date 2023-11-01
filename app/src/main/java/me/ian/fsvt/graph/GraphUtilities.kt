@@ -21,7 +21,11 @@ enum class ChartType {
 private class XAxisFormatter : ValueFormatter() {
     // May not be necessary as the granularity is set to 1F
     override fun getAxisLabel(value: Float, axis: AxisBase?): String {
-        return "${value.toInt()}s"
+        return if (value % 1 == 0.0f) {
+            "${value.toInt()}s"
+        } else {
+            "${"%.1f".format(value)}s"
+        }
     }
 }
 
@@ -56,7 +60,8 @@ fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
     val xAxis = chart?.xAxis
     xAxis?.apply {
         position = XAxis.XAxisPosition.BOTTOM
-        granularity = 1F
+        granularity = 0.5F
+        axisMinimum = 0F
         axisLineWidth = 2F
         axisLineColor = Color.WHITE
         textColor = Color.WHITE
@@ -66,7 +71,6 @@ fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
     // Y Axis (left axis)
     val axisLeft = chart?.axisLeft
     axisLeft?.apply {
-        granularity = 25F
         axisMinimum = -5F
         axisMaximum = 250F
         axisLineWidth = 2F
@@ -131,7 +135,7 @@ fun createSet(): LineDataSet {
     // Line Styling (line that represents the data on the x-y planes)
     set.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
     set.axisDependency = YAxis.AxisDependency.LEFT
-    set.color = Color.RED
+    set.color = Color.WHITE
     set.lineWidth = 0.5F
     set.setDrawValues(false)
     set.setDrawCircles(false)

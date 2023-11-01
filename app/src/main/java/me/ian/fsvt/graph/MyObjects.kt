@@ -24,11 +24,16 @@ class MyObjects {
         var unitType        : UnitType = UnitType.FEET
         var fileName        : String? = null
         var distance        : Float  = 0F
+        var fileReady       : Boolean = false
 
         /*******************************************
          * Timing
          *******************************************/
-        var firstDataReceivedTime : Long? = null
+
+        var startProgramTime      : Long? = null
+        var stopProgramTime       : Long? = null
+        var firstReadInG1         : Boolean = false
+        var firstReadInG2         : Boolean = false
 
         /*******************************************
          * Extension Functions
@@ -42,6 +47,8 @@ class MyObjects {
             unitType = UnitType.FEET
             fileName = null
             distance = 0F
+            firstReadInG1 = false
+            firstReadInG2 = false
         }
     }
 }
