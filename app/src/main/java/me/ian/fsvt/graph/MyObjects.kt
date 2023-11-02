@@ -1,6 +1,7 @@
 package me.ian.fsvt.graph
 
 import com.github.mikephil.charting.charts.LineChart
+import me.ian.fsvt.csv.CSVProcessing
 
 class MyObjects {
     companion object {
@@ -25,6 +26,7 @@ class MyObjects {
         var fileName        : String? = null
         var distance        : Float  = 0F
         var fileReady       : Boolean = false
+        var testCount       : Int = 0
 
         /*******************************************
          * Timing

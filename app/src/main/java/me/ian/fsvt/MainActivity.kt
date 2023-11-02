@@ -18,18 +18,19 @@ package me.ian.fsvt
  import android.os.Looper
  import android.text.Editable
  import android.text.TextWatcher
- import android.view.Gravity
  import android.view.View.*
  import android.widget.Button
  import android.widget.EditText
  import android.widget.TextView
  import android.widget.Toast
+ import androidx.annotation.RequiresApi
  import androidx.appcompat.app.AlertDialog
  import androidx.appcompat.app.AppCompatActivity
  import androidx.core.app.ActivityCompat
  import androidx.core.content.ContextCompat
  import com.google.android.material.switchmaterial.SwitchMaterial
  import me.ian.fsvt.bluetooth.ConnectionManager
+ import me.ian.fsvt.csv.CSVProcessing
  import me.ian.fsvt.databinding.ActivityMainBinding
  import me.ian.fsvt.graph.ConnectionState
  import me.ian.fsvt.graph.DeviceState
@@ -81,6 +82,7 @@ class MainActivity: AppCompatActivity() {
      * Activity function overrides
      *******************************************/
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -107,6 +109,21 @@ class MainActivity: AppCompatActivity() {
             replace(R.id.GraphTwoFragment, MyObjects.graphTwoFragment)
             commit()
         }
+
+        /*******************************************
+         * CSV Initialization
+         *******************************************/
+
+        if (CSVProcessing.createDirectory()) {
+            runOnUiThread {
+                Toast.makeText(this, "Found the Stream Data folder!", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            runOnUiThread {
+                Toast.makeText(this, "No Stream Data folder found! CSV exporting will not work!", Toast.LENGTH_LONG).show()
+            }
+        }
+        CSVProcessing.createFile()
 
         /*******************************************
          * Observe Live Data for TextView (OPTIONAL?)
@@ -159,6 +176,7 @@ class MainActivity: AppCompatActivity() {
 
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
+            CSVProcessing.writeTest()
             startScan()
         }
 

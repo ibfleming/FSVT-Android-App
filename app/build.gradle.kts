@@ -50,6 +50,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("org.apache.commons:commons-csv:1.5")
 
     //noinspection GradleDependency
     implementation("androidx.core:core-ktx:1.9.0")
