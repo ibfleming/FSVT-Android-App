@@ -41,11 +41,13 @@ package me.ian.fsvt
  import me.ian.fsvt.graph.UnitType
  import org.jetbrains.anko.*
  import timber.log.Timber
+ import java.io.File
  import kotlin.math.abs
 
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
 private const val LOCATION_PERMISSION_REQUEST_CODE = 2
+private const val STORAGE_REQUEST_CODE = 3
 private const val MAC = "B4:52:A9:04:28:DC"
 private const val SCAN_PERIOD = 3000L
 
@@ -77,6 +79,9 @@ class MainActivity: AppCompatActivity() {
 
     private val isLocationPermissionGranted
         get() = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+
+    private val isStoragePermissionGranted
+        get() = hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     /*******************************************
      * Activity function overrides
@@ -111,19 +116,14 @@ class MainActivity: AppCompatActivity() {
         }
 
         /*******************************************
-         * CSV Initialization
+         * CSV Initialization (Create directory)
          *******************************************/
 
-        if (CSVProcessing.createDirectory()) {
-            runOnUiThread {
-                Toast.makeText(this, "Found the Stream Data folder!", Toast.LENGTH_SHORT).show()
-            }
+        if( !isStoragePermissionGranted ) {
+            requestStoragePermission()
         } else {
-            runOnUiThread {
-                Toast.makeText(this, "No Stream Data folder found! CSV exporting will not work!", Toast.LENGTH_LONG).show()
-            }
+            CSVProcessing.createDirectory()
         }
-        CSVProcessing.createFile()
 
         /*******************************************
          * Observe Live Data for TextView (OPTIONAL?)
@@ -176,7 +176,6 @@ class MainActivity: AppCompatActivity() {
 
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
-            CSVProcessing.writeTest()
             startScan()
         }
 
@@ -281,6 +280,13 @@ class MainActivity: AppCompatActivity() {
                     startScan()
                 }
             }
+            STORAGE_REQUEST_CODE -> {
+                if( grantResults.firstOrNull() == PackageManager.PERMISSION_DENIED) {
+                    requestStoragePermission()
+                } else {
+                    CSVProcessing.createDirectory()
+                }
+            }
         }
     }
 
@@ -294,6 +300,16 @@ class MainActivity: AppCompatActivity() {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST_CODE)
         }
+    }
+
+    private fun requestStoragePermission() {
+        if( isStoragePermissionGranted ) {
+            return
+        }
+        requestPermission(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            STORAGE_REQUEST_CODE
+        )
     }
 
     private fun requestLocationPermission() {
@@ -500,7 +516,7 @@ class MainActivity: AppCompatActivity() {
         }
 
         // Switch change listener
-        unitTypeSwitch.setOnCheckedChangeListener { _, isChecked ->
+        unitTypeSwitch.setOnCheckedChangeListener { _, _ ->
             // Handle unit type change
             // ...
         }

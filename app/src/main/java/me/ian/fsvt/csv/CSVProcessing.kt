@@ -31,21 +31,34 @@ class CSVProcessing {
                 "-${cal.get(Calendar.SECOND)}"
 
         fun createDirectory() : Boolean {
-            val saveDir = Environment.getExternalStoragePublicDirectory("Documents").toString()
-            saveFolder = File("$saveDir/StreamData")
+            val externalStorageState = Environment.getExternalStorageState()
+            if( externalStorageState == Environment.MEDIA_MOUNTED ) {
+                Timber.d("External storage is available")
 
-            return if( saveFolder.exists() ) {
-                Timber.v("'StreamData' exists in the device's file system")
-                true
-            } else {
-                Timber.e("No folder exists in the device's file system")
-                if( saveFolder.mkdir() ) {
-                    Timber.v("Successfully created the folder")
+                val saveDir = Environment.getExternalStoragePublicDirectory("Documents")
+                if( !saveDir.exists() && !saveDir.mkdirs() ) {
+                    Timber.e("Failed to create parent directory")
+                    return false
+                }
+
+                saveFolder = File(saveDir, "StreamData")
+
+                return if( saveFolder.exists() ) {
+                    Timber.v("'StreamData' exists in the device's file system")
                     true
                 } else {
-                    Timber.e("Failed to create the folder")
-                    false
+                    if( saveFolder.mkdir() ) {
+                        Timber.v("Successfully created the folder")
+                        true
+                    } else {
+                        Timber.e("Failed to create the folder")
+                        false
+                    }
                 }
+            }
+            else {
+                Timber.e("External storage not available")
+                return false
             }
         }
 
