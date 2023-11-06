@@ -1,7 +1,6 @@
 package me.ian.fsvt.graph
 
 import com.github.mikephil.charting.charts.LineChart
-import me.ian.fsvt.csv.CSVProcessing
 
 class MyObjects {
     companion object {
@@ -24,7 +23,9 @@ class MyObjects {
         var connectionState : ConnectionState = ConnectionState.DISCONNECTED
         var unitType        : UnitType = UnitType.FEET
         var fileName        : String? = null
+        var currentTestName : String? = null
         var distance        : Float  = 0F
+        var velocity        : Float = 0F
         var fileReady       : Boolean = false
         var testCount       : Int = 0
 
@@ -49,6 +50,7 @@ class MyObjects {
             unitType = UnitType.FEET
             fileName = null
             distance = 0F
+            velocity = 0F
             firstReadInG1 = false
             firstReadInG2 = false
         }

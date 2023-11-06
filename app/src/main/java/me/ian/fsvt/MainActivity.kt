@@ -41,7 +41,6 @@ package me.ian.fsvt
  import me.ian.fsvt.graph.UnitType
  import org.jetbrains.anko.*
  import timber.log.Timber
- import java.io.File
  import kotlin.math.abs
 
 
@@ -182,14 +181,9 @@ class MainActivity: AppCompatActivity() {
         /** SETTINGS BUTTON **/
         binding.SettingsButton.isEnabled = false // Disable by default
         binding.SettingsButton.setOnClickListener {
-            promptSettings { fileName, distance, unitType ->
-                if (fileName != null && distance != null && unitType != null ) {
-                    MyObjects.fileName = fileName
-                    MyObjects.distance = distance
-                    MyObjects.unitType = unitType
-                    MyObjects.fileReady = true
-                    binding.StartButton.isEnabled = true
-                    binding.ResetButton.isEnabled = true
+            if( MyObjects.connectionState == ConnectionState.CONNECTED ) {
+                promptSettings { fileName, distance, unitType ->
+                    applySettings(fileName, distance, unitType)
                 }
             }
         }
@@ -206,12 +200,18 @@ class MainActivity: AppCompatActivity() {
                         binding.StopButton.isEnabled = true
                         ConnectionManager.sendStartCommand()
 
+                        /** Create the file and open it for writing **/
+                        CSVProcessing.createFile()
+
                         /** Set the start time of the program here **/
                         if( MyObjects.startProgramTime == null ) {
                             MyObjects.startProgramTime = System.currentTimeMillis()
                         }
                     } else {
-                        // Dialog alert to prompt user for distance and filename, etc.
+                        /** Prompt the user for custom settings **/
+                        promptSettings { fileName, distance, unitType ->
+                            applySettings(fileName, distance, unitType)
+                        }
                     }
                 }
             }
@@ -231,6 +231,7 @@ class MainActivity: AppCompatActivity() {
                     binding.StartButton.isEnabled = true
                     ConnectionManager.sendStopCommand()
                     calculateVelocity()
+                    CSVProcessing.writeToCSV()
                 }
             }
         }
@@ -424,12 +425,11 @@ class MainActivity: AppCompatActivity() {
             velocity = 0F
         }
 
-        Timber.d("------------------------------------------------------------")
         Timber.d("\tVelocity: $velocity")
         Timber.d("\t[Graph One] Max Pair: " + graph1Pair.toString())
         Timber.d("\t[Graph Two] Max Pair: " + graph2Pair.toString())
-        Timber.d("------------------------------------------------------------")
 
+        MyObjects.velocity = String.format("%.2f", velocity).toFloat()
         showVelocityDialog(velocity)
     }
 
@@ -440,6 +440,18 @@ class MainActivity: AppCompatActivity() {
         binding.SettingsButton.isEnabled = false
         binding.StartButton.isEnabled    = false
         binding.ResetButton.isEnabled    = false
+    }
+
+    private fun applySettings(fileName: String?, distance: Float?, unitType: UnitType?) {
+        // Used in applying the callback values from promptSettings()
+        if (fileName != null && distance != null && unitType != null ) {
+            MyObjects.fileName = fileName
+            MyObjects.distance = distance
+            MyObjects.unitType = unitType
+            MyObjects.fileReady = true
+            binding.StartButton.isEnabled = true
+            binding.ResetButton.isEnabled = true
+        }
     }
 
     /*******************************************

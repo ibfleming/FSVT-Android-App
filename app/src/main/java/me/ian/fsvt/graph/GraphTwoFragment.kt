@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
 import me.ian.fsvt.R
 import timber.log.Timber
 
@@ -98,5 +99,9 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
             }
         }
         return null
+    }
+
+    fun fetchData(): LineData? {
+        return chart.data
     }
 }
