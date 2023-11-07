@@ -162,7 +162,7 @@ class MainActivity: AppCompatActivity() {
                                   "Please connect to the device again."
                         isCancelable = false
                         positiveButton(android.R.string.ok) {
-                            resetApp()
+                            reset()
                         }
                     }.show()
                 }
@@ -193,26 +193,20 @@ class MainActivity: AppCompatActivity() {
         binding.StartButton.setOnClickListener {
             if (MyObjects.connectionState == ConnectionState.CONNECTED) {
                 if( MyObjects.deviceState == DeviceState.STOPPED ) {
-                    if( MyObjects.fileReady ) {
-                        Timber.tag(tag).d("[STARTING PROGRAM]")
-                        MyObjects.deviceState = DeviceState.RUNNING
-                        binding.StartButton.isEnabled = false
-                        binding.StopButton.isEnabled = true
-                        ConnectionManager.sendStartCommand()
+                    Timber.tag(tag).d("[STARTING PROGRAM]")
+                    MyObjects.deviceState = DeviceState.RUNNING
+                    binding.StartButton.isEnabled = false
+                    binding.StopButton.isEnabled = true
+                    ConnectionManager.sendStartCommand()
 
-                        /** Create the file and open it for writing **/
-                        CSVProcessing.createFile()
+                    /** Create the file and open it for writing **/
+                    CSVProcessing.createFile()
 
-                        /** Set the start time of the program here **/
-                        if( MyObjects.startProgramTime == null ) {
-                            MyObjects.startProgramTime = System.currentTimeMillis()
-                        }
-                    } else {
-                        /** Prompt the user for custom settings **/
-                        promptSettings { fileName, distance, unitType ->
-                            applySettings(fileName, distance, unitType)
-                        }
+                    /** Set the start time of the program here **/
+                    if( MyObjects.startProgramTime == null ) {
+                        MyObjects.startProgramTime = System.currentTimeMillis()
                     }
+                    MyObjects.testCount++
                 }
             }
             else {
@@ -232,6 +226,7 @@ class MainActivity: AppCompatActivity() {
                     ConnectionManager.sendStopCommand()
                     calculateVelocity()
                     CSVProcessing.writeToCSV()
+                    softReset()
                 }
             }
         }
@@ -240,10 +235,7 @@ class MainActivity: AppCompatActivity() {
         binding.ResetButton.isEnabled = false   // Disable by default
         binding.ResetButton.setOnClickListener {
             if( MyObjects.connectionState == ConnectionState.CONNECTED && MyObjects.deviceState == DeviceState.STOPPED ) {
-                MyObjects.graphOneFragment.clearGraph()
-                MyObjects.graphTwoFragment.clearGraph()
-                MyObjects.startProgramTime = null
-                MyObjects.stopProgramTime  = null
+                reset()
             }
         }
     }
@@ -425,21 +417,28 @@ class MainActivity: AppCompatActivity() {
             velocity = 0F
         }
 
-        Timber.d("\tVelocity: $velocity")
-        Timber.d("\t[Graph One] Max Pair: " + graph1Pair.toString())
-        Timber.d("\t[Graph Two] Max Pair: " + graph2Pair.toString())
+        Timber.d( "------------------------------"
+            + "\n\t[Graph One] : " + graph1Pair.toString()
+            + "\n\t[Graph Two] : " + graph2Pair.toString()
+            + "\n\t[Velocity]  : $velocity"
+            + "\n------------------------------")
 
         MyObjects.velocity = String.format("%.2f", velocity).toFloat()
         showVelocityDialog(velocity)
     }
 
-    private fun resetApp() {
+    private fun reset() {
         Timber.w("[RESET APP]")
         MyObjects.resetValues()
-        binding.ConnectButton.isEnabled  = true
-        binding.SettingsButton.isEnabled = false
-        binding.StartButton.isEnabled    = false
-        binding.ResetButton.isEnabled    = false
+        CSVProcessing.closeFile()
+        binding.StartButton.isEnabled = false
+        binding.StopButton.isEnabled  = false
+        binding.ResetButton.isEnabled = false
+    }
+
+    private fun softReset() {
+        Timber.w("[SOFT RESET APP]")
+        MyObjects.softResetValues()
     }
 
     private fun applySettings(fileName: String?, distance: Float?, unitType: UnitType?) {
@@ -448,7 +447,6 @@ class MainActivity: AppCompatActivity() {
             MyObjects.fileName = fileName
             MyObjects.distance = distance
             MyObjects.unitType = unitType
-            MyObjects.fileReady = true
             binding.StartButton.isEnabled = true
             binding.ResetButton.isEnabled = true
         }
@@ -534,7 +532,7 @@ class MainActivity: AppCompatActivity() {
         }
 
         // Submit button click listener
-        if( !MyObjects.fileReady ) {
+        if( MyObjects.fileName == null && MyObjects.distance == 0F) {
             submit.isEnabled = false
         }
         submit.setOnClickListener {
@@ -577,7 +575,7 @@ class MainActivity: AppCompatActivity() {
                 message = "Could not find the specified device. " +
                         "Please ensure the devices are powered on and try again."
                 isCancelable = false
-                positiveButton(android.R.string.ok) { resetApp() }
+                positiveButton(android.R.string.ok) { reset() }
             }.show()
         }
     }

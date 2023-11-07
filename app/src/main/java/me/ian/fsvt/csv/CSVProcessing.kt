@@ -100,7 +100,10 @@ class CSVProcessing {
 
         fun writeToCSV() {
 
-            fileWriter.write("Test #${MyObjects.testCount + 1}")
+            if( MyObjects.testCount > 1 ) {
+                fileWriter.newLine()
+            }
+            fileWriter.write("Test #${MyObjects.testCount}")
             fileWriter.newLine()
             if( MyObjects.unitType == UnitType.METERS) {
                 fileWriter.write("Velocity:,${MyObjects.velocity} m/s")
@@ -143,10 +146,12 @@ class CSVProcessing {
 
                     Timber.v("Closing file '${MyObjects.fileName}'. Finished writing data.")
                     fileWriter.flush()
-                    fileWriter.close()
                 }
-
             }
+        }
+
+        fun closeFile() {
+            fileWriter.close()
         }
 
         private fun calcAvg(index: Int, setOne: ILineDataSet, setTwo: ILineDataSet): Float {

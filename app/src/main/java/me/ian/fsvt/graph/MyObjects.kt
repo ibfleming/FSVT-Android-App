@@ -23,10 +23,8 @@ class MyObjects {
         var connectionState : ConnectionState = ConnectionState.DISCONNECTED
         var unitType        : UnitType = UnitType.FEET
         var fileName        : String? = null
-        var currentTestName : String? = null
         var distance        : Float  = 0F
         var velocity        : Float = 0F
-        var fileReady       : Boolean = false
         var testCount       : Int = 0
 
         /*******************************************
@@ -34,7 +32,6 @@ class MyObjects {
          *******************************************/
 
         var startProgramTime      : Long? = null
-        var stopProgramTime       : Long? = null
         var firstReadInG1         : Boolean = false
         var firstReadInG2         : Boolean = false
 
@@ -46,13 +43,23 @@ class MyObjects {
             graphOneFragment.clearGraph()
             graphTwoFragment.clearGraph()
             deviceState = DeviceState.STOPPED
-            connectionState = ConnectionState.DISCONNECTED
             unitType = UnitType.FEET
             fileName = null
             distance = 0F
             velocity = 0F
+            testCount = 0
             firstReadInG1 = false
             firstReadInG2 = false
+            startProgramTime = null
+        }
+
+        fun softResetValues() {
+            graphOneFragment.clearGraph()
+            graphTwoFragment.clearGraph()
+            velocity = 0F
+            firstReadInG1 = false
+            firstReadInG2 = false
+            startProgramTime = null
         }
     }
 }
