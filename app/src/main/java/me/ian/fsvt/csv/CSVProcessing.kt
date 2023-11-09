@@ -20,30 +20,27 @@ class CSVProcessing {
          * Properties
          *******************************************/
 
-        private lateinit var saveFolder: File
-        private lateinit var fileWriter: BufferedWriter
+        private lateinit var saveFolder : File
+        private var fileWriter : BufferedWriter? = null
 
-        private val cal: Calendar = Calendar.getInstance()
-        private val defaultFileName = "Test-File" +
-                "--${cal.get(Calendar.YEAR)}" +
-                "-${cal.get(Calendar.MONTH) + 1}" +
-                "-${cal.get(Calendar.DAY_OF_MONTH)}" +
-                "--${cal.get(Calendar.HOUR_OF_DAY)}" +
-                "-${cal.get(Calendar.MINUTE)}" +
-                "-${cal.get(Calendar.SECOND)}"
+        private val cal : Calendar = Calendar.getInstance()
+        private val defaultFileName = "Test" + generateTag()
 
         /*******************************************
          * Extension Functions
          *******************************************/
 
-        private fun generateName(): String {
-            return MyObjects.fileName +
-                    "--${cal.get(Calendar.YEAR)}" +
+        private fun generateTag(): String {
+            return ("--${cal.get(Calendar.YEAR)}" +
                     "-${cal.get(Calendar.MONTH) + 1}" +
                     "-${cal.get(Calendar.DAY_OF_MONTH)}" +
                     "--${cal.get(Calendar.HOUR_OF_DAY)}" +
                     "-${cal.get(Calendar.MINUTE)}" +
-                    "-${cal.get(Calendar.SECOND)}"
+                    "-${cal.get(Calendar.SECOND)}")
+        }
+
+        private fun generateCustomName(): String {
+            return MyObjects.fileName + generateTag()
         }
 
         fun createDirectory(): Boolean {
@@ -79,49 +76,56 @@ class CSVProcessing {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun createFile() {
-
             val file: File = if (MyObjects.fileName != null) {
-                Timber.w("File name: ${generateName()}")
-                File("$saveFolder/${generateName()}.csv")
+                val name = generateCustomName()
+                Timber.v("Using user-defined file name.")
+                Timber.d("File name: $name")
+                File("$saveFolder/${name}.csv")
             } else {
                 Timber.w("No file name specified by the user - generating DEFAULT name.")
+                Timber.d("File name: $defaultFileName")
                 File("$saveFolder/$defaultFileName.csv")
             }
 
             if (file.exists()) {
-                Timber.e("File already exists!")
+                Timber.w("File already exists.")
             } else {
-                Timber.v("Creating and opening the file for writes!")
-                Timber.v("Full path: $file")
+                Timber.v("Creating and opening the file for writes.")
+                Timber.d("Full path: $file")
                 fileWriter = newBufferedWriter((Paths.get(file.toString())))
-                fileWriter.flush()
+                fileWriter?.close()
             }
         }
 
         fun writeToCSV() {
-
+            /** Get Test Header **/
             if( MyObjects.testCount > 1 ) {
-                fileWriter.newLine()
+                fileWriter?.newLine()
             }
-            fileWriter.write("Test #${MyObjects.testCount}")
-            fileWriter.newLine()
+            fileWriter?.write("Test #${MyObjects.testCount}")
+            fileWriter?.newLine()
+
+            /** Get Velocity and Distance **/
             if( MyObjects.unitType == UnitType.METERS) {
-                fileWriter.write("Velocity:,${MyObjects.velocity} m/s")
-                fileWriter.newLine()
-                fileWriter.write("Distance:,${MyObjects.distance} m")
-                fileWriter.newLine()
+                fileWriter?.write("Velocity:,${MyObjects.velocity} m/s")
+                fileWriter?.newLine()
+                fileWriter?.write("Distance:,${MyObjects.distance} m")
+                fileWriter?.newLine()
             }
             else {
-                fileWriter.write("Velocity:,${MyObjects.velocity} ft/s")
-                fileWriter.newLine()
-                fileWriter.write("Distance:,${MyObjects.distance} ft")
-                fileWriter.newLine()
+                fileWriter?.write("Velocity:,${MyObjects.velocity} ft/s")
+                fileWriter?.newLine()
+                fileWriter?.write("Distance:,${MyObjects.distance} ft")
+                fileWriter?.newLine()
             }
-            fileWriter.write("Time (s),Probe 1 (ppm), Probe 2 (ppm)")
-            fileWriter.newLine()
 
-            val dataOne = MyObjects.graphOneFragment.fetchData()
-            val dataTwo = MyObjects.graphTwoFragment.fetchData()
+            /** Generate Value Headers  **/
+            fileWriter?.write("Time (s),Probe 1 (ppm), Probe 2 (ppm)")
+            fileWriter?.newLine()
+
+            /** Adding data values to CSV file **/
+            val dataOne = MyObjects.graphOneFragment.data()
+            val dataTwo = MyObjects.graphTwoFragment.data()
 
             if( (dataOne != null && dataOne.dataSetCount > 0) &&
                 (dataTwo != null && dataTwo.dataSetCount > 0 ) )
@@ -139,19 +143,19 @@ class CSVProcessing {
                         val y1 = setOne.getEntryForIndex(i).y
                         val y2 = setTwo.getEntryForIndex(i).y
 
-                        Timber.w("[CSV WRITE] -> ($avgX, $y1, $y2)")
-                        fileWriter.write("$avgX,$y1,$y2")
-                        fileWriter.newLine()
+                        Timber.d("[CSV] -> ($avgX, $y1, $y2)")
+                        fileWriter?.write("$avgX,$y1,$y2")
+                        fileWriter?.newLine()
                     }
 
                     Timber.v("Closing file '${MyObjects.fileName}'. Finished writing data.")
-                    fileWriter.flush()
+                    fileWriter?.flush()
                 }
             }
         }
 
         fun closeFile() {
-            fileWriter.close()
+            fileWriter?.close()
         }
 
         private fun calcAvg(index: Int, setOne: ILineDataSet, setTwo: ILineDataSet): Float {

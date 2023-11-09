@@ -34,11 +34,11 @@ class GraphDataViewModel : ViewModel() {
 
     fun setConnectionStatus(connect : Boolean) {
         if( connect ) {
-            Timber.d("setConnectionStatus() -> Connected = true")
+            Timber.tag("[VIEW MODEL]").i("setConnectionStatus() -> Connected = TRUE")
             _isConnected.postValue(true)
         }
         else {
-            Timber.e("setConnectionStatus() -> Connected = false")
+            Timber.tag("[VIEW MODEL]").i("setConnectionStatus() -> Connected = FALSE")
             _isConnected.postValue(false)
         }
     }

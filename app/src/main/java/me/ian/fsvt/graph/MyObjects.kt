@@ -2,6 +2,13 @@ package me.ian.fsvt.graph
 
 import com.github.mikephil.charting.charts.LineChart
 
+/*******************************************
+ * This is a static class that contains all
+ * the important variables and objects on the global
+ * scope that essentially allow the app to function
+ * properly. It is the heart of the application.
+ *******************************************/
+
 class MyObjects {
     companion object {
 
@@ -31,9 +38,9 @@ class MyObjects {
          * Timing
          *******************************************/
 
-        var startProgramTime      : Long? = null
-        var firstReadInG1         : Boolean = false
-        var firstReadInG2         : Boolean = false
+        var startProgramTime    : Long? = null
+        var firstReadInG1       : Boolean = false
+        var firstReadInG2       : Boolean = false
 
         /*******************************************
          * Extension Functions
@@ -62,6 +69,15 @@ class MyObjects {
             startProgramTime = null
         }
     }
+}
+
+/*******************************************
+ * Important ENUM Definitions
+ *******************************************/
+
+enum class ChartType {
+    Probe1,
+    Probe2
 }
 
 enum class UnitType {

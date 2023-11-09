@@ -12,12 +12,6 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 
-
-enum class ChartType {
-    Probe1,
-    Probe2
-}
-
 private class XAxisFormatter : ValueFormatter() {
     // May not be necessary as the granularity is set to 1F
     override fun getAxisLabel(value: Float, axis: AxisBase?): String {
@@ -40,7 +34,6 @@ private class YAxisFormatter : ValueFormatter() {
 }
 
 fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
-
     // Description
     val desc = chart?.description
     desc?.apply {
@@ -54,7 +47,6 @@ fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
         typeface = Typeface.MONOSPACE
     }
     chart?.description = desc
-
 
     // X Axis
     val xAxis = chart?.xAxis
@@ -112,7 +104,7 @@ fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
         setHardwareAccelerationEnabled(true)
     }
 
-    // Chart data
+    // Default Chart Data
     initializeLineData(chart)
 }
 
@@ -129,9 +121,7 @@ fun initializeLineData(chart: LineChart?) {
 }
 
 fun createSet(): LineDataSet {
-    // Should we name these sets unique to the chart?
-    val set = LineDataSet(createMockData(), "Data")
-    //val set = LineDataSet(createMockData(), "Data")
+    val set = LineDataSet(createMockData(), "DATA")
     // Line Styling (line that represents the data on the x-y planes)
     set.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
     set.axisDependency = YAxis.AxisDependency.LEFT

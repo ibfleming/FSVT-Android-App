@@ -43,16 +43,16 @@ package me.ian.fsvt
  import timber.log.Timber
  import kotlin.math.abs
 
-
-private const val ENABLE_BLUETOOTH_REQUEST_CODE = 1
+private const val ENABLE_BLUETOOTH_REQUEST_CODE    = 1
 private const val LOCATION_PERMISSION_REQUEST_CODE = 2
-private const val STORAGE_REQUEST_CODE = 3
-private const val MAC = "B4:52:A9:04:28:DC"
+private const val STORAGE_PERMISSION_REQUEST_CODE  = 3
+
+private const val MAC_ADDRESS = "B4:52:A9:04:28:DC"
 private const val SCAN_PERIOD = 3000L
 
 class MainActivity: AppCompatActivity() {
 
-    private var tag = "MainActivity"
+    private var tag = "MAIN"
 
     /*******************************************
      * Properties
@@ -73,7 +73,7 @@ class MainActivity: AppCompatActivity() {
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
         .build()
 
-    private val scanFilter = ScanFilter.Builder().setDeviceAddress(MAC).build()
+    private val scanFilter = ScanFilter.Builder().setDeviceAddress(MAC_ADDRESS).build()
     private val scanResults = mutableListOf<ScanResult>()
 
     private val isLocationPermissionGranted
@@ -94,7 +94,7 @@ class MainActivity: AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        Timber.tag(tag).d("MainActivity Initialized!")
+        Timber.tag(tag).v("[MAIN INITIALIZED]")
 
         /*******************************************
          * Initialize Graph Fragments
@@ -115,7 +115,7 @@ class MainActivity: AppCompatActivity() {
         }
 
         /*******************************************
-         * CSV Initialization (Create directory)
+         * CSV Initialization (Creates directory)
          *******************************************/
 
         if( !isStoragePermissionGranted ) {
@@ -125,7 +125,7 @@ class MainActivity: AppCompatActivity() {
         }
 
         /*******************************************
-         * Observe Live Data for TextView (OPTIONAL?)
+         * Observe Live Data for TextView (OPTIONAL)
          *******************************************/
 
         MyObjects.graphDataViewModel.dataPoint1.observe(this) { data ->
@@ -173,6 +173,22 @@ class MainActivity: AppCompatActivity() {
          * Button Click Listeners
          *******************************************/
 
+        /**
+         *  Notes:
+         *  - All buttons are accessible only when the bluetooth device is connected to the app
+         *  - All the buttons but the 'Connect' check first if the device is connected
+         *  - Pay attention to the other conditionals the buttons have to work.
+         *
+         *  Flow of execution:
+         *  1) Connect Button -> Scan, and connects if device is found
+         *  2) 'Settings' button is enabled -> Input a distance and file name, etc.
+         *  3) If values are valid, 'Start' and 'Reset' buttons are enabled
+         *  4) 'Stop' button is enabled only if 'Start' has been pressed.
+         *  5) 'Reset' button will disabled all buttons but 'Settings' and resets all values/tests
+         *  6) Repeat from (2), if the device disconnects then this process starts over
+         *
+         **/
+
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
             startScan()
@@ -198,6 +214,7 @@ class MainActivity: AppCompatActivity() {
                     binding.StartButton.isEnabled = false
                     binding.StopButton.isEnabled = true
                     ConnectionManager.sendStartCommand()
+                    MyObjects.testCount++
 
                     /** Create the file and open it for writing **/
                     CSVProcessing.createFile()
@@ -206,7 +223,6 @@ class MainActivity: AppCompatActivity() {
                     if( MyObjects.startProgramTime == null ) {
                         MyObjects.startProgramTime = System.currentTimeMillis()
                     }
-                    MyObjects.testCount++
                 }
             }
             else {
@@ -224,8 +240,12 @@ class MainActivity: AppCompatActivity() {
                     binding.StopButton.isEnabled = false
                     binding.StartButton.isEnabled = true
                     ConnectionManager.sendStopCommand()
+
+                    /** Calculate velocity and prompt the dialog **/
                     calculateVelocity()
+                    /** Write the data of the test to the CSV file **/
                     CSVProcessing.writeToCSV()
+                    /** Execute a soft reset to further future tests **/
                     softReset()
                 }
             }
@@ -273,7 +293,7 @@ class MainActivity: AppCompatActivity() {
                     startScan()
                 }
             }
-            STORAGE_REQUEST_CODE -> {
+            STORAGE_PERMISSION_REQUEST_CODE -> {
                 if( grantResults.firstOrNull() == PackageManager.PERMISSION_DENIED) {
                     requestStoragePermission()
                 } else {
@@ -301,7 +321,7 @@ class MainActivity: AppCompatActivity() {
         }
         requestPermission(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            STORAGE_REQUEST_CODE
+            STORAGE_PERMISSION_REQUEST_CODE
         )
     }
 
@@ -428,7 +448,7 @@ class MainActivity: AppCompatActivity() {
     }
 
     private fun reset() {
-        Timber.w("[RESET APP]")
+        Timber.v("[RESET APP]")
         MyObjects.resetValues()
         CSVProcessing.closeFile()
         binding.StartButton.isEnabled = false
@@ -437,7 +457,7 @@ class MainActivity: AppCompatActivity() {
     }
 
     private fun softReset() {
-        Timber.w("[SOFT RESET APP]")
+        Timber.v("[SOFT RESET APP]")
         MyObjects.softResetValues()
     }
 

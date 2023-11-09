@@ -62,7 +62,7 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
                 time = (currentTime - MyObjects.startProgramTime!!).toFloat() / 1000
             }
 
-            Timber.w("[Graph One] (update) -> (time: ${"%.1f".format(time)}, tds: $value)")
+            Timber.d("[Graph One] (update) -> (time: ${"%.1f".format(time)}, tds: $value)")
             data.addEntry(Entry("%.1f".format(time).toFloat(), value), 0)
             data.notifyDataChanged()
             chart.notifyDataSetChanged()
@@ -101,7 +101,8 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
         return null
     }
 
-    fun fetchData(): LineData? {
+    // Simply returns the chart's data
+    fun data(): LineData? {
         return chart.data
     }
 }
