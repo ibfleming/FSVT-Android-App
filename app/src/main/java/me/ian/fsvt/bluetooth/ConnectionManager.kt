@@ -5,6 +5,7 @@ import android.bluetooth.*
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import me.ian.fsvt.DeviceState
 import me.ian.fsvt.graph.GraphDataViewModel
 import me.ian.fsvt.MyObjects
 import timber.log.Timber
@@ -106,7 +107,7 @@ object ConnectionManager {
                         receivedAcknowledgement = true
                     }
                     else -> {
-                        Timber.d( "[READ TDS] -> '$msg'")
+                        Timber.d( "[READ DATA] -> '$msg'")
                         processData(msg)
                     }
                 }
@@ -127,18 +128,28 @@ object ConnectionManager {
      * Process the Data from BLE Device
      *******************************************/
     private fun processData(data : String) {
-        val values = data.split(":").map { it.trim() }
-        if(values.size == 2) {
-            try {
-                val p1Value = values[0].toFloat()
-                val p2Value = values[1].toFloat()
-                viewModel.updateGraphs(p1Value, p2Value)
-            } catch (e: NumberFormatException) {
-                Timber.e("Error parsing data: $data")
+        if( data.contains(":") ) {
+            // READING TDS DATA
+            val values = data.split(":").map { it.trim() }
+            if(values.size == 2) {
+                try {
+                    val p1Value = values[0].toFloat()
+                    val p2Value = values[1].toFloat()
+                    viewModel.updateGraphs(p1Value, p2Value)
+                } catch (e: NumberFormatException) {
+                    Timber.e("Error parsing data: $data")
+                }
+            }
+        }
+        else if ( data.contains("V") ) {
+            // READING BATTERY DATA
+            val values = data.split("V").map { it.trim() }
+            if(values.size == 2) {
+                // PROCESS BATTERY DATA
             }
         }
         else {
-            Timber.e("Invalid data format: $data")
+            Timber.e("INVALID DATA OVER BLUETOOTH -> $data")
         }
     }
 
@@ -157,6 +168,7 @@ object ConnectionManager {
 
     fun sendStartCommand() {
         writeCommand('S')
+        MyObjects.deviceState = DeviceState.RUNNING
     }
 
     private const val MAX_ATTEMPTS = 25
@@ -172,6 +184,7 @@ object ConnectionManager {
                 handler.postDelayed({
                     if (receivedAcknowledgement) {
                         // Acknowledgement received
+                        MyObjects.deviceState = DeviceState.STOPPED
                         receivedAcknowledgement = false
                     } else {
                         // No acknowledgment received, retry...

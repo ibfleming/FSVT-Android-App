@@ -17,12 +17,30 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.5">
 
+        <Button
+            android:id="@+id/Rotate_Button"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:minWidth="36dp"
+            android:outlineProvider="bounds"
+            android:padding="6dp"
+            app:icon="@drawable/screen_rotation"
+            app:iconPadding="0dp"
+            app:iconSize="36dp"
+            app:layout_constraintBottom_toTopOf="@+id/Dialog_Title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="SpeakableTextPresentCheck" />
+
         <TextView
             android:id="@+id/Dialog_Title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="35dp"
-            android:layout_marginTop="32dp"
             android:layout_marginEnd="32dp"
             android:includeFontPadding="false"
             android:text="@string/Dialog_Title"
@@ -32,7 +50,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/Rotate_Button" />
 
         <EditText
             android:id="@+id/Input_Title"
@@ -87,7 +105,7 @@
             android:id="@+id/Submit_Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="24dp"
             android:includeFontPadding="false"
             android:text="@string/Dialog_Submit"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -100,7 +118,7 @@
             android:id="@+id/Back_Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="24dp"
             android:includeFontPadding="false"
             android:text="@string/Dialog_Cancel"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -135,12 +153,5 @@
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/barrier2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:barrierDirection="left"
-        app:constraint_referenced_ids="Inner_Wrapper" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

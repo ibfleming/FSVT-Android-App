@@ -11,7 +11,9 @@ package me.ian.fsvt
  import android.content.Context
  import android.content.DialogInterface
  import android.content.Intent
+ import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
+ import android.content.res.Configuration
  import android.graphics.Color
  import android.os.Build
  import android.os.Bundle
@@ -50,7 +52,6 @@ private const val SCAN_PERIOD = 3000L
 class MainActivity: AppCompatActivity() {
 
     private var tag = "MAIN"
-
     /*******************************************
      * Properties
      *******************************************/
@@ -83,6 +84,7 @@ class MainActivity: AppCompatActivity() {
      * Activity function overrides
      *******************************************/
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -142,27 +144,19 @@ class MainActivity: AppCompatActivity() {
             /** Behavior of APP when we successfully connected **/
             if (isConnected) {
                 MyObjects.connectionState = ConnectionState.CONNECTED
-                binding.ConnectButton.setBackgroundColor(ContextCompat.getColor(this, R.color.connect_color))
-                binding.ConnectButton.isEnabled  = false
-                binding.SettingsButton.isEnabled = true
+                binding.ConnectButton.backgroundColor = R.color.connect_color
                 runOnUiThread {
                     Toast.makeText(this, "Connected!", Toast.LENGTH_SHORT).show()
                 }
+                binding.ConnectButton.isEnabled  = false
+                binding.SettingsButton.isEnabled = true
             }
             /** Behavior of APP when we disconnect **/
             else {
                 MyObjects.connectionState = ConnectionState.DISCONNECTED
                 binding.ConnectButton.backgroundColor = Color.TRANSPARENT
-                // TODO "Perhaps make a custom layout for this?"
-                runOnUiThread {
-                    alert {
-                        title = "Disconnected"
-                        message = "The device disconnected unexpectedly from the app. " +
-                                  "Please connect to the device again."
-                        isCancelable = false
-                        positiveButton(android.R.string.ok) {}
-                    }.show()
-                }
+                showDisconnectedAlert()
+                // Disable all buttons but connect again and refresh
             }
         }
 
@@ -186,6 +180,13 @@ class MainActivity: AppCompatActivity() {
          *
          **/
 
+        /** DISABLE ALL BUTTONS BUT CONNECT INITIALLY **/
+        disableButtons()
+
+        // Debug
+        binding.SettingsButton.isEnabled = true
+        binding.ResetButton.isEnabled = true
+
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
             startScan()
@@ -193,53 +194,55 @@ class MainActivity: AppCompatActivity() {
 
         /** SETTINGS BUTTON **/
         binding.SettingsButton.setOnClickListener {
-            // Prompt Settings Dialog
-            promptSettings()
+            showSettingsDialog()
         }
 
         /** START BUTTON **/
-        binding.StartButton.setOnClickListener {
-                Timber.tag(tag).d("[STARTING PROGRAM]")
-                MyObjects.deviceState = DeviceState.RUNNING
-                binding.StartButton.isEnabled = false
-                binding.StopButton.isEnabled = true
-                ConnectionManager.sendStartCommand()
-                MyObjects.testCount++
+        binding.StartButton.setOnClickListener { button ->
+            Timber.i("[START]")
+            button.isEnabled = false
 
-                /** Create the file and open it for writing **/
-                CSVProcessing.createFile()
+            // CSV Logic
+            MyObjects.testCount++
 
-                /** Set the start time of the program here **/
-                if( MyObjects.startProgramTime == null ) {
-                    MyObjects.startProgramTime = System.currentTimeMillis()
-                }
+            // Send Command to Devices to RUN
+            ConnectionManager.sendStartCommand()
+
+            // Set Start Time
+            /*
+            if( MyObjects.startProgramTime == null ) {
+                MyObjects.startProgramTime = System.currentTimeMillis()
+            }
+            */
+            // Button Logic
+            binding.StopButton.isEnabled = true
         }
 
         /** STOP BUTTON **/
-        binding.StopButton.setOnClickListener {
+        binding.StopButton.setOnClickListener { button ->
+            Timber.i("[STOP]")
+            button.isEnabled = false
+
+            // Calculate velocity
             calculateVelocity()
-            // TODO "Fix this logic"
-            // Device state will be set to STOPPED
+            showVelocityDialog()
 
-            /*if( MyObjects.connectionState == ConnectionState.CONNECTED) {
-                if( MyObjects.deviceState == DeviceState.RUNNING) {
-                    Timber.tag(tag).d("[STOPPING PROGRAM]")
-                    MyObjects.deviceState = DeviceState.STOPPED
-                    binding.StopButton.isEnabled = false
-                    binding.StartButton.isEnabled = true
-                    ConnectionManager.sendStopCommand()
+            // Write to CSV
+            CSVProcessing.writeToCSV()
 
-                    /** Calculate velocity and prompt the dialog **/
-                    calculateVelocity()
-                    /** Write the data of the test to the CSV file **/
-                    CSVProcessing.writeToCSV()
-                    /** Execute a soft reset to further future tests **/
-                    softReset()
-                }
-            }*/
+            // Send Command to Devices to STOP
+            ConnectionManager.sendStopCommand()
+
+            // Reset objects and variables
+            MyObjects.stopDirective()
+
+            // Button Logic
+            binding.StartButton.isEnabled = true
         }
 
-        /** RESET BUTTON **/
+        /** RESET BUTTON
+         *      MAY NOT BE ENTIRELY NECESSARY!
+         * **/
         binding.ResetButton.setOnClickListener {
             // TODO "Fix this logic"
             // Device state will be set to STOPPED
@@ -330,21 +333,7 @@ class MainActivity: AppCompatActivity() {
         if (isLocationPermissionGranted) {
             return
         }
-        // TODO "Perhaps make a custom layout for this?"
-        runOnUiThread {
-            alert {
-                title = "Location permission required"
-                message = "Starting from Android M (6.0), the system requires apps to be granted " +
-                        "location access in order to scan for BLE devices."
-                isCancelable = false
-                positiveButton(android.R.string.ok) {
-                    requestPermission(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        LOCATION_PERMISSION_REQUEST_CODE
-                    )
-                }
-            }.show()
-        }
+        showLocationPermissionDialog()
     }
 
     private var scanTimeoutHandler = Handler(Looper.getMainLooper())
@@ -361,7 +350,7 @@ class MainActivity: AppCompatActivity() {
 
             scanTimeoutHandler.postDelayed({
                 stopScan()
-                showDeviceNotFoundAlert()
+                showDeviceNotFoundDialog()
             }, SCAN_PERIOD)
         }
     }
@@ -374,7 +363,7 @@ class MainActivity: AppCompatActivity() {
     }
 
     /*******************************************
-     * Callback bodies
+     * Callbacks
      *******************************************/
 
     private val scanCallback = object : ScanCallback() {
@@ -394,30 +383,13 @@ class MainActivity: AppCompatActivity() {
 
         override fun onScanFailed(errorCode: Int) {
             Timber.tag(tag).e("Scan Failed! CODE: $errorCode")
-            // TODO "Perhaps make a custom layout for this?"
-            runOnUiThread {
-                alert {
-                    title = "Scanning error"
-                    message = "Scanning procedure failed unexpectedly. Please try again."
-                    isCancelable = false
-                    positiveButton(android.R.string.ok) { /* nop */ }
-                }.show()
-            }
+            showScanFailedDialog()
         }
     }
 
     /*******************************************
-     * Extension functions
+     * Helper Functions
      *******************************************/
-
-    private fun Context.hasPermission(permissionType: String): Boolean {
-        return ContextCompat.checkSelfPermission(this, permissionType) ==
-                PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun Activity.requestPermission(permission: String, requestCode: Int) {
-        ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
-    }
 
     private fun calculateVelocity() {
         val graph1Pair = MyObjects.graphOneFragment.findMaxEntry()
@@ -431,34 +403,61 @@ class MainActivity: AppCompatActivity() {
         if( MyObjects.distance == null ) return
 
         /** DEFAULT VALUE OF DISTANCE IS 0F **/
-        var velocity = if( MyObjects.unitType == UnitType.METERS ) {
+        val velocity = if( MyObjects.unitType == UnitType.METERS ) {
             val distanceMeters = MyObjects.distance!!.times(0.3048)
             (distanceMeters.div(deltaTime)).toFloat()
         } else {
             MyObjects.distance?.div(deltaTime)
         }
 
-        if( velocity == null ) return
-
-        if( velocity.isNaN() || velocity.isInfinite() ) {
-            velocity = 0F
+        MyObjects.velocity = String.format("%.2f", velocity).toFloat()
+        if( MyObjects.velocity!!.isInfinite() || MyObjects.velocity!!.isNaN() ) {
+            Timber.e("Invalid Velocity!")
+            MyObjects.velocity = 0F
         }
 
         Timber.d( "------------------------------"
             + "\n\t[Graph One] : " + graph1Pair.toString()
             + "\n\t[Graph Two] : " + graph2Pair.toString()
-            + "\n\t[Velocity]  : $velocity"
+            + "\n\t[Velocity]  : ${MyObjects.velocity}"
             + "\n------------------------------")
+    }
 
-        MyObjects.velocity = String.format("%.2f", velocity).toFloat()
-        showVelocityDialog(velocity)
+    /***
+     * Resets all the buttons to DEFAULT.
+     * Connect button is the only button enabled.
+     * The rest are disabled.
+     */
+    private fun disableButtons() {
+        binding.ConnectButton.isEnabled  = true
+        binding.SettingsButton.isEnabled = false
+        binding.StartButton.isEnabled    = false
+        binding.StopButton.isEnabled     = false
+        binding.ResetButton .isEnabled   = false
+    }
+
+    private fun changeOrientation() {
+        // TODO
+    }
+
+    /*******************************************
+     * Permissions
+     *******************************************/
+
+    private fun Context.hasPermission(permissionType: String): Boolean {
+        return ContextCompat.checkSelfPermission(this, permissionType) ==
+                PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun Activity.requestPermission(permission: String, requestCode: Int) {
+        ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
     }
 
     /*******************************************
      * Custom Dialog Alerts
      *******************************************/
 
-    private fun showVelocityDialog(v: Float) {
+    private fun showVelocityDialog() {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
         val dialogView = inflater.inflate(R.layout.layout_velocity_dialog, null)
@@ -473,9 +472,9 @@ class MainActivity: AppCompatActivity() {
 
         val velocityText : String =
             if( MyObjects.unitType == UnitType.METERS ) {
-                getString(R.string.Velocity_Meters, String.format("%.2f", v))
+                getString(R.string.Velocity_Meters, String.format("%.2f", MyObjects.velocity))
             } else {
-                getString(R.string.Velocity_Feet, String.format("%.2f", v))
+                getString(R.string.Velocity_Feet, String.format("%.2f", MyObjects.velocity))
             }
 
         tvVelocity.text = velocityText
@@ -488,7 +487,8 @@ class MainActivity: AppCompatActivity() {
         dialog.show()
     }
 
-    private fun promptSettings() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun showSettingsDialog() {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
         val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
@@ -505,6 +505,15 @@ class MainActivity: AppCompatActivity() {
         val metersCheckbox = dialogView.findViewById<CheckBox>(R.id.Meters_CheckBox)
         val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
         val back = dialogView.findViewById<Button>(R.id.Back_Button)
+        val rotate = dialogView.findViewById<Button>(R.id.Rotate_Button)
+
+        // Input Logic for All
+        if( MyObjects.deviceState == DeviceState.RUNNING ) {
+            editTitle.isEnabled      = false
+            editDist.isEnabled       = false
+            feetCheckbox.isEnabled   = false
+            metersCheckbox.isEnabled = false
+        }
 
         // Checkbox Logic
         if( MyObjects.unitType == UnitType.FEET ) feetCheckbox.isChecked = true
@@ -546,46 +555,91 @@ class MainActivity: AppCompatActivity() {
         }
 
         // Input Box Listeners (Only Enable is No Test is RUNNING)
-        if( MyObjects.deviceState == DeviceState.STOPPED ) {
+        editTitle.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun afterTextChanged(p0: Editable?) {
+                updateSubmitButtonState()
+            }
+        })
 
-            editTitle.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-                override fun afterTextChanged(p0: Editable?) {
-                    updateSubmitButtonState()
-                }
-            })
-
-            editDist.addTextChangedListener(object :TextWatcher {
-                override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-                override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-                override fun afterTextChanged(p0: Editable?) {
-                    updateSubmitButtonState()
-                }
-            })
-        }
+        editDist.addTextChangedListener(object :TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+            override fun afterTextChanged(p0: Editable?) {
+                updateSubmitButtonState()
+            }
+        })
 
         // Buttons
+
+        rotate.isEnabled = true
+        rotate.setOnClickListener {
+            // prompt user if this indeed what they desire -> will reset app!
+            changeOrientation()
+        }
+
         back.setOnClickListener {
-            Toast.makeText(this,
-                "Name: ${MyObjects.fileName}\nDistance: ${MyObjects.distance}\nUnit: ${MyObjects.unitType}", Toast.LENGTH_LONG).show()
             dialog.dismiss()
         }
 
         submit.isEnabled = false
         submit.setOnClickListener {
-            MyObjects.fileName = editTitle.text.toString().trim()
-            MyObjects.distance = editDist.text.toString().toFloat()
+            /*
+             * At this point, there is valid user input for the file name and distance.
+             * Must check if this is the first time the user as inputted this information or not.
+             * If NOT and if the test is NOT RUNNING then let's check if
+             * fileBuffer != NULL (this also implies csvFile != NULL as this var is dependent on csvFile)
+             * If we submit within these conditions, then we must close the current fileBuffer and make it null.
+             * fileBuffer gets set (non-null) in Start Button Listener at openBuffer()
+             * We shall then set the fileName to the new one (alongside distance) and call the
+             * createFile() -> creates this new file for new tests presuming that this is the
+             * intention of the user.
+             * The other case would be by these values are null and therefore ->
+             * set the filename and distance and create file...
+             * NOTE: File buffer only cause on RESET button which is entirely different behavior to be handled
+             */
+
+            if( MyObjects.fileBuffer == null ) {
+                // There is currently no file buffer that is opened for writes
+                // Set parameters
+                MyObjects.fileName = editTitle.text.toString().trim()
+                MyObjects.distance = editDist.text.toString().toFloat()
+                if ( CSVProcessing.createFile() ) {
+                    Timber.tag("(1) Settings Dialog").v("Created the file successfully.")
+                    if (CSVProcessing.openBuffer())  Timber.tag("(1) Settings Dialog").v("File Buffer OPENED!")
+                    binding.StartButton.isEnabled = true
+                }
+                else {
+                    Timber.tag("(1) Settings Dialog").e("Failed to create the file.")
+                }
+            }
+            else {
+                // There is a file buffer that is opened for writes.
+                // Set parameters
+                MyObjects.fileName = editTitle.text.toString().trim()
+                MyObjects.distance = editDist.text.toString().toFloat()
+                MyObjects.testCount = 0
+
+                // Close the current buffer
+                CSVProcessing.closeBuffer()
+                if ( CSVProcessing.createFile() ) {
+                    Timber.tag("(2) Settings Dialog").v("Created the file successfully.")
+                    if (CSVProcessing.openBuffer())  Timber.tag("(2) Settings Dialog").v("File Buffer OPENED!")
+                    binding.StartButton.isEnabled = true
+                }
+                else {
+                    Timber.tag("(2) Settings Dialog").e("Failed to create the file.")
+                }
+            }
             Toast.makeText(this,
                 "Name: ${MyObjects.fileName}\nDistance: ${MyObjects.distance}\nUnit: ${MyObjects.unitType}", Toast.LENGTH_LONG).show()
             dialog.dismiss()
         }
-
         dialog.show()
     }
 
-    // TODO "Perhaps make a custom layout for this?"
-    private fun showDeviceNotFoundAlert() {
+    private fun showDeviceNotFoundDialog() {
         runOnUiThread {
             AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("No device found")
@@ -595,6 +649,49 @@ class MainActivity: AppCompatActivity() {
                 .setPositiveButton(android.R.string.ok) { dialog, _ ->
                     dialog.dismiss()
                 }
+                .show()
+        }
+    }
+
+    private fun showDisconnectedAlert() {
+        runOnUiThread {
+            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+                .setTitle("Disconnected")
+                .setMessage("The device disconnected unexpectedly from the app. "
+                        + "Please connect to the device again. "
+                        + "If this occurred during a running test, please power cycle the devices.")
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+        }
+    }
+
+    private fun showLocationPermissionDialog() {
+        runOnUiThread {
+            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+                .setTitle("Location permission required")
+                .setMessage("Starting from Android M (6.0), the system requires apps to be granted " +
+                        "location access in order to scan for BLE devices.")
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    requestPermission(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        LOCATION_PERMISSION_REQUEST_CODE
+                    )
+                }
+                .show()
+        }
+    }
+
+    private fun showScanFailedDialog() {
+        runOnUiThread {
+            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+                .setTitle("Scanning error")
+                .setMessage("Scanning procedure failed unexpectedly. Please try again.")
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok) { _,_ -> /* NOP */ }
                 .show()
         }
     }

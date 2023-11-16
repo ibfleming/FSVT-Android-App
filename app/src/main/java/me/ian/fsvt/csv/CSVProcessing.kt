@@ -7,8 +7,9 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import me.ian.fsvt.MyObjects
 import me.ian.fsvt.UnitType
 import timber.log.Timber
-import java.io.BufferedWriter
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Files.newBufferedWriter
 import java.nio.file.Paths
 import java.util.Calendar
@@ -20,17 +21,14 @@ class CSVProcessing {
          * Properties
          *******************************************/
 
-        private lateinit var saveFolder : File
-        private var fileWriter : BufferedWriter? = null
-
-        private val cal : Calendar = Calendar.getInstance()
         private val defaultFileName = "Test" + generateTag()
 
         /*******************************************
-         * Extension Functions
+         * File Name Functions
          *******************************************/
 
         private fun generateTag(): String {
+            val cal = Calendar.getInstance()
             return ("--${cal.get(Calendar.YEAR)}" +
                     "-${cal.get(Calendar.MONTH) + 1}" +
                     "-${cal.get(Calendar.DAY_OF_MONTH)}" +
@@ -43,6 +41,10 @@ class CSVProcessing {
             return MyObjects.fileName + generateTag()
         }
 
+        /*******************************************
+         * Directory and File Creations
+         *******************************************/
+
         fun createDirectory(): Boolean {
             val externalStorageState = Environment.getExternalStorageState()
             if (externalStorageState == Environment.MEDIA_MOUNTED) {
@@ -54,13 +56,13 @@ class CSVProcessing {
                     return false
                 }
 
-                saveFolder = File(saveDir, "StreamData")
+                MyObjects.csvDirectory = File(saveDir, "StreamData")
 
-                return if (saveFolder.exists()) {
+                return if (MyObjects.csvDirectory!!.exists()) {
                     Timber.v("'StreamData' exists in the device's file system")
                     true
                 } else {
-                    if (saveFolder.mkdir()) {
+                    if (MyObjects.csvDirectory!!.mkdir()) {
                         Timber.v("Successfully created the folder")
                         true
                     } else {
@@ -74,82 +76,89 @@ class CSVProcessing {
             }
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
-        fun createFile() {
-            val file: File = if (MyObjects.fileName != null) {
+        fun createFile(): Boolean {
+            MyObjects.csvFile = if (MyObjects.fileName != null) {
                 val name = generateCustomName()
                 Timber.v("Using user-defined file name.")
-                Timber.d("File name: $name")
-                File("$saveFolder/${name}.csv")
+                Timber.d("File name: '$name'")
+                File("${MyObjects.csvDirectory}/${name}.csv")
             } else {
                 Timber.w("No file name specified by the user - generating DEFAULT name.")
-                Timber.d("File name: $defaultFileName")
-                File("$saveFolder/$defaultFileName.csv")
+                Timber.d("File name: '$defaultFileName'")
+                File("${MyObjects.csvDirectory}/$defaultFileName.csv")
             }
 
-            if (file.exists()) {
+            return if (MyObjects.csvFile!!.exists()) {
                 Timber.w("File already exists.")
+                false
             } else {
-                Timber.v("Creating and opening the file for writes.")
-                Timber.d("Full path: $file")
-                fileWriter = newBufferedWriter(Paths.get(file.toString()))
-                fileWriter?.close()
+                Timber.tag("CSVProcessing").d("Full file path: '${MyObjects.csvFile}'")
+                true
             }
         }
 
+        /*******************************************
+         * Write to CSV
+         *******************************************/
+
         fun writeToCSV() {
-            /** Get Test Header **/
-            if( MyObjects.testCount > 1 ) {
-                fileWriter?.newLine()
+
+            val bufferRef = MyObjects.fileBuffer
+
+            if (bufferRef == null) {
+                Timber.e("writeToCSV() -> ERROR: Buffer Writer NULL!")
+                return
             }
-            fileWriter?.write("Test #${MyObjects.testCount}")
-            fileWriter?.newLine()
+
+            /** Get Test Header **/
+            if (MyObjects.testCount > 1) bufferRef?.newLine()
+            bufferRef.write("Test #${MyObjects.testCount}")
+            bufferRef.newLine()
 
             /** Get Velocity and Distance **/
-            if( MyObjects.unitType == UnitType.METERS) {
-                fileWriter?.write("Velocity:,${MyObjects.velocity} m/s")
-                fileWriter?.newLine()
-                fileWriter?.write("Distance:,${MyObjects.distance} m")
-                fileWriter?.newLine()
-            }
-            else {
-                fileWriter?.write("Velocity:,${MyObjects.velocity} ft/s")
-                fileWriter?.newLine()
-                fileWriter?.write("Distance:,${MyObjects.distance} ft")
-                fileWriter?.newLine()
+            if (MyObjects.unitType == UnitType.METERS) {
+                bufferRef.write("Velocity:,${MyObjects.velocity} m/s")
+                bufferRef.newLine()
+                bufferRef.write("Distance:,${MyObjects.distance} m")
+                bufferRef.newLine()
+            } else {
+                bufferRef.write("Velocity:,${MyObjects.velocity} ft/s")
+                bufferRef.newLine()
+                bufferRef.write("Distance:,${MyObjects.distance} ft")
+                bufferRef.newLine()
             }
 
             /** Generate Value Headers  **/
-            fileWriter?.write("Time (s),Probe 1 (ppm), Probe 2 (ppm)")
-            fileWriter?.newLine()
+            bufferRef.write("Time (s),Probe 1 (ppm), Probe 2 (ppm)")
+            bufferRef.newLine()
 
             /** Adding data values to CSV file **/
             val dataOne = MyObjects.graphOneFragment.data()
             val dataTwo = MyObjects.graphTwoFragment.data()
 
-            if( (dataOne != null && dataOne.dataSetCount > 0) &&
-                (dataTwo != null && dataTwo.dataSetCount > 0 ) )
-            {
+            if ((dataOne != null && dataOne.dataSetCount > 0) &&
+                (dataTwo != null && dataTwo.dataSetCount > 0)
+            ) {
                 val setOne = dataOne.getDataSetByIndex(0)
                 val setTwo = dataTwo.getDataSetByIndex(0)
 
-                if( (setOne != null && setOne.entryCount > 0) &&
-                    (setTwo != null && setTwo.entryCount > 0) )
-                {
+                if ((setOne != null && setOne.entryCount > 0) &&
+                    (setTwo != null && setTwo.entryCount > 0)
+                ) {
                     val maxEntryCount = maxOf(setOne.entryCount, setTwo.entryCount)
 
-                    for(i in 1 until maxEntryCount) {
+                    for (i in 1 until maxEntryCount) {
                         val avgX = calcAvg(i, setOne, setTwo)
                         val y1 = setOne.getEntryForIndex(i).y
                         val y2 = setTwo.getEntryForIndex(i).y
 
                         Timber.d("[CSV] -> ($avgX, $y1, $y2)")
-                        fileWriter?.write("$avgX,$y1,$y2")
-                        fileWriter?.newLine()
+                        bufferRef.write("$avgX,$y1,$y2")
+                        bufferRef.newLine()
                     }
 
-                    Timber.v("Closing file '${MyObjects.fileName}'. Finished writing data.")
-                    fileWriter?.flush()
+                    Timber.v("Finished writing test #${MyObjects.testCount}")
+                    bufferRef.flush()
                 }
             }
         }
@@ -160,6 +169,42 @@ class CSVProcessing {
 
             val formatAvgX = String.format("%.2f", (x1 + x2) / 2)
             return formatAvgX.toFloat()
+        }
+
+        /*******************************************
+         * Helper Functions
+         *******************************************/
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun openBuffer(): Boolean {
+            if (MyObjects.csvFile == null) return false
+            MyObjects.fileBuffer = newBufferedWriter(Paths.get(MyObjects.csvFile.toString()))
+            return true
+        }
+
+        fun closeBuffer(): Boolean {
+            if (MyObjects.fileBuffer == null) return false
+            MyObjects.fileBuffer!!.flush()
+            MyObjects.fileBuffer!!.close()
+            MyObjects.fileBuffer = null
+            return true
+        }
+
+        /**
+         * TODO "MUST BE WORKED ON MORE -> DELETES CURRENT OPEN FILE"
+         * Wipes all the tests in the 'StreamData' Directory
+         */
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun wipeTests(): Boolean {
+            if (MyObjects.csvDirectory == null) return false
+
+            Timber.v("Wiping all tests in directory.")
+            MyObjects.csvDirectory!!.listFiles()?.forEach { file ->
+                if (file.isFile) {
+                    file.delete()
+                }
+            }
+            return true
         }
     }
 }

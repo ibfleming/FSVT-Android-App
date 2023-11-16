@@ -4,6 +4,9 @@ import com.github.mikephil.charting.charts.LineChart
 import me.ian.fsvt.graph.GraphDataViewModel
 import me.ian.fsvt.graph.GraphOneFragment
 import me.ian.fsvt.graph.GraphTwoFragment
+import timber.log.Timber
+import java.io.BufferedWriter
+import java.io.File
 
 /*******************************************
  * This is a static class that contains all
@@ -32,11 +35,33 @@ class MyObjects {
         var deviceState     : DeviceState = DeviceState.STOPPED
         var connectionState : ConnectionState = ConnectionState.DISCONNECTED
         var unitType        : UnitType = UnitType.FEET
-        var testCount       : Int = 0
 
-        var fileName        : String? = null
         var distance        : Float?  = null
         var velocity        : Float?  = null
+
+        /*******************************************
+         * File/CSV Properties
+         *******************************************/
+
+        var testCount    : Int = 0                   // Test count for CSV
+        var fileName     : String? = null            // The RAW String of the File Name from User
+        var csvDirectory : File? = null              // File directory for storage of CSVs on device
+        var csvFile      : File? = null              // Current file object for CSV processing
+        var fileBuffer   : BufferedWriter? = null    // Current file buffer of the current file object
+
+        /**
+         * Resets all objects for CSV processing.
+         * No need to reset the csvDirectory as that is initialized
+         * on Activity create and shall remain the same for the entire lifespan
+         * of the app.
+         * The rest of these values will change dynamically by the user in the app.
+         */
+        fun resetCSV() {
+            testCount = 0
+            fileName = null
+            csvFile = null
+            fileBuffer = null
+        }
 
         /*******************************************
          * Timing
@@ -65,9 +90,9 @@ class MyObjects {
         }
 
         fun stopDirective() {
+            Timber.i("[STOP DIRECTIVE]")
             graphOneFragment.clearGraph()
             graphTwoFragment.clearGraph()
-            deviceState = DeviceState.STOPPED
             velocity = 0F
             firstReadInG1 = false
             firstReadInG2 = false
