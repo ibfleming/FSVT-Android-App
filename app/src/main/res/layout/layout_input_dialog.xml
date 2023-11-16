@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/Dialog_Main"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -25,7 +26,7 @@
             android:layout_marginEnd="32dp"
             android:includeFontPadding="false"
             android:text="@string/Dialog_Title"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display4"
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@+id/Input_Title"
             app:layout_constraintEnd_toEndOf="parent"
@@ -38,7 +39,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="24dp"
             android:layout_marginEnd="32dp"
             android:alpha="1"
             android:autofillHints=""
@@ -53,7 +54,7 @@
             android:textStyle="italic"
             app:layout_constraintBottom_toTopOf="@+id/Input_Distance"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/Dialog_Title"
             app:layout_constraintWidth_max="488dp" />
@@ -76,37 +77,11 @@
             android:paddingRight="10dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textStyle="italic"
-            app:layout_constraintBottom_toTopOf="@+id/Unit_Type_Switch"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/Input_Title"
             app:layout_constraintWidth_max="488dp" />
-
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/Unit_Type_Switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:includeFontPadding="false"
-            android:minHeight="48dp"
-            android:text="@string/Unit_Type"
-            app:layout_constraintBottom_toTopOf="@+id/Submit_Button"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/Input_Distance" />
-
-        <Button
-            android:id="@+id/Cancel_Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:includeFontPadding="false"
-            android:text="@string/Dialog_Cancel"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/Submit_Button"
-            app:layout_constraintStart_toStartOf="parent" />
 
         <Button
             android:id="@+id/Submit_Button"
@@ -117,8 +92,55 @@
             android:text="@string/Dialog_Submit"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/Cancel_Button" />
+            app:layout_constraintStart_toEndOf="@+id/Back_Button"
+            app:layout_constraintTop_toBottomOf="@+id/UnitType_Wrapper"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <Button
+            android:id="@+id/Back_Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:includeFontPadding="false"
+            android:text="@string/Dialog_Cancel"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/Submit_Button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/UnitType_Wrapper"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <LinearLayout
+            android:id="@+id/UnitType_Wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Input_Distance">
+
+            <CheckBox
+                android:id="@+id/Feet_CheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/Unit_Feet" />
+
+            <CheckBox
+                android:id="@+id/Meters_CheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/Unit_Meters" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="left"
+        app:constraint_referenced_ids="Inner_Wrapper" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

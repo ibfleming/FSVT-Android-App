@@ -18,5 +18,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TheFSVTApp"
+rootProject.name = "FSVT App"
 include(":app")

@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
+import me.ian.fsvt.ChartType
+import me.ian.fsvt.MyObjects
 import me.ian.fsvt.R
 import timber.log.Timber
 

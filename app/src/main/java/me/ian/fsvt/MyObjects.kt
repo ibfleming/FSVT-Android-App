@@ -1,6 +1,9 @@
-package me.ian.fsvt.graph
+package me.ian.fsvt
 
 import com.github.mikephil.charting.charts.LineChart
+import me.ian.fsvt.graph.GraphDataViewModel
+import me.ian.fsvt.graph.GraphOneFragment
+import me.ian.fsvt.graph.GraphTwoFragment
 
 /*******************************************
  * This is a static class that contains all
@@ -29,10 +32,11 @@ class MyObjects {
         var deviceState     : DeviceState = DeviceState.STOPPED
         var connectionState : ConnectionState = ConnectionState.DISCONNECTED
         var unitType        : UnitType = UnitType.FEET
-        var fileName        : String? = null
-        var distance        : Float  = 0F
-        var velocity        : Float = 0F
         var testCount       : Int = 0
+
+        var fileName        : String? = null
+        var distance        : Float?  = null
+        var velocity        : Float?  = null
 
         /*******************************************
          * Timing
@@ -46,7 +50,7 @@ class MyObjects {
          * Extension Functions
          *******************************************/
 
-        fun resetValues() {
+        fun resetDirective() {
             graphOneFragment.clearGraph()
             graphTwoFragment.clearGraph()
             deviceState = DeviceState.STOPPED
@@ -60,9 +64,10 @@ class MyObjects {
             startProgramTime = null
         }
 
-        fun softResetValues() {
+        fun stopDirective() {
             graphOneFragment.clearGraph()
             graphTwoFragment.clearGraph()
+            deviceState = DeviceState.STOPPED
             velocity = 0F
             firstReadInG1 = false
             firstReadInG2 = false

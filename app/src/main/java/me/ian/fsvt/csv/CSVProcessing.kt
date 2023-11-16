@@ -4,8 +4,8 @@ import android.os.Build
 import android.os.Environment
 import androidx.annotation.RequiresApi
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import me.ian.fsvt.graph.MyObjects
-import me.ian.fsvt.graph.UnitType
+import me.ian.fsvt.MyObjects
+import me.ian.fsvt.UnitType
 import timber.log.Timber
 import java.io.BufferedWriter
 import java.io.File
@@ -92,7 +92,7 @@ class CSVProcessing {
             } else {
                 Timber.v("Creating and opening the file for writes.")
                 Timber.d("Full path: $file")
-                fileWriter = newBufferedWriter((Paths.get(file.toString())))
+                fileWriter = newBufferedWriter(Paths.get(file.toString()))
                 fileWriter?.close()
             }
         }
@@ -152,10 +152,6 @@ class CSVProcessing {
                     fileWriter?.flush()
                 }
             }
-        }
-
-        fun closeFile() {
-            fileWriter?.close()
         }
 
         private fun calcAvg(index: Int, setOne: ILineDataSet, setTwo: ILineDataSet): Float {

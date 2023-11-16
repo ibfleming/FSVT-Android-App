@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import me.ian.fsvt.graph.GraphDataViewModel
-import me.ian.fsvt.graph.MyObjects
+import me.ian.fsvt.MyObjects
 import timber.log.Timber
 import java.util.UUID
 

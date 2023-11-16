@@ -11,6 +11,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import me.ian.fsvt.ChartType
 
 private class XAxisFormatter : ValueFormatter() {
     // May not be necessary as the granularity is set to 1F
@@ -64,7 +65,7 @@ fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
     val axisLeft = chart?.axisLeft
     axisLeft?.apply {
         axisMinimum = -5F
-        axisMaximum = 250F
+        axisMaximum = 750F
         axisLineWidth = 2F
         axisLineColor = Color.WHITE
         textColor = Color.WHITE
