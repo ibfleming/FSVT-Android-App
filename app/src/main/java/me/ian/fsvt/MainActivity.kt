@@ -31,7 +31,6 @@ package me.ian.fsvt
  import androidx.annotation.RequiresApi
  import androidx.appcompat.app.AlertDialog
  import androidx.appcompat.app.AppCompatActivity
- import androidx.compose.ui.text.toLowerCase
  import androidx.core.app.ActivityCompat
  import androidx.core.content.ContextCompat
  import me.ian.fsvt.bluetooth.ConnectionManager
@@ -42,7 +41,6 @@ package me.ian.fsvt
  import me.ian.fsvt.graph.GraphTwoFragment
  import org.jetbrains.anko.*
  import timber.log.Timber
- import java.util.Locale
  import kotlin.math.abs
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE    = 1
@@ -103,6 +101,7 @@ class MainActivity: AppCompatActivity() {
          *******************************************/
 
         MyObjects.graphDataViewModel = GraphDataViewModel()
+        //TODO "CHANGE CLASS OBJECT"
         MyObjects.graphOneFragment = GraphOneFragment()
         MyObjects.graphTwoFragment = GraphTwoFragment()
 
@@ -193,9 +192,6 @@ class MainActivity: AppCompatActivity() {
         /** DISABLE ALL BUTTONS BUT CONNECT INITIALLY **/
         disableButtons()
 
-        // Debug
-        binding.SettingsButton.isEnabled = true
-
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
             startScan()
@@ -223,11 +219,11 @@ class MainActivity: AppCompatActivity() {
             ConnectionManager.sendStartCommand()
 
             // Set Start Time
-            /*
+
             if( MyObjects.startProgramTime == null ) {
                 MyObjects.startProgramTime = System.currentTimeMillis()
             }
-            */
+
             // Button Logic
             binding.StopButton.isEnabled = true
         }
@@ -611,6 +607,8 @@ class MainActivity: AppCompatActivity() {
                 // Set parameters
                 MyObjects.fileName = editTitle.text.toString().trim()
                 MyObjects.distance = editDist.text.toString().toFloat()
+                MyObjects.testCount = 0
+
                 if ( CSVProcessing.createFile() ) {
                     Timber.tag("(1) Settings Dialog").v("Created the file successfully.")
                     if (CSVProcessing.openBuffer())  Timber.tag("(1) Settings Dialog").v("File Buffer OPENED!")
@@ -645,7 +643,7 @@ class MainActivity: AppCompatActivity() {
             } else {
                 "${MyObjects.distance}m"
             }
-            showCustomToast(this, "Name = ${MyObjects.fileName}\nDistance = ${distStr}")
+            showCustomToast(this, "Name = ${MyObjects.fileName}\nDistance = $distStr")
 
             dialog.dismiss()
         }

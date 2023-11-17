@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
-import me.ian.fsvt.ChartType
+import me.ian.fsvt.ChartClassifier
 import me.ian.fsvt.MyObjects
 import me.ian.fsvt.R
 import timber.log.Timber
@@ -37,7 +37,7 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
         super.onViewCreated(view, savedInstanceState)
         MyObjects.graphOne = view.findViewById(R.id.GraphOne)
         chart = MyObjects.graphOne
-        applyGraphStyling(chart, ChartType.Probe1)
+        applyGraphStyling(chart, ChartClassifier.Probe1)
 
         MyObjects.graphDataViewModel.dataPoint1.observe(viewLifecycleOwner) { value ->
             updateChart(value)

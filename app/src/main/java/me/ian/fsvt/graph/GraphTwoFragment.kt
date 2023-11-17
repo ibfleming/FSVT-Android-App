@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
-import me.ian.fsvt.ChartType
+import me.ian.fsvt.ChartClassifier
 import me.ian.fsvt.MyObjects
 import me.ian.fsvt.R
 import timber.log.Timber
@@ -37,7 +37,7 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
         super.onViewCreated(view, savedInstanceState)
         MyObjects.graphTwo = view.findViewById(R.id.GraphTwo)
         chart = MyObjects.graphTwo
-        applyGraphStyling(chart, ChartType.Probe2)
+        applyGraphStyling(chart, ChartClassifier.Probe2)
 
         MyObjects.graphDataViewModel.dataPoint2.observe(viewLifecycleOwner) { value ->
             updateChart(value)

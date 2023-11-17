@@ -11,7 +11,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import me.ian.fsvt.ChartType
+import me.ian.fsvt.ChartClassifier
 
 private class XAxisFormatter : ValueFormatter() {
     // May not be necessary as the granularity is set to 1F
@@ -34,13 +34,13 @@ private class YAxisFormatter : ValueFormatter() {
     }
 }
 
-fun applyGraphStyling(chart: LineChart?, probe: ChartType) {
+fun applyGraphStyling(chart: LineChart?, probe: ChartClassifier) {
     // Description
     val desc = chart?.description
     desc?.apply {
         text = "Probe ${when (probe) {
-            ChartType.Probe1 -> "1"
-            ChartType.Probe2 -> "2"
+            ChartClassifier.Probe1 -> "1"
+            ChartClassifier.Probe2 -> "2"
         }}"
         textColor = Color.GRAY
         yOffset = 15F

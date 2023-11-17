@@ -106,7 +106,7 @@ class MyObjects {
  * Important ENUM Definitions
  *******************************************/
 
-enum class ChartType {
+enum class ChartClassifier {
     Probe1,
     Probe2
 }
