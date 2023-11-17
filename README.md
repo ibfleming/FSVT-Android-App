@@ -1,3 +1,3 @@
 # fsvt-app
-v2.0 of App Development
+v3.0 of App Development
 Free Stream Velocity Team - Android App Development

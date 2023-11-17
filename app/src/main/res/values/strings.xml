@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Stream Velocity</string>
+    <string name="app_name">FSVT</string>
     <string name="Connect_Button">Connect</string>
     <string name="Connected_Button">Connected</string>
     <string name="Scanning_Button">Scanning…</string>
@@ -7,7 +7,7 @@
     <string name="Start_Program">Start</string>
     <string name="Stop_Program">Halt</string>
     <string name="Disconnect_Button">Disconnect</string>
-    <string name="Dialog_Title">Enter the file name, distance, and unit</string>
+    <string name="Dialog_Title">Settings</string>
     <string name="Title_Hint">Name</string>
     <string name="Distance_Hint">Distance</string>
     <string name="Dialog_Submit">Submit</string>
@@ -21,5 +21,8 @@
     <string name="Velocity_Empty">Empty</string>
     <string name="Velocity_Feet">%s ft/s</string>
     <string name="Velocity_Meters">%s m/s</string>
+    <string name="Empty_Placeholder">NA%</string>
+    <string name="Battery_Probe_One">Battery Probe 1:</string>
+    <string name="Battery_Probe_Two">Battery Probe 2:</string>
     <string name="copyright">© 2023 FSVT - All Rights Reserved.</string>
 </resources>

@@ -76,13 +76,14 @@ class MyObjects {
          *******************************************/
 
         fun resetDirective() {
+            Timber.e("[RESET DIRECTIVE]")
             graphOneFragment.clearGraph()
             graphTwoFragment.clearGraph()
             deviceState = DeviceState.STOPPED
             unitType = UnitType.FEET
             fileName = null
-            distance = 0F
-            velocity = 0F
+            distance = null
+            velocity = null
             testCount = 0
             firstReadInG1 = false
             firstReadInG2 = false
@@ -90,10 +91,10 @@ class MyObjects {
         }
 
         fun stopDirective() {
-            Timber.i("[STOP DIRECTIVE]")
+            Timber.e("[STOP DIRECTIVE]")
             graphOneFragment.clearGraph()
             graphTwoFragment.clearGraph()
-            velocity = 0F
+            velocity = null
             firstReadInG1 = false
             firstReadInG2 = false
             startProgramTime = null

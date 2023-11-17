@@ -12,12 +12,9 @@
         android:id="@+id/Button_Wrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:padding="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Graph_Wrapper">
 
@@ -26,12 +23,9 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="48dp"
-            android:outlineProvider="bounds"
-            android:padding="6dp"
+            android:backgroundTint="@color/scan_color"
             app:icon="@drawable/bluetooth"
-            app:iconPadding="0dp"
-            app:iconSize="42dp"
+            app:iconSize="32dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Settings_Button"
             app:layout_constraintStart_toStartOf="parent"
@@ -43,11 +37,9 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="48dp"
-            android:padding="6dp"
+            android:backgroundTint="@color/settings_color"
             app:icon="@drawable/settings"
-            app:iconPadding="0dp"
-            app:iconSize="42dp"
+            app:iconSize="32dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Start_Button"
             app:layout_constraintStart_toEndOf="@+id/Connect_Button"
@@ -59,11 +51,9 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="48dp"
-            android:padding="6dp"
+            android:backgroundTint="@color/start_color"
             app:icon="@drawable/start_test"
-            app:iconPadding="0dp"
-            app:iconSize="42dp"
+            app:iconSize="32dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Stop_Button"
             app:layout_constraintStart_toEndOf="@+id/Settings_Button"
@@ -75,11 +65,9 @@
             style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="48dp"
-            android:padding="6dp"
+            android:backgroundTint="@color/stop_color"
             app:icon="@drawable/stop_test"
-            app:iconPadding="0dp"
-            app:iconSize="42dp"
+            app:iconSize="32dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/Reset_Button"
             app:layout_constraintStart_toEndOf="@+id/Start_Button"
@@ -93,6 +81,7 @@
             android:layout_height="wrap_content"
             android:minWidth="48dp"
             android:padding="6dp"
+            android:visibility="gone"
             app:icon="@drawable/reset_test"
             app:iconPadding="0dp"
             app:iconSize="42dp"
@@ -100,7 +89,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/Stop_Button"
             app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="SpeakableTextPresentCheck" />
+            tools:ignore="SpeakableTextPresentCheck"
+            tools:visibility="gone" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -109,7 +99,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:padding="0dp"
+        android:padding="4dp"
         app:layout_constraintBottom_toTopOf="@+id/Button_Wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -129,89 +119,6 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             tools:layout="@layout/fragment_graph_two" />
-
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/Copyright"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/copyright"
-        android:textColor="#78909C"
-        android:textSize="12sp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="gone" />
-
-    <LinearLayout
-        android:id="@+id/Data_Wrapper"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="0dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Button_Wrapper"
-        tools:visibility="gone">
-
-        <LinearLayout
-            android:id="@+id/Probe1_Wrapper"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="4dp">
-
-            <TextView
-                android:id="@+id/Probe1_Label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/Probe1_Label"
-                android:textColor="#81C784"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/Probe1_Data"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:text="@string/Probe_Data"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/Probe2_Wrapper"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="4dp">
-
-            <TextView
-                android:id="@+id/Probe2_Label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/Probe2_Label"
-                android:textColor="#81C784"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/Probe2_Data"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:text="@string/Probe_Data"
-                android:textSize="12sp" />
-
-        </LinearLayout>
 
     </LinearLayout>
 

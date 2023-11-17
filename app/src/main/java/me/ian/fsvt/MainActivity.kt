@@ -11,9 +11,7 @@ package me.ian.fsvt
  import android.content.Context
  import android.content.DialogInterface
  import android.content.Intent
- import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
- import android.content.res.Configuration
  import android.graphics.Color
  import android.os.Build
  import android.os.Bundle
@@ -21,6 +19,9 @@ package me.ian.fsvt
  import android.os.Looper
  import android.text.Editable
  import android.text.TextWatcher
+ import android.view.Gravity
+ import android.view.LayoutInflater
+ import android.view.View
  import android.view.View.*
  import android.widget.Button
  import android.widget.CheckBox
@@ -30,6 +31,7 @@ package me.ian.fsvt
  import androidx.annotation.RequiresApi
  import androidx.appcompat.app.AlertDialog
  import androidx.appcompat.app.AppCompatActivity
+ import androidx.compose.ui.text.toLowerCase
  import androidx.core.app.ActivityCompat
  import androidx.core.content.ContextCompat
  import me.ian.fsvt.bluetooth.ConnectionManager
@@ -40,6 +42,7 @@ package me.ian.fsvt
  import me.ian.fsvt.graph.GraphTwoFragment
  import org.jetbrains.anko.*
  import timber.log.Timber
+ import java.util.Locale
  import kotlin.math.abs
 
 private const val ENABLE_BLUETOOTH_REQUEST_CODE    = 1
@@ -125,38 +128,46 @@ class MainActivity: AppCompatActivity() {
         }
 
         /*******************************************
-         * Observe Live Data for TextView (OPTIONAL)
-         *******************************************/
-
-        MyObjects.graphDataViewModel.dataPoint1.observe(this) { data ->
-            binding.Probe1Data.text = data.toInt().toString()
-        }
-
-        MyObjects.graphDataViewModel.dataPoint2.observe(this) { data ->
-            binding.Probe2Data.text =  data.toInt().toString()
-        }
-
-        /*******************************************
          * Observe Connection State of Device
          *******************************************/
 
         MyObjects.graphDataViewModel.isConnected.observe(this) { isConnected ->
             /** Behavior of APP when we successfully connected **/
             if (isConnected) {
+                Timber.v("[CONNECTED]")
+                // Set connection state
                 MyObjects.connectionState = ConnectionState.CONNECTED
+
+                /**
+                 * Send a STOP command to devices initially...
+                 * In the event the program on the devices is running.
+                 * Better to be safe than sorry.
+                 */
+                ConnectionManager.sendStopCommand()
+
+                // Show toast
+                showCustomToast(this, "Successfully connected!")
+
+                /// Button Logic
                 binding.ConnectButton.backgroundColor = R.color.connect_color
-                runOnUiThread {
-                    Toast.makeText(this, "Connected!", Toast.LENGTH_SHORT).show()
-                }
                 binding.ConnectButton.isEnabled  = false
                 binding.SettingsButton.isEnabled = true
             }
             /** Behavior of APP when we disconnect **/
             else {
+                Timber.v("[DISCONNECTED]")
+                // Set disconnect state
                 MyObjects.connectionState = ConnectionState.DISCONNECTED
+
+                // Show dialog
+                showDisconnectedDialog()
+
+                // Reset
+                MyObjects.resetDirective()
+
+                // Button Logic
                 binding.ConnectButton.backgroundColor = Color.TRANSPARENT
-                showDisconnectedAlert()
-                // Disable all buttons but connect again and refresh
+                disableButtons()
             }
         }
 
@@ -175,8 +186,7 @@ class MainActivity: AppCompatActivity() {
          *  2) 'Settings' button is enabled -> Input a distance and file name, etc.
          *  3) If values are valid, 'Start' and 'Reset' buttons are enabled
          *  4) 'Stop' button is enabled only if 'Start' has been pressed.
-         *  5) 'Reset' button will disabled all buttons but 'Settings' and resets all values/tests
-         *  6) Repeat from (2), if the device disconnects then this process starts over
+         *  5) Repeat from (2), if the device disconnects then this process starts over
          *
          **/
 
@@ -185,7 +195,6 @@ class MainActivity: AppCompatActivity() {
 
         // Debug
         binding.SettingsButton.isEnabled = true
-        binding.ResetButton.isEnabled = true
 
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
@@ -194,6 +203,10 @@ class MainActivity: AppCompatActivity() {
 
         /** SETTINGS BUTTON **/
         binding.SettingsButton.setOnClickListener {
+            /**
+             * Mutable values in the settings dialog are only changeable
+             * when the devices are in stopped state.
+             */
             showSettingsDialog()
         }
 
@@ -203,6 +216,7 @@ class MainActivity: AppCompatActivity() {
             button.isEnabled = false
 
             // CSV Logic
+            CSVProcessing.openBuffer()
             MyObjects.testCount++
 
             // Send Command to Devices to RUN
@@ -229,6 +243,7 @@ class MainActivity: AppCompatActivity() {
 
             // Write to CSV
             CSVProcessing.writeToCSV()
+            CSVProcessing.closeBuffer()
 
             // Send Command to Devices to STOP
             ConnectionManager.sendStopCommand()
@@ -240,27 +255,10 @@ class MainActivity: AppCompatActivity() {
             binding.StartButton.isEnabled = true
         }
 
-        /** RESET BUTTON
-         *      MAY NOT BE ENTIRELY NECESSARY!
-         * **/
-        binding.ResetButton.setOnClickListener {
-            // TODO "Fix this logic"
-            // Device state will be set to STOPPED
-        }
 
         /*
-        private fun reset() {
-            Timber.v("[RESET APP]")
-            MyObjects.resetValues()
-            binding.StartButton.isEnabled = false
-            binding.StopButton.isEnabled  = false
-            binding.ResetButton.isEnabled = false
-        }
-
-        private fun softReset() {
-            Timber.v("[SOFT RESET APP]")
-            MyObjects.softResetValues()
-        }
+        MAY NO LONGER BE USED/NECESSARY
+        binding.ResetButton.setOnClickListener {}
         */
     }
 
@@ -268,6 +266,13 @@ class MainActivity: AppCompatActivity() {
         super.onResume()
         if (!bluetoothAdapter.isEnabled) {
             promptEnableBluetooth()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if( MyObjects.fileBuffer != null ) {
+            CSVProcessing.closeBuffer()
         }
     }
 
@@ -513,6 +518,7 @@ class MainActivity: AppCompatActivity() {
             editDist.isEnabled       = false
             feetCheckbox.isEnabled   = false
             metersCheckbox.isEnabled = false
+            rotate.isEnabled         = false
         }
 
         // Checkbox Logic
@@ -573,7 +579,7 @@ class MainActivity: AppCompatActivity() {
 
         // Buttons
 
-        rotate.isEnabled = true
+        rotate.isEnabled = false
         rotate.setOnClickListener {
             // prompt user if this indeed what they desire -> will reset app!
             changeOrientation()
@@ -632,8 +638,15 @@ class MainActivity: AppCompatActivity() {
                     Timber.tag("(2) Settings Dialog").e("Failed to create the file.")
                 }
             }
-            Toast.makeText(this,
-                "Name: ${MyObjects.fileName}\nDistance: ${MyObjects.distance}\nUnit: ${MyObjects.unitType}", Toast.LENGTH_LONG).show()
+
+            // Send Custom Toast to User
+            val distStr = if( MyObjects.unitType == UnitType.FEET) {
+                "${MyObjects.distance}ft"
+            } else {
+                "${MyObjects.distance}m"
+            }
+            showCustomToast(this, "Name = ${MyObjects.fileName}\nDistance = ${distStr}")
+
             dialog.dismiss()
         }
         dialog.show()
@@ -653,7 +666,7 @@ class MainActivity: AppCompatActivity() {
         }
     }
 
-    private fun showDisconnectedAlert() {
+    private fun showDisconnectedDialog() {
         runOnUiThread {
             AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("Disconnected")
@@ -694,5 +707,21 @@ class MainActivity: AppCompatActivity() {
                 .setPositiveButton(android.R.string.ok) { _,_ -> /* NOP */ }
                 .show()
         }
+    }
+
+    @SuppressLint("InflateParams")
+    @Deprecated("Deprecated in Java")
+    private fun showCustomToast(context: Context, message: String) {
+        val layoutInflater: LayoutInflater = LayoutInflater.from(context)
+        val layout: View = layoutInflater.inflate(R.layout.custom_toast_layout, null)
+
+        val textView: TextView = layout.findViewById(R.id.Toast_Text)
+        textView.text = message
+
+        val toast = Toast(context)
+        toast.setGravity(Gravity.TOP, 0, 96)
+        toast.duration = Toast.LENGTH_LONG
+        toast.view = layout
+        toast.show()
     }
 }

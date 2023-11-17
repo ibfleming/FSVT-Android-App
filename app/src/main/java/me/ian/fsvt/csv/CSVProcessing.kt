@@ -7,7 +7,9 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import me.ian.fsvt.MyObjects
 import me.ian.fsvt.UnitType
 import timber.log.Timber
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileWriter
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Files.newBufferedWriter
@@ -111,7 +113,7 @@ class CSVProcessing {
             }
 
             /** Get Test Header **/
-            if (MyObjects.testCount > 1) bufferRef?.newLine()
+            if (MyObjects.testCount > 1) bufferRef.newLine()
             bufferRef.write("Test #${MyObjects.testCount}")
             bufferRef.newLine()
 
@@ -178,7 +180,8 @@ class CSVProcessing {
         @RequiresApi(Build.VERSION_CODES.O)
         fun openBuffer(): Boolean {
             if (MyObjects.csvFile == null) return false
-            MyObjects.fileBuffer = newBufferedWriter(Paths.get(MyObjects.csvFile.toString()))
+            MyObjects.fileBuffer = BufferedWriter(FileWriter(MyObjects.csvFile, true))
+            //MyObjects.fileBuffer = newBufferedWriter(Paths.get(MyObjects.csvFile.toString()))
             return true
         }
 
