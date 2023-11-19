@@ -34,13 +34,13 @@ private class YAxisFormatter : ValueFormatter() {
     }
 }
 
-fun applyGraphStyling(chart: LineChart?, probe: ChartClassifier) {
+fun applyDefaultSettings(chart: LineChart?, probe: ChartClassifier) {
     // Description
     val desc = chart?.description
     desc?.apply {
         text = "Probe ${when (probe) {
-            ChartClassifier.Probe1 -> "1"
-            ChartClassifier.Probe2 -> "2"
+            ChartClassifier.GRAPH_ONE -> "1"
+            ChartClassifier.GRAPH_TWO -> "2"
         }}"
         textColor = Color.GRAY
         yOffset = 15F
@@ -106,10 +106,10 @@ fun applyGraphStyling(chart: LineChart?, probe: ChartClassifier) {
     }
 
     // Default Chart Data
-    initializeLineData(chart)
+    initialize(chart)
 }
 
-fun initializeLineData(chart: LineChart?) {
+fun initialize(chart: LineChart?) {
     val data = chart?.data
     if( data == null ) {
         val set = createSet()                                       // (1) Create a set
@@ -122,7 +122,7 @@ fun initializeLineData(chart: LineChart?) {
 }
 
 fun createSet(): LineDataSet {
-    val set = LineDataSet(createMockData(), "DATA")
+    val set = LineDataSet(createMockData(), null)
     // Line Styling (line that represents the data on the x-y planes)
     set.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
     set.axisDependency = YAxis.AxisDependency.LEFT

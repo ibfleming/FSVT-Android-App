@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import me.ian.fsvt.DeviceState
-import me.ian.fsvt.MyObjects
+import me.ian.fsvt.AppGlobals
 import me.ian.fsvt.graph.GraphDataViewModel
 import timber.log.Timber
 import java.util.UUID
@@ -21,7 +21,7 @@ object ConnectionManager {
      *******************************************/
 
     private val handler = Handler(Looper.getMainLooper())
-    private var viewModel : GraphDataViewModel = MyObjects.graphDataViewModel
+    private var viewModel : GraphDataViewModel = AppGlobals.graphDataViewModel
 
     private var bluetoothGatt           : BluetoothGatt? = null
     private var readCharacteristic      : BluetoothGattCharacteristic? = null
@@ -38,37 +38,46 @@ object ConnectionManager {
         device.connectGatt(context, false, callback)
     }
 
+    @SuppressLint("MissingPermission")
+    fun disconnect() {
+        bluetoothGatt?.disconnect()
+        bluetoothGatt?.close()
+        bluetoothGatt = null
+    }
+
     private val callback = object : BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
+            when {
+                status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED -> {
+                    Timber.v("DEVICE CONNECTED")
                     bluetoothGatt = gatt
 
                     Handler(Looper.getMainLooper()).post {
                         bluetoothGatt!!.discoverServices()
                     }
-
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    Timber.e("Device disconnected!")
-                    handleUnexpectedDisconnect()
                 }
-            } else {
-                Timber.e("Failure to connect to Gatt!")
-                handleUnexpectedDisconnect()
+                status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED -> {
+                    Timber.v("DEVICE DISCONNECTED")
+                    handleDisconnect()
+                }
+                status != BluetoothGatt.GATT_SUCCESS -> {
+                    Timber.e("FAILED TO CONNECT TO GATT (status = $status)")
+                    handleDisconnect()
+                }
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             if( status == BluetoothGatt.GATT_SUCCESS ) {
-                Timber.v("Discovered services successfully!")
+                Timber.v("DISCOVERED SERVICES")
                 if (gatt != null) {
                     connectCharacteristics(gatt)
                 }
             }
             else {
-                Timber.e("onServicesDiscovered received $status")
-                handleUnexpectedDisconnect()
+                Timber.e("FAILED TO DISCOVER SERVICES (status = $status)")
+                handleDisconnect()
             }
         }
 
@@ -82,11 +91,10 @@ object ConnectionManager {
             status: Int
         ) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Timber.v("[CHARACTERISTIC WRITE SUCCESS]")
+                Timber.v("WRITE SUCCESS")
             } else {
-                Timber.e("Characteristic write failed with status: $status")
+                Timber.e("WRITE FAILED (status = $status)")
             }
-            super.onCharacteristicWrite(gatt, characteristic, status)
         }
 
         /*******************************************
@@ -103,11 +111,11 @@ object ConnectionManager {
 
                 when (val msg = String(data.map { it.toInt().toChar() }.toCharArray())) {
                     "A" -> {
-                        Timber.v( "[READ ACKNOWLEDGE] -> '$msg'")
+                        Timber.v( "[ACKNOWLEDGE] = '$msg'")
                         receivedAcknowledgement = true
                     }
                     else -> {
-                        Timber.d( "[READ DATA] -> '$msg'")
+                        Timber.d( "[TDS] = '$msg'")
                         processData(msg)
                     }
                 }
@@ -115,8 +123,8 @@ object ConnectionManager {
         }
     }
 
-    private fun handleUnexpectedDisconnect() {
-        bluetoothGatt           = null
+    private fun handleDisconnect() {
+        disconnect()
         readCharacteristic      = null
         writeCharacteristic     = null
         hm10Delegate            = null
@@ -127,6 +135,7 @@ object ConnectionManager {
     /*******************************************
      * Process the Data from BLE Device
      *******************************************/
+
     private fun processData(data : String) {
         if( data.contains(":") ) {
             // READING TDS DATA
@@ -137,19 +146,16 @@ object ConnectionManager {
                     val p2Value = values[1].toFloat()
                     viewModel.updateGraphs(p1Value, p2Value)
                 } catch (e: NumberFormatException) {
-                    Timber.e("Error parsing data: $data")
+                    Timber.e("ERROR PARSING DATA (data = $data)")
                 }
             }
         }
         else if ( data.contains("V") ) {
             // READING BATTERY DATA
             val values = data.split("V").map { it.trim() }
-            if(values.size == 2) {
-                // PROCESS BATTERY DATA
-            }
         }
         else {
-            Timber.e("INVALID DATA OVER BLUETOOTH -> $data")
+            Timber.e("INVALID DATA (data = $data)")
         }
     }
 
@@ -162,13 +168,15 @@ object ConnectionManager {
         writeCharacteristic?.let { characteristic ->
             val packet = byteArrayOf(command.code.toByte())
             characteristic.value = packet
-            bluetoothGatt?.writeCharacteristic(characteristic)
+            if (bluetoothGatt?.writeCharacteristic(characteristic) == true) {
+                Timber.d("RETURN TRUE ON WRITE SUCCESS!")
+            }
         }
     }
 
     fun sendStartCommand() {
         writeCommand('S')
-        MyObjects.deviceState = DeviceState.RUNNING
+        AppGlobals.deviceState = DeviceState.RUNNING
     }
 
     private const val MAX_ATTEMPTS = 25
@@ -184,7 +192,7 @@ object ConnectionManager {
                 handler.postDelayed({
                     if (receivedAcknowledgement) {
                         // Acknowledgement received
-                        MyObjects.deviceState = DeviceState.STOPPED
+                        AppGlobals.deviceState = DeviceState.STOPPED
                         receivedAcknowledgement = false
                     } else {
                         // No acknowledgment received, retry...

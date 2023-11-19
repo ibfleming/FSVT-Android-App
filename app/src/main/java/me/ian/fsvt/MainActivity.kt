@@ -36,9 +36,6 @@ package me.ian.fsvt
  import me.ian.fsvt.bluetooth.ConnectionManager
  import me.ian.fsvt.csv.CSVProcessing
  import me.ian.fsvt.databinding.ActivityMainBinding
- import me.ian.fsvt.graph.GraphDataViewModel
- import me.ian.fsvt.graph.GraphOneFragment
- import me.ian.fsvt.graph.GraphTwoFragment
  import org.jetbrains.anko.*
  import timber.log.Timber
  import kotlin.math.abs
@@ -94,25 +91,19 @@ class MainActivity: AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        Timber.tag(tag).v("[MAIN INITIALIZED]")
+        Timber.tag(tag).v("[MAIN INIT]")
 
         /*******************************************
          * Initialize Graph Fragments
          *******************************************/
 
-        MyObjects.graphDataViewModel = GraphDataViewModel()
-        //TODO "CHANGE CLASS OBJECT"
-        MyObjects.graphOneFragment = GraphOneFragment()
-        MyObjects.graphTwoFragment = GraphTwoFragment()
-
         supportFragmentManager.beginTransaction().apply {
-            MyObjects
-            replace(R.id.GraphOneFragment, MyObjects.graphOneFragment)
+            replace(R.id.GraphOneFragment, AppGlobals.graphOneFragment)
             commit()
         }
 
         supportFragmentManager.beginTransaction().apply {
-            replace(R.id.GraphTwoFragment, MyObjects.graphTwoFragment)
+            replace(R.id.GraphTwoFragment, AppGlobals.graphTwoFragment)
             commit()
         }
 
@@ -130,12 +121,12 @@ class MainActivity: AppCompatActivity() {
          * Observe Connection State of Device
          *******************************************/
 
-        MyObjects.graphDataViewModel.isConnected.observe(this) { isConnected ->
+        AppGlobals.graphDataViewModel.isConnected.observe(this) { isConnected ->
             /** Behavior of APP when we successfully connected **/
             if (isConnected) {
-                Timber.v("[CONNECTED]")
+                Timber.tag(tag).v("[CONNECTED]")
                 // Set connection state
-                MyObjects.connectionState = ConnectionState.CONNECTED
+                AppGlobals.connectionState = ConnectionState.CONNECTED
 
                 /**
                  * Send a STOP command to devices initially...
@@ -154,15 +145,15 @@ class MainActivity: AppCompatActivity() {
             }
             /** Behavior of APP when we disconnect **/
             else {
-                Timber.v("[DISCONNECTED]")
+                Timber.tag(tag).v("[DISCONNECTED]")
                 // Set disconnect state
-                MyObjects.connectionState = ConnectionState.DISCONNECTED
+                AppGlobals.connectionState = ConnectionState.DISCONNECTED
 
                 // Show dialog
                 showDisconnectedDialog()
 
                 // Reset
-                MyObjects.resetDirective()
+                AppGlobals.resetDirective()
 
                 // Button Logic
                 binding.ConnectButton.backgroundColor = Color.TRANSPARENT
@@ -208,20 +199,20 @@ class MainActivity: AppCompatActivity() {
 
         /** START BUTTON **/
         binding.StartButton.setOnClickListener { button ->
-            Timber.i("[START]")
+            Timber.tag(tag).v("[START]")
             button.isEnabled = false
 
             // CSV Logic
             CSVProcessing.openBuffer()
-            MyObjects.testCount++
+            AppGlobals.testCount++
 
             // Send Command to Devices to RUN
             ConnectionManager.sendStartCommand()
 
             // Set Start Time
 
-            if( MyObjects.startProgramTime == null ) {
-                MyObjects.startProgramTime = System.currentTimeMillis()
+            if( AppGlobals.startProgramTime == null ) {
+                AppGlobals.startProgramTime = System.currentTimeMillis()
             }
 
             // Button Logic
@@ -230,7 +221,7 @@ class MainActivity: AppCompatActivity() {
 
         /** STOP BUTTON **/
         binding.StopButton.setOnClickListener { button ->
-            Timber.i("[STOP]")
+            Timber.tag(tag).v("[STOP]")
             button.isEnabled = false
 
             // Calculate velocity
@@ -245,30 +236,18 @@ class MainActivity: AppCompatActivity() {
             ConnectionManager.sendStopCommand()
 
             // Reset objects and variables
-            MyObjects.stopDirective()
+            AppGlobals.stopDirective()
 
             // Button Logic
             binding.StartButton.isEnabled = true
         }
 
-
-        /*
-        MAY NO LONGER BE USED/NECESSARY
-        binding.ResetButton.setOnClickListener {}
-        */
     }
 
     override fun onResume() {
         super.onResume()
         if (!bluetoothAdapter.isEnabled) {
             promptEnableBluetooth()
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if( MyObjects.fileBuffer != null ) {
-            CSVProcessing.closeBuffer()
         }
     }
 
@@ -393,34 +372,34 @@ class MainActivity: AppCompatActivity() {
      *******************************************/
 
     private fun calculateVelocity() {
-        val graph1Pair = MyObjects.graphOneFragment.findMaxEntry()
-        val graph2Pair = MyObjects.graphTwoFragment.findMaxEntry()
+        val graph1Pair = AppGlobals.graphOneFragment.maxY()
+        val graph2Pair = AppGlobals.graphTwoFragment.maxY()
 
         val graph1X = graph1Pair?.first ?: Float.NaN
         val graph2X = graph2Pair?.first ?: Float.NaN
 
         val deltaTime = abs(graph2X - graph1X)
 
-        if( MyObjects.distance == null ) return
+        if( AppGlobals.distance == null ) return
 
         /** DEFAULT VALUE OF DISTANCE IS 0F **/
-        val velocity = if( MyObjects.unitType == UnitType.METERS ) {
-            val distanceMeters = MyObjects.distance!!.times(0.3048)
+        val velocity = if( AppGlobals.unitType == UnitType.METERS ) {
+            val distanceMeters = AppGlobals.distance!!.times(0.3048)
             (distanceMeters.div(deltaTime)).toFloat()
         } else {
-            MyObjects.distance?.div(deltaTime)
+            AppGlobals.distance?.div(deltaTime)
         }
 
-        MyObjects.velocity = String.format("%.2f", velocity).toFloat()
-        if( MyObjects.velocity!!.isInfinite() || MyObjects.velocity!!.isNaN() ) {
+        AppGlobals.velocity = String.format("%.2f", velocity).toFloat()
+        if( AppGlobals.velocity!!.isInfinite() || AppGlobals.velocity!!.isNaN() ) {
             Timber.e("Invalid Velocity!")
-            MyObjects.velocity = 0F
+            AppGlobals.velocity = 0F
         }
 
         Timber.d( "------------------------------"
             + "\n\t[Graph One] : " + graph1Pair.toString()
             + "\n\t[Graph Two] : " + graph2Pair.toString()
-            + "\n\t[Velocity]  : ${MyObjects.velocity}"
+            + "\n\t[Velocity]  : ${AppGlobals.velocity}"
             + "\n------------------------------")
     }
 
@@ -436,6 +415,7 @@ class MainActivity: AppCompatActivity() {
         binding.StopButton.isEnabled     = false
         binding.ResetButton .isEnabled   = false
     }
+
 
     private fun changeOrientation() {
         // TODO
@@ -472,10 +452,10 @@ class MainActivity: AppCompatActivity() {
         val tvVelocity = dialogView.findViewById<TextView>(R.id.Velocity)
 
         val velocityText : String =
-            if( MyObjects.unitType == UnitType.METERS ) {
-                getString(R.string.Velocity_Meters, String.format("%.2f", MyObjects.velocity))
+            if( AppGlobals.unitType == UnitType.METERS ) {
+                getString(R.string.Velocity_Meters, String.format("%.2f", AppGlobals.velocity))
             } else {
-                getString(R.string.Velocity_Feet, String.format("%.2f", MyObjects.velocity))
+                getString(R.string.Velocity_Feet, String.format("%.2f", AppGlobals.velocity))
             }
 
         tvVelocity.text = velocityText
@@ -509,7 +489,7 @@ class MainActivity: AppCompatActivity() {
         val rotate = dialogView.findViewById<Button>(R.id.Rotate_Button)
 
         // Input Logic for All
-        if( MyObjects.deviceState == DeviceState.RUNNING ) {
+        if( AppGlobals.deviceState == DeviceState.RUNNING ) {
             editTitle.isEnabled      = false
             editDist.isEnabled       = false
             feetCheckbox.isEnabled   = false
@@ -518,27 +498,27 @@ class MainActivity: AppCompatActivity() {
         }
 
         // Checkbox Logic
-        if( MyObjects.unitType == UnitType.FEET ) feetCheckbox.isChecked = true
+        if( AppGlobals.unitType == UnitType.FEET ) feetCheckbox.isChecked = true
         else metersCheckbox.isChecked = true
 
         // Checkbox Listeners (Actually Sets the Unit Type value)
         feetCheckbox.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 metersCheckbox.isChecked = false
-                MyObjects.unitType = UnitType.FEET
+                AppGlobals.unitType = UnitType.FEET
             }
         }
 
         metersCheckbox.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 feetCheckbox.isChecked = false
-                MyObjects.unitType = UnitType.METERS
+                AppGlobals.unitType = UnitType.METERS
             }
         }
 
         // Input Box Logic
-        if( MyObjects.fileName != null ) editTitle.setText(MyObjects.fileName)
-        if( MyObjects.distance != null ) editDist.setText(MyObjects.distance.toString())
+        if( AppGlobals.fileName != null ) editTitle.setText(AppGlobals.fileName)
+        if( AppGlobals.distance != null ) editDist.setText(AppGlobals.distance.toString())
 
         // Input Box Helper Functions
         fun isFloat(value: String): Boolean {
@@ -602,48 +582,33 @@ class MainActivity: AppCompatActivity() {
              * NOTE: File buffer only cause on RESET button which is entirely different behavior to be handled
              */
 
-            if( MyObjects.fileBuffer == null ) {
+            if( AppGlobals.fileBuffer == null ) {
                 // There is currently no file buffer that is opened for writes
                 // Set parameters
-                MyObjects.fileName = editTitle.text.toString().trim()
-                MyObjects.distance = editDist.text.toString().toFloat()
-                MyObjects.testCount = 0
+                AppGlobals.fileName = editTitle.text.toString().trim()
+                AppGlobals.distance = editDist.text.toString().toFloat()
+                AppGlobals.testCount = 0
 
                 if ( CSVProcessing.createFile() ) {
-                    Timber.tag("(1) Settings Dialog").v("Created the file successfully.")
-                    if (CSVProcessing.openBuffer())  Timber.tag("(1) Settings Dialog").v("File Buffer OPENED!")
+                    Timber.tag("Settings").v("Created the file successfully.")
+                    if (CSVProcessing.openBuffer())  Timber.tag("Settings").v("File Buffer OPENED!")
                     binding.StartButton.isEnabled = true
                 }
                 else {
-                    Timber.tag("(1) Settings Dialog").e("Failed to create the file.")
+                    Timber.tag("Settings").e("Failed to create the file.")
                 }
             }
             else {
-                // There is a file buffer that is opened for writes.
-                // Set parameters
-                MyObjects.fileName = editTitle.text.toString().trim()
-                MyObjects.distance = editDist.text.toString().toFloat()
-                MyObjects.testCount = 0
-
-                // Close the current buffer
-                CSVProcessing.closeBuffer()
-                if ( CSVProcessing.createFile() ) {
-                    Timber.tag("(2) Settings Dialog").v("Created the file successfully.")
-                    if (CSVProcessing.openBuffer())  Timber.tag("(2) Settings Dialog").v("File Buffer OPENED!")
-                    binding.StartButton.isEnabled = true
-                }
-                else {
-                    Timber.tag("(2) Settings Dialog").e("Failed to create the file.")
-                }
+                Timber.tag("Settings").e("FILE BUFFER IS NOT NULL")
             }
 
             // Send Custom Toast to User
-            val distStr = if( MyObjects.unitType == UnitType.FEET) {
-                "${MyObjects.distance}ft"
+            val distStr = if( AppGlobals.unitType == UnitType.FEET) {
+                "${AppGlobals.distance}ft"
             } else {
-                "${MyObjects.distance}m"
+                "${AppGlobals.distance}m"
             }
-            showCustomToast(this, "Name = ${MyObjects.fileName}\nDistance = $distStr")
+            showCustomToast(this, "Name = ${AppGlobals.fileName}\nDistance = $distStr")
 
             dialog.dismiss()
         }

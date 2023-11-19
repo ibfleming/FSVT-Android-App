@@ -2,8 +2,7 @@ package me.ian.fsvt
 
 import com.github.mikephil.charting.charts.LineChart
 import me.ian.fsvt.graph.GraphDataViewModel
-import me.ian.fsvt.graph.GraphOneFragment
-import me.ian.fsvt.graph.GraphTwoFragment
+import me.ian.fsvt.graph.GraphFragment
 import timber.log.Timber
 import java.io.BufferedWriter
 import java.io.File
@@ -15,7 +14,7 @@ import java.io.File
  * properly. It is the heart of the application.
  *******************************************/
 
-class MyObjects {
+class AppGlobals {
     companion object {
 
         /*******************************************
@@ -24,9 +23,9 @@ class MyObjects {
 
         lateinit var graphOne : LineChart
         lateinit var graphTwo : LineChart
-        lateinit var graphDataViewModel: GraphDataViewModel
-        lateinit var graphOneFragment : GraphOneFragment
-        lateinit var graphTwoFragment : GraphTwoFragment
+        var graphDataViewModel = GraphDataViewModel()
+        var graphOneFragment   = GraphFragment(ChartClassifier.GRAPH_ONE)
+        var graphTwoFragment   = GraphFragment(ChartClassifier.GRAPH_TWO)
 
         /*******************************************
          * Primary Variables
@@ -68,8 +67,7 @@ class MyObjects {
          *******************************************/
 
         var startProgramTime    : Long? = null
-        var firstReadInG1       : Boolean = false
-        var firstReadInG2       : Boolean = false
+        var firstRead           : Boolean = false
 
         /*******************************************
          * Extension Functions
@@ -77,26 +75,24 @@ class MyObjects {
 
         fun resetDirective() {
             Timber.e("[RESET DIRECTIVE]")
-            graphOneFragment.clearGraph()
-            graphTwoFragment.clearGraph()
+            graphOneFragment.clear()
+            graphTwoFragment.clear()
             deviceState = DeviceState.STOPPED
             unitType = UnitType.FEET
             fileName = null
             distance = null
             velocity = null
             testCount = 0
-            firstReadInG1 = false
-            firstReadInG2 = false
+            firstRead = false
             startProgramTime = null
         }
 
         fun stopDirective() {
             Timber.e("[STOP DIRECTIVE]")
-            graphOneFragment.clearGraph()
-            graphTwoFragment.clearGraph()
+            graphOneFragment.clear()
+            graphTwoFragment.clear()
             velocity = null
-            firstReadInG1 = false
-            firstReadInG2 = false
+            firstRead = false
             startProgramTime = null
         }
     }
@@ -107,8 +103,8 @@ class MyObjects {
  *******************************************/
 
 enum class ChartClassifier {
-    Probe1,
-    Probe2
+    GRAPH_ONE,
+    GRAPH_TWO
 }
 
 enum class UnitType {
