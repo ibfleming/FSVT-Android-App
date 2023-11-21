@@ -47,21 +47,7 @@ class AppGlobals {
         var csvDirectory : File? = null              // File directory for storage of CSVs on device
         var csvFile      : File? = null              // Current file object for CSV processing
         var fileBuffer   : BufferedWriter? = null    // Current file buffer of the current file object
-
-        /**
-         * Resets all objects for CSV processing.
-         * No need to reset the csvDirectory as that is initialized
-         * on Activity create and shall remain the same for the entire lifespan
-         * of the app.
-         * The rest of these values will change dynamically by the user in the app.
-         */
-        fun resetCSV() {
-            testCount = 0
-            fileName = null
-            csvFile = null
-            fileBuffer = null
-        }
-
+        
         /*******************************************
          * Timing
          *******************************************/
