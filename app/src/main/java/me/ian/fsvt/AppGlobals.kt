@@ -24,8 +24,8 @@ class AppGlobals {
         lateinit var graphOne : LineChart
         lateinit var graphTwo : LineChart
         var graphDataViewModel = GraphDataViewModel()
-        var graphOneFragment   = GraphFragment(ChartClassifier.GRAPH_ONE)
-        var graphTwoFragment   = GraphFragment(ChartClassifier.GRAPH_TWO)
+        var graphOneFragment   = GraphFragment.newInstance(ChartClassifier.GRAPH_ONE)
+        var graphTwoFragment   = GraphFragment.newInstance(ChartClassifier.GRAPH_TWO)
 
         /*******************************************
          * Primary Variables

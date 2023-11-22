@@ -11,6 +11,7 @@ package me.ian.fsvt
  import android.content.Context
  import android.content.DialogInterface
  import android.content.Intent
+ import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
  import android.graphics.Color
  import android.os.Build
@@ -82,7 +83,6 @@ class MainActivity: AppCompatActivity() {
      * Activity function overrides
      *******************************************/
 
-    @SuppressLint("SourceLockedOrientationActivity")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -182,9 +182,11 @@ class MainActivity: AppCompatActivity() {
 
         /** DISABLE ALL BUTTONS BUT CONNECT INITIALLY **/
         disableButtons()
+        binding.SettingsButton.isEnabled = true
 
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
+            it.isEnabled = false
             startScan()
         }
 
@@ -331,6 +333,7 @@ class MainActivity: AppCompatActivity() {
             scanTimeoutHandler.postDelayed({
                 stopScan()
                 showDeviceNotFoundDialog()
+                binding.ConnectButton.isEnabled = true
             }, SCAN_PERIOD)
         }
     }
@@ -413,12 +416,15 @@ class MainActivity: AppCompatActivity() {
         binding.SettingsButton.isEnabled = false
         binding.StartButton.isEnabled    = false
         binding.StopButton.isEnabled     = false
-        binding.ResetButton .isEnabled   = false
     }
 
-
     private fun changeOrientation() {
-        // TODO
+        val newOrientation = when (requestedOrientation) {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+        requestedOrientation = newOrientation
     }
 
     /*******************************************
@@ -555,10 +561,11 @@ class MainActivity: AppCompatActivity() {
 
         // Buttons
 
-        rotate.isEnabled = false
+        rotate.isEnabled = true
         rotate.setOnClickListener {
             // prompt user if this indeed what they desire -> will reset app!
-            changeOrientation()
+            dialog.dismiss() // Must dismiss this Alert first otherwise a View Leak will occur
+            showOrientationChangeDialog()
         }
 
         back.setOnClickListener {
@@ -668,6 +675,18 @@ class MainActivity: AppCompatActivity() {
                 .setMessage("Scanning procedure failed unexpectedly. Please try again.")
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok) { _,_ -> /* NOP */ }
+                .show()
+        }
+    }
+
+    private fun showOrientationChangeDialog() {
+        runOnUiThread {
+            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+                .setTitle("Orientation change")
+                .setMessage("WARNING: Changing the orientation will restart the app and any tests!")
+                .setCancelable(true)
+                .setPositiveButton(android.R.string.ok) { _,_ -> changeOrientation() }
+                .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
                 .show()
         }
     }

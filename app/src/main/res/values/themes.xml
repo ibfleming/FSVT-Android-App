@@ -1,9 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.TheFSVTApp" parent="Theme.Material3.Dark.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Theme.FSVT" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Customize your theme here. -->
+        <!-- This code is for changing the color of the bar. -->
+        <!-- Type your colour code which you want to set in colorPrimary item -->
+        <!-- <item name="colorPrimary">#FF1C1B1F</item> -->
     </style>
-
-    <style name="Theme.TheFSVTApp" parent="Base.Theme.TheFSVTApp" />
 </resources>

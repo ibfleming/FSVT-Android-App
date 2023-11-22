@@ -13,13 +13,25 @@ import me.ian.fsvt.AppGlobals
 import me.ian.fsvt.R
 import timber.log.Timber
 
-class GraphFragment(private val classifier: ChartClassifier): Fragment() {
+class GraphFragment : Fragment() {
 
     /*******************************************
      * Properties
      *******************************************/
 
     private lateinit var chart : LineChart
+    private lateinit var classifier : ChartClassifier
+
+    companion object {
+        fun newInstance(classifier: ChartClassifier): GraphFragment {
+            return GraphFragment().apply {
+                arguments = Bundle().apply {
+                    putSerializable(ARG_CLASSIFIER, classifier)
+                }
+            }
+        }
+        private const val ARG_CLASSIFIER = "classifier"
+    }
 
     /*******************************************
      * Fragment Function Overrides
@@ -30,6 +42,8 @@ class GraphFragment(private val classifier: ChartClassifier): Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        classifier = arguments?.getSerializable(ARG_CLASSIFIER) as? ChartClassifier
+            ?: ChartClassifier.GRAPH_ONE // Default classifier
 
         val layout = if( classifier == ChartClassifier.GRAPH_ONE ) { R.layout.fragment_graph_one }
         else { R.layout.fragment_graph_two  }

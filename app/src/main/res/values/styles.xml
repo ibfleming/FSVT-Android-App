@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="CustomAlertDialog" parent="Theme.Material3.Dark.Dialog">
-    <item name="android:windowBackground">@drawable/rounded_dialog_bg</item>
-</style></resources>
+        <item name="android:windowBackground">@drawable/rounded_dialog_bg</item>
+    </style>
+</resources>
