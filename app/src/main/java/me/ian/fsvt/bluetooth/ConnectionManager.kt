@@ -153,6 +153,15 @@ object ConnectionManager {
         else if ( data.contains("V") ) {
             // READING BATTERY DATA
             val values = data.split("V").map { it.trim() }
+            if(values.size == 2) {
+                try {
+                    val b1Value = values[0].toFloat()
+                    val b2Value = values[1].toFloat()
+                    Timber.v("Battery: $b1Value, $b2Value")
+                } catch (e: NumberFormatException) {
+                    Timber.e("ERROR PARSING DATA (data = $data)")
+                }
+            }
         }
         else {
             Timber.e("INVALID DATA (data = $data)")
