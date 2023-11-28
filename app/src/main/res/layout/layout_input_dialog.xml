@@ -155,20 +155,23 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:padding="4dp"
                     android:text="@string/Battery_Probe_One"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
                 <TextView
+                    android:id="@+id/Battery_Probe_1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="4dp"
+                    android:layout_marginStart="13dp"
                     android:text="@string/Empty_Placeholder"
-                    android:textColor="@color/scan_color" />
+                    android:textAlignment="textStart"
+                    android:textColor="@color/scan_color"
+                    android:textStyle="italic" />
             </LinearLayout>
 
             <LinearLayout
@@ -177,27 +180,30 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:padding="4dp"
                     android:text="@string/Battery_Probe_Two"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
                 <TextView
+                    android:id="@+id/Battery_Probe_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="4dp"
+                    android:layout_marginStart="10dp"
                     android:text="@string/Empty_Placeholder"
-                    android:textColor="@color/scan_color" />
+                    android:textAlignment="textStart"
+                    android:textColor="@color/scan_color"
+                    android:textStyle="italic" />
             </LinearLayout>
 
         </LinearLayout>
 
         <Button
             android:id="@+id/Rotate_Button"
-            style="@style/Widget.Material3.Button.IconButton.Filled"
+            style="@style/Widget.Material3.Button.IconButton.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:width="58dp"

@@ -158,6 +158,8 @@ object ConnectionManager {
                     val b1Value = values[0].toFloat()
                     val b2Value = values[1].toFloat()
                     Timber.v("Battery: $b1Value, $b2Value")
+                    AppGlobals.batteryProbe1 = checkBatteryLevel(b1Value)
+                    AppGlobals.batteryProbe2 = checkBatteryLevel(b2Value)
                 } catch (e: NumberFormatException) {
                     Timber.e("ERROR PARSING DATA (data = $data)")
                 }
@@ -166,6 +168,15 @@ object ConnectionManager {
         else {
             Timber.e("INVALID DATA (data = $data)")
         }
+    }
+
+    private fun checkBatteryLevel(level: Float): Int {
+        if (level >= 3.5) {
+            return 100
+        } else if (level >= 2.5) {
+            return ((level - 2.5) / 0.1).toInt() * 10
+        }
+        return 0
     }
 
     /*******************************************

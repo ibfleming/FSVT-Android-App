@@ -182,7 +182,6 @@ class MainActivity: AppCompatActivity() {
 
         /** DISABLE ALL BUTTONS BUT CONNECT INITIALLY **/
         disableButtons()
-        binding.SettingsButton.isEnabled = true
 
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
@@ -490,6 +489,8 @@ class MainActivity: AppCompatActivity() {
         val editDist = dialogView.findViewById<EditText>(R.id.Input_Distance)
         val feetCheckbox = dialogView.findViewById<CheckBox>(R.id.Feet_CheckBox)
         val metersCheckbox = dialogView.findViewById<CheckBox>(R.id.Meters_CheckBox)
+        val batteryViewProbe1 = dialogView.findViewById<TextView>(R.id.Battery_Probe_1)
+        val batteryViewProbe2 = dialogView.findViewById<TextView>(R.id.Battery_Probe_2)
         val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
         val back = dialogView.findViewById<Button>(R.id.Back_Button)
         val rotate = dialogView.findViewById<Button>(R.id.Rotate_Button)
@@ -559,6 +560,13 @@ class MainActivity: AppCompatActivity() {
             }
         })
 
+        // Battery Indicator
+
+        val batteryText1 = getString(R.string.battery_percentage, AppGlobals.batteryProbe1)
+        val batteryText2 = getString(R.string.battery_percentage, AppGlobals.batteryProbe2)
+        batteryViewProbe1.text = batteryText1
+        batteryViewProbe2.text = batteryText2
+
         // Buttons
 
         rotate.isEnabled = true
@@ -567,6 +575,9 @@ class MainActivity: AppCompatActivity() {
             dialog.dismiss() // Must dismiss this Alert first otherwise a View Leak will occur
             showOrientationChangeDialog()
         }
+
+
+
 
         back.setOnClickListener {
             dialog.dismiss()

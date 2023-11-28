@@ -12,7 +12,8 @@
     <string name="Velocity_Feet">%s ft/s</string>
     <string name="Velocity_Meters">%s m/s</string>
     <string name="Empty_Placeholder">NA%</string>
-    <string name="Battery_Probe_One">Battery Probe 1:</string>
-    <string name="Battery_Probe_Two">Battery Probe 2:</string>
+    <string name="Battery_Probe_One">Probe 1</string>
+    <string name="Battery_Probe_Two">Probe 2</string>
     <string name="copyright">© 2023 FSVT - All Rights Reserved.</string>
+    <string name="battery_percentage">%d%%</string>
 </resources>

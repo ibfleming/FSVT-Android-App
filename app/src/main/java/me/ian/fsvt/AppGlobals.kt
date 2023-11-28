@@ -56,6 +56,13 @@ class AppGlobals {
         var firstRead           : Boolean = false
 
         /*******************************************
+         * Battery Levels
+         *******************************************/
+
+        var batteryProbe1 : Int? = 0
+        var batteryProbe2 : Int? = 0
+
+        /*******************************************
          * Extension Functions
          *******************************************/
 
