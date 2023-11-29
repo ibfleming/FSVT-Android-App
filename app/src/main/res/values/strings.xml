@@ -4,7 +4,7 @@
     <string name="Title_Hint">Name</string>
     <string name="Distance_Hint">Distance</string>
     <string name="Dialog_Submit">Submit</string>
-    <string name="Dialog_Cancel">Back</string>
+    <string name="Dialog_Cancel">Cancel</string>
     <string name="Unit_Feet">Feet</string>
     <string name="Unit_Meters">Meters</string>
     <string name="Velocity_Label">Velocity:</string>

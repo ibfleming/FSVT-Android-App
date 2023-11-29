@@ -59,7 +59,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginEnd="32dp"
-            android:layout_marginBottom="16dp"
             android:autofillHints=""
             android:hint="@string/Distance_Hint"
             android:includeFontPadding="true"
@@ -80,11 +79,11 @@
         android:id="@+id/UnitType_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal"
         app:layout_constraintBottom_toTopOf="@+id/Control_Wrapper"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Input_Wrapper">
 
@@ -117,7 +116,6 @@
         android:id="@+id/Control_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
         android:orientation="horizontal"
         app:layout_constraintBottom_toTopOf="@+id/Info_Wrapper"
         app:layout_constraintEnd_toEndOf="parent"
@@ -166,14 +164,13 @@
         android:id="@+id/Info_Wrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="24dp"
-        app:layout_constraintBottom_toTopOf="@+id/Copyright"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Control_Wrapper"
-        app:layout_constraintVertical_bias="0.0">
+        app:layout_constraintTop_toBottomOf="@+id/Control_Wrapper">
 
         <LinearLayout
             android:id="@+id/Battery_Wrapper"
@@ -261,23 +258,5 @@
             tools:ignore="DuplicateSpeakableTextCheck" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <TextView
-        android:id="@+id/Copyright"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:alpha="0.25"
-        android:text="@string/Copyright"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textColor="@color/md_theme_dark_outline"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Info_Wrapper"
-        app:layout_constraintVertical_bias="0.0"
-        tools:ignore="SmallSp,TextContrastCheck" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

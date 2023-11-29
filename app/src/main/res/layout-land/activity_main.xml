@@ -26,7 +26,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/Empty_Placeholder"
-            app:backgroundTint="@color/scan_color"
+            app:backgroundTint="@color/bluetooth_color"
             app:cornerRadius="10dp"
             app:icon="@drawable/bluetooth"
             app:iconSize="32dp"

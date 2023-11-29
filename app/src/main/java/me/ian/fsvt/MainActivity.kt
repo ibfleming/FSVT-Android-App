@@ -13,7 +13,6 @@ package me.ian.fsvt
  import android.content.Intent
  import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
- import android.graphics.Color
  import android.os.Build
  import android.os.Bundle
  import android.os.Handler
@@ -139,9 +138,9 @@ class MainActivity: AppCompatActivity() {
                 showCustomToast(this, "Successfully connected!")
 
                 /// Button Logic
-                binding.ConnectButton.backgroundColor = R.color.connect_color
-                binding.ConnectButton.isEnabled = false
-                binding.SettingsButton.isEnabled = true
+                binding.ConnectButton.backgroundColor = R.color.connected_color
+                disable(binding.ConnectButton)
+                enable(binding.SettingsButton)
             }
             /** Behavior of APP when we disconnect **/
             else {
@@ -156,7 +155,7 @@ class MainActivity: AppCompatActivity() {
                 AppGlobals.resetDirective()
 
                 // Button Logic
-                binding.ConnectButton.backgroundColor = Color.TRANSPARENT
+                binding.ConnectButton.backgroundColor = R.color.bluetooth_color
                 disableButtons()
             }
         }
@@ -182,10 +181,11 @@ class MainActivity: AppCompatActivity() {
 
         /** DISABLE ALL BUTTONS BUT CONNECT INITIALLY **/
         disableButtons()
+        enable(binding.SettingsButton)
 
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
-            it.isEnabled = false
+            disable(it as Button)
             startScan()
         }
 
@@ -201,7 +201,7 @@ class MainActivity: AppCompatActivity() {
         /** START BUTTON **/
         binding.StartButton.setOnClickListener { button ->
             Timber.tag(tag).v("[START]")
-            button.isEnabled = false
+            disable(button as Button)
 
             // CSV Logic
             CSVProcessing.openBuffer()
@@ -217,7 +217,7 @@ class MainActivity: AppCompatActivity() {
             }
 
             // Button Logic
-            binding.StopButton.isEnabled = true
+            enable(binding.StopButton)
         }
 
         /** STOP BUTTON **/
@@ -332,7 +332,7 @@ class MainActivity: AppCompatActivity() {
             scanTimeoutHandler.postDelayed({
                 stopScan()
                 showDeviceNotFoundDialog()
-                binding.ConnectButton.isEnabled = true
+                enable(binding.ConnectButton)
             }, SCAN_PERIOD)
         }
     }
@@ -496,13 +496,18 @@ class MainActivity: AppCompatActivity() {
         val rotate = dialogView.findViewById<Button>(R.id.RotateButton)
 
         // Input Logic for All
-        if( AppGlobals.deviceState == DeviceState.RUNNING ) {
+        if( AppGlobals.deviceState == DeviceState.STOPPED && AppGlobals.connectionState == ConnectionState.DISCONNECTED ) {
             editTitle.isEnabled      = false
             editDist.isEnabled       = false
             feetCheckbox.isEnabled   = false
             metersCheckbox.isEnabled = false
-            rotate.isEnabled         = false
-            rotate.background.alpha  = 128
+        }
+        else if( AppGlobals.deviceState == DeviceState.RUNNING && AppGlobals.connectionState == ConnectionState.CONNECTED ) {
+            editTitle.isEnabled      = false
+            editDist.isEnabled       = false
+            feetCheckbox.isEnabled   = false
+            metersCheckbox.isEnabled = false
+            disable(rotate)
         }
 
         // Checkbox Logic
@@ -637,7 +642,7 @@ class MainActivity: AppCompatActivity() {
 
     private fun showDeviceNotFoundDialog() {
         runOnUiThread {
-            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("No device found")
                 .setMessage("Could not find the specified device. " +
                         "Please ensure the devices are powered on and try again.")
@@ -646,12 +651,15 @@ class MainActivity: AppCompatActivity() {
                     dialog.dismiss()
                 }
                 .show()
+
+            // Change color of the button
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
         }
     }
 
     private fun showDisconnectedDialog() {
         runOnUiThread {
-            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("Disconnected")
                 .setMessage("The device disconnected unexpectedly from the app. "
                         + "Please connect to the device again. "
@@ -661,12 +669,15 @@ class MainActivity: AppCompatActivity() {
                     dialog.dismiss()
                 }
                 .show()
+
+            // Change color of the button
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
         }
     }
 
     private fun showLocationPermissionDialog() {
         runOnUiThread {
-            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("Location permission required")
                 .setMessage("Starting from Android M (6.0), the system requires apps to be granted " +
                         "location access in order to scan for BLE devices.")
@@ -678,29 +689,39 @@ class MainActivity: AppCompatActivity() {
                     )
                 }
                 .show()
+
+            // Change color of the button
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
         }
     }
 
     private fun showScanFailedDialog() {
         runOnUiThread {
-            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("Scanning error")
                 .setMessage("Scanning procedure failed unexpectedly. Please try again.")
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok) { _,_ -> /* NOP */ }
                 .show()
+
+            // Change color of the button
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
         }
     }
 
     private fun showOrientationChangeDialog() {
         runOnUiThread {
-            AlertDialog.Builder(this, R.style.CustomAlertDialog)
+            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("Orientation change")
                 .setMessage("WARNING: Changing the orientation will restart the app and any tests!")
                 .setCancelable(true)
                 .setPositiveButton(android.R.string.ok) { _,_ -> changeOrientation() }
                 .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
                 .show()
+
+            // Change color of the button
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+            alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light))
         }
     }
 

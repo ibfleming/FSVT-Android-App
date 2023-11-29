@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="scan_color">#4A9EE8</color>
-    <color name="connect_color">#7CB342</color>
+    <color name="bluetooth_color">#4A9EE8</color>
+    <color name="connected_color">#7CB342</color>
     <color name="settings_color">#802A362B</color>
     <color name="start_color">#4AE852</color>
     <color name="stop_color">#E84A5F</color>
+    <color name="rotate_color">#A84A84E8</color>
     <color name="ripple_color">#333333</color>
 
     <!-- THEME COLORS -->
