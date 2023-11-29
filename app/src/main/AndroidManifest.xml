@@ -23,9 +23,9 @@
 
     <application
         android:name=".MainApplication"
-        android:label="@string/app_name"
-        android:icon="@mipmap/usdalogo"
-        android:theme="@style/Theme.FSVT"
+        android:label="@string/App_Name"
+        android:icon="@mipmap/usda_logo"
+        android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".MainActivity"

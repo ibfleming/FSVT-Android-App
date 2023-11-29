@@ -140,7 +140,7 @@ class MainActivity: AppCompatActivity() {
 
                 /// Button Logic
                 binding.ConnectButton.backgroundColor = R.color.connect_color
-                binding.ConnectButton.isEnabled  = false
+                binding.ConnectButton.isEnabled = false
                 binding.SettingsButton.isEnabled = true
             }
             /** Behavior of APP when we disconnect **/
@@ -411,10 +411,10 @@ class MainActivity: AppCompatActivity() {
      * The rest are disabled.
      */
     private fun disableButtons() {
-        binding.ConnectButton.isEnabled  = true
-        binding.SettingsButton.isEnabled = false
-        binding.StartButton.isEnabled    = false
-        binding.StopButton.isEnabled     = false
+        enable(binding.ConnectButton)
+        disable(binding.SettingsButton)
+        disable(binding.StartButton)
+        disable(binding.StopButton)
     }
 
     private fun changeOrientation() {
@@ -446,12 +446,12 @@ class MainActivity: AppCompatActivity() {
     private fun showVelocityDialog() {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
-        val dialogView = inflater.inflate(R.layout.layout_velocity_dialog, null)
+        val dialogView = inflater.inflate(R.layout.velocity_layout, null)
         builder.setView(dialogView)
         val dialog = builder.create()
 
         // Custom Background
-        dialog.window?.setBackgroundDrawableResource(R.drawable.rounded_dialog_bg)
+        dialog.window?.setBackgroundDrawableResource(R.drawable.custom_dialog)
 
         // Layout Views
         val tvVelocity = dialogView.findViewById<TextView>(R.id.Velocity)
@@ -477,12 +477,12 @@ class MainActivity: AppCompatActivity() {
     private fun showSettingsDialog() {
         val builder = AlertDialog.Builder(this)
         val inflater = layoutInflater
-        val dialogView = inflater.inflate(R.layout.layout_input_dialog, null)
+        val dialogView = inflater.inflate(R.layout.settings_layout, null)
         builder.setView(dialogView)
         val dialog = builder.create()
 
         // Custom Background
-        dialog.window?.setBackgroundDrawableResource(R.drawable.rounded_dialog_bg)
+        dialog.window?.setBackgroundDrawableResource(R.drawable.custom_dialog)
 
         // Layout Views
         val editTitle = dialogView.findViewById<EditText>(R.id.Input_Title)
@@ -493,7 +493,7 @@ class MainActivity: AppCompatActivity() {
         val batteryViewProbe2 = dialogView.findViewById<TextView>(R.id.Battery_Probe_2)
         val submit = dialogView.findViewById<Button>(R.id.Submit_Button)
         val back = dialogView.findViewById<Button>(R.id.Back_Button)
-        val rotate = dialogView.findViewById<Button>(R.id.Rotate_Button)
+        val rotate = dialogView.findViewById<Button>(R.id.RotateButton)
 
         // Input Logic for All
         if( AppGlobals.deviceState == DeviceState.RUNNING ) {
@@ -502,6 +502,7 @@ class MainActivity: AppCompatActivity() {
             feetCheckbox.isEnabled   = false
             metersCheckbox.isEnabled = false
             rotate.isEnabled         = false
+            rotate.background.alpha  = 128
         }
 
         // Checkbox Logic
@@ -540,7 +541,10 @@ class MainActivity: AppCompatActivity() {
         fun updateSubmitButtonState() {
             val titleText = editTitle.text.toString().trim()
             val distText = editDist.text.toString().trim()
-            submit.isEnabled = (titleText.isNotEmpty() && distText.isNotEmpty()) && isFloat(distText)
+            if( (titleText.isNotEmpty() && distText.isNotEmpty()) && isFloat(distText) ) {
+                submit.isEnabled = true
+                submit.background.alpha = 255
+            }
         }
 
         // Input Box Listeners (Only Enable is No Test is RUNNING)
@@ -562,8 +566,8 @@ class MainActivity: AppCompatActivity() {
 
         // Battery Indicator
 
-        val batteryText1 = getString(R.string.battery_percentage, AppGlobals.batteryProbe1)
-        val batteryText2 = getString(R.string.battery_percentage, AppGlobals.batteryProbe2)
+        val batteryText1 = getString(R.string.Battery_Format, AppGlobals.batteryProbe1)
+        val batteryText2 = getString(R.string.Battery_Format, AppGlobals.batteryProbe2)
         batteryViewProbe1.text = batteryText1
         batteryViewProbe2.text = batteryText2
 
@@ -576,14 +580,12 @@ class MainActivity: AppCompatActivity() {
             showOrientationChangeDialog()
         }
 
-
-
-
         back.setOnClickListener {
             dialog.dismiss()
         }
 
         submit.isEnabled = false
+        submit.background.alpha = 64
         submit.setOnClickListener {
             /*
              * At this point, there is valid user input for the file name and distance.
@@ -603,7 +605,7 @@ class MainActivity: AppCompatActivity() {
             if( AppGlobals.fileBuffer == null ) {
                 // There is currently no file buffer that is opened for writes
                 // Set parameters
-                AppGlobals.fileName = editTitle.text.toString().trim()
+                AppGlobals.fileName = editTitle.text.toString().replace("\\s+".toRegex(), "")
                 AppGlobals.distance = editDist.text.toString().toFloat()
                 AppGlobals.testCount = 0
 
@@ -706,7 +708,7 @@ class MainActivity: AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     private fun showCustomToast(context: Context, message: String) {
         val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-        val layout: View = layoutInflater.inflate(R.layout.custom_toast_layout, null)
+        val layout: View = layoutInflater.inflate(R.layout.toast_layout, null)
 
         val textView: TextView = layout.findViewById(R.id.Toast_Text)
         textView.text = message
@@ -716,5 +718,15 @@ class MainActivity: AppCompatActivity() {
         toast.duration = Toast.LENGTH_LONG
         toast.view = layout
         toast.show()
+    }
+
+    private fun enable(button: Button) {
+        button.isEnabled = true
+        button.background.alpha = 255
+    }
+
+    private fun disable(button: Button) {
+        button.isEnabled = false
+        button.background.alpha = 64
     }
 }

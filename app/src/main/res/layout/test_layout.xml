@@ -3,16 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:backgroundTint="#1C1B1F"
-    tools:context=".MainActivity">
-
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/ButtonWrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -26,19 +21,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/Empty_Placeholder"
-            app:backgroundTint="@color/scan_color"
+            app:backgroundTint="@android:color/transparent"
             app:cornerRadius="10dp"
             app:icon="@drawable/bluetooth"
-            app:iconSize="32dp"
             app:iconTint="@android:color/white"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/SettingsButton"
+            app:layout_constraintEnd_toEndOf="@id/SettingsButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:rippleColor="@color/ripple_color"
+            app:rippleColor="@color/connect_color"
             app:strokeColor="@android:color/white"
-            app:strokeWidth="2sp"
-            tools:ignore="DuplicateSpeakableTextCheck" />
+            app:strokeWidth="2sp" />
 
         <Button
             android:id="@+id/SettingsButton"
@@ -49,14 +42,13 @@
             app:backgroundTint="@color/md_theme_dark_primary"
             app:cornerRadius="10dp"
             app:icon="@drawable/settings"
-            app:iconSize="32dp"
             app:iconTint="@android:color/white"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/StartButton"
-            app:layout_constraintStart_toEndOf="@+id/ConnectButton"
+            app:layout_constraintEnd_toEndOf="@id/StartButton"
+            app:layout_constraintStart_toStartOf="@id/ConnectButton"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5"
-            app:rippleColor="@color/ripple_color"
+            app:rippleColor="@color/connect_color"
             app:strokeColor="@android:color/white"
             app:strokeWidth="2sp" />
 
@@ -66,17 +58,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/Empty_Placeholder"
-            app:backgroundTint="@color/start_color"
+            app:backgroundTint="@color/md_theme_dark_onSecondary"
             app:cornerRadius="10dp"
             app:icon="@drawable/start"
-            app:iconSize="32dp"
             app:iconTint="@android:color/white"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/StopButton"
-            app:layout_constraintStart_toEndOf="@+id/SettingsButton"
+            app:layout_constraintEnd_toEndOf="@id/StopButton"
+            app:layout_constraintStart_toStartOf="@id/SettingsButton"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5"
-            app:rippleColor="@color/ripple_color"
+            app:rippleColor="@color/connect_color"
             app:strokeColor="@android:color/white"
             app:strokeWidth="2sp" />
 
@@ -89,45 +80,38 @@
             app:backgroundTint="@color/stop_color"
             app:cornerRadius="10dp"
             app:icon="@drawable/close"
-            app:iconSize="32dp"
             app:iconTint="@android:color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/StartButton"
+            app:layout_constraintStart_toStartOf="@id/StartButton"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5"
-            app:rippleColor="@color/ripple_color"
+            app:rippleColor="@color/connect_color"
             app:strokeColor="@android:color/white"
-            app:strokeWidth="2sp"/>
+            app:strokeWidth="2sp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <LinearLayout
-        android:id="@+id/GraphWrapper"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginBottom="4dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/ButtonWrapper"
+    <Button
+        android:id="@+id/RotateButton"
+        style="?attr/materialIconButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="464dp"
+        android:contentDescription="@string/Empty_Placeholder"
+        app:backgroundTint="@android:color/transparent"
+        app:cornerRadius="10dp"
+        app:icon="@drawable/rotate"
+        app:iconTint="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:rippleColor="@color/connect_color"
+        app:strokeColor="@android:color/white"
+        app:strokeWidth="2sp"
+        tools:ignore="DuplicateSpeakableTextCheck" />
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/GraphOneFragment"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            tools:layout="@layout/fragment_graph_two" />
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/GraphTwoFragment"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            tools:layout="@layout/fragment_graph_two" />
-
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

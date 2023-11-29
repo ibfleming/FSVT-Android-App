@@ -5,13 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Input_Wrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -19,53 +16,73 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
             android:gravity="center"
             android:includeFontPadding="false"
             android:text="@string/Dialog_Title"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-            android:textSize="24sp" />
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/Input_Title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
             android:id="@+id/Input_Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="16dp"
             android:autofillHints=""
             android:hint="@string/Title_Hint"
             android:includeFontPadding="true"
             android:inputType="text"
             android:maxWidth="488dp"
             android:minHeight="48dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            app:layout_constraintBottom_toTopOf="@+id/Input_Distance"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView"
+            tools:ignore="VisualLintTextFieldSize" />
 
         <EditText
             android:id="@+id/Input_Distance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
             android:autofillHints=""
             android:hint="@string/Distance_Hint"
             android:includeFontPadding="true"
             android:inputType="text"
             android:maxWidth="488dp"
             android:minHeight="48dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Input_Title"
+            tools:ignore="VisualLintTextFieldSize" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/UnitType_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/Control_Wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Input_Wrapper">
@@ -74,26 +91,33 @@
             android:id="@+id/Feet_CheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_marginEnd="16dp"
             android:text="@string/Unit_Feet"
-            app:buttonIconTint="#FFFFFF" />
+            app:layout_constraintBottom_toBottomOf="@+id/Meters_CheckBox"
+            app:layout_constraintEnd_toStartOf="@+id/Meters_CheckBox"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/Meters_CheckBox"
+            app:layout_constraintVertical_bias="0.0" />
 
         <CheckBox
             android:id="@+id/Meters_CheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_marginStart="16dp"
             android:text="@string/Unit_Meters"
-            app:buttonIconTint="#FFFFFF" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/Feet_CheckBox"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Control_Wrapper"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/Info_Wrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/UnitType_Wrapper">
@@ -102,34 +126,42 @@
             android:id="@+id/Back_Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="36dp"
-            android:layout_marginBottom="12dp"
-            android:includeFontPadding="false"
+            android:layout_marginEnd="24dp"
+            android:backgroundTint="#FFFFFF"
+            android:includeFontPadding="true"
             android:text="@string/Dialog_Cancel"
+            android:textColor="#303030"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/Submit_Button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.5"
             tools:ignore="ButtonStyle" />
 
         <Button
             android:id="@+id/Submit_Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_marginBottom="12dp"
-            android:includeFontPadding="false"
+            android:layout_marginStart="24dp"
+            android:backgroundTint="#FFFFFF"
+            android:includeFontPadding="true"
             android:text="@string/Dialog_Submit"
+            android:textColor="#303030"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/Back_Button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.5"
             tools:ignore="ButtonStyle" />
-    </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/Info_Wrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/Copyright"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -141,11 +173,9 @@
             android:id="@+id/Battery_Wrapper"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
             android:orientation="vertical"
-            android:padding="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -161,7 +191,8 @@
                     android:padding="4dp"
                     android:text="@string/Battery_Probe_One"
                     android:textAllCaps="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/Battery_Probe_1"
@@ -170,7 +201,7 @@
                     android:layout_marginStart="13dp"
                     android:text="@string/Empty_Placeholder"
                     android:textAlignment="textStart"
-                    android:textColor="@color/scan_color"
+                    android:textColor="#0091EA"
                     android:textStyle="italic" />
             </LinearLayout>
 
@@ -186,7 +217,8 @@
                     android:padding="4dp"
                     android:text="@string/Battery_Probe_Two"
                     android:textAllCaps="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/Battery_Probe_2"
@@ -195,26 +227,32 @@
                     android:layout_marginStart="10dp"
                     android:text="@string/Empty_Placeholder"
                     android:textAlignment="textStart"
-                    android:textColor="@color/scan_color"
+                    android:textColor="#0091EA"
                     android:textStyle="italic" />
             </LinearLayout>
 
         </LinearLayout>
 
         <Button
-            android:id="@+id/Rotate_Button"
-            style="@style/Widget.Material3.Button.IconButton.Outlined"
+            android:id="@+id/RotateButton"
+            style="?attr/materialIconButtonOutlinedStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:width="58dp"
-            android:contentDescription="@string/Velocity_Empty"
-            app:icon="@drawable/screen_rotation"
-            app:iconSize="29dp"
+            android:layout_marginEnd="32dp"
+            android:contentDescription="@string/Empty_Placeholder"
+            app:backgroundTint="@android:color/transparent"
+            app:cornerRadius="10dp"
+            app:icon="@drawable/rotate"
+            app:iconSize="32dp"
+            app:iconTint="@android:color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/Battery_Wrapper"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:rippleColor="@color/connect_color"
+            app:strokeColor="@android:color/white"
+            app:strokeWidth="2sp"
+            tools:ignore="DuplicateSpeakableTextCheck" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -222,10 +260,9 @@
         android:id="@+id/Copyright"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
         android:alpha="0.5"
-        android:text="@string/copyright"
+        android:text="@string/Copyright"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textColor="#78909C"
         android:textSize="10sp"
