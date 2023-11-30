@@ -26,6 +26,7 @@
             android:text="@string/Dialog_Title"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2"
             android:textSize="24sp"
+            android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/Input_Title"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
