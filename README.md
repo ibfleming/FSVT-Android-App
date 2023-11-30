@@ -9,7 +9,7 @@
 > Official Release :
 > Version: 4.0 (LTS)
 
-<img src="https://github.com/ibfleming/fsvt-app/blob/main/usda_logo" alt="app" width="100"/>
+<img src="https://github.com/ibfleming/fsvt-app/blob/main/usda-logo" alt="app" width="100"/>
 
 <img src="https://github.com/ibfleming/fsvt-app/blob/main/app_image" alt="app" width="300"/>
 
