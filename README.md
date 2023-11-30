@@ -1,12 +1,15 @@
 # Stream Velocity App for USDA Forest Service
+
 ### Free Stream Velocity Team
+
 **Senior Capstone Project, University of Idaho, 2023**
+
 *Developed by Ian Fleming*
 
 > Official Release :
 > Version: 4.0 (LTS)
 
-![alt text](https://github.com/ibfleming/fsvt-app/blob/main/app_image)
+<img src="https://github.com/ibfleming/fsvt-app/blob/main/app_image" alt="app" width="200"/>
 
 #### Features:
 - Friendly and dynamic user interface
