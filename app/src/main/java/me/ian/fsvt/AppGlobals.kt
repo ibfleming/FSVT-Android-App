@@ -22,9 +22,9 @@ class AppGlobals {
          * Primary Objects
          *******************************************/
 
-        lateinit var graphOne : LineChart
-        lateinit var graphTwo : LineChart
-        var graphDataViewModel = GraphDataViewModel()
+        lateinit var graphOne           : LineChart
+        lateinit var graphTwo           : LineChart
+        var graphDataViewModel          = GraphDataViewModel()
         lateinit var graphOneFragment   : GraphOneFragment
         lateinit var graphTwoFragment   : GraphTwoFragment
 
@@ -32,10 +32,12 @@ class AppGlobals {
          * Primary Variables
          *******************************************/
 
+        // State Variables
         var deviceState     : DeviceState = DeviceState.STOPPED
         var connectionState : ConnectionState = ConnectionState.DISCONNECTED
-        var unitType        : UnitType = UnitType.FEET
 
+        // Measurement Variables
+        var unitType        : UnitType = UnitType.FEET
         var distance        : Float?  = null
         var velocity        : Float?  = null
 
@@ -54,13 +56,14 @@ class AppGlobals {
          *******************************************/
 
         var startProgramTime    : Long? = null
-        var firstReadOne        : Boolean = false
-        var firstReadTwo        : Boolean = false
+        var firstReadOne        : Boolean = false   // Graph One -> First data read in will be timed at 0 seconds
+        var firstReadTwo        : Boolean = false   // Graph Two -> First data read in will be timed at 0 seconds
 
         /*******************************************
          * Battery Levels
          *******************************************/
 
+        // These are whole numbers between 0-100 representing percentages
         var batteryProbe1 : Int? = 0
         var batteryProbe2 : Int? = 0
 
@@ -68,6 +71,7 @@ class AppGlobals {
          * Extension Functions
          *******************************************/
 
+        // Complete reset of globals
         fun resetDirective() {
             Timber.e("[RESET DIRECTIVE]")
             graphOneFragment.clear()
@@ -83,6 +87,7 @@ class AppGlobals {
             startProgramTime = null
         }
 
+        // "Soft" reset of globals
         fun stopDirective() {
             Timber.e("[STOP DIRECTIVE]")
             graphOneFragment.clear()

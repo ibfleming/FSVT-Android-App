@@ -10,11 +10,12 @@ class GraphDataViewModel : ViewModel() {
     /*******************************************
      * Connection State
      *******************************************/
+
     private val _isConnected = MutableLiveData<Boolean>()
     val isConnected: LiveData<Boolean> get() = _isConnected
 
     /*******************************************
-     * Graph Data Entries
+     * Graph Data Entry (ppm)
      *******************************************/
 
     private val _dataOne = MutableLiveData<Float>()
@@ -26,17 +27,19 @@ class GraphDataViewModel : ViewModel() {
      * Functions
      *******************************************/
 
+    // Update Live Data
     fun updateGraphs(data1: Float, data2: Float) {
         _dataOne.postValue(data1)
         _dataTwo.postValue(data2)
     }
 
-    fun setConnectionStatus(connect: Boolean) {
-        if (connect) {
-            Timber.i("Connected")
+    // Update Connection State
+    fun setConnectionStatus(connected: Boolean) {
+        if (connected) {
+            Timber.i("[CONNECTED]")
             _isConnected.postValue(true)
         } else {
-            Timber.i("Disconnected")
+            Timber.i("[DISCONNECTED]")
             _isConnected.postValue(false)
         }
     }

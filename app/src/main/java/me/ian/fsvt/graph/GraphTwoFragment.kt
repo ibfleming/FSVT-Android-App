@@ -20,7 +20,7 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
     private lateinit var chart : LineChart
 
     /*******************************************
-     * Fragment function overrides
+     * Fragment Function Overrides
      *******************************************/
 
     override fun onCreateView(
@@ -42,6 +42,11 @@ class GraphTwoFragment : Fragment(R.layout.fragment_graph_two) {
         }
     }
 
+    /*******************************************
+     * Extension Functions
+     *******************************************/
+
+    // Update chart with new data values
     private fun update(y: Float) : Pair<Float, Float>? {
         val data = data()
         var time = 0F

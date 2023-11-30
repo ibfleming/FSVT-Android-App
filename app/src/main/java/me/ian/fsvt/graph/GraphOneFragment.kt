@@ -13,6 +13,7 @@ import me.ian.fsvt.ChartClassifier
 import me.ian.fsvt.R
 
 class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
+
     /*******************************************
      * Properties
      *******************************************/
@@ -20,7 +21,7 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
     private lateinit var chart : LineChart
 
     /*******************************************
-     * Fragment function overrides
+     * Fragment Function Overrides
      *******************************************/
 
     override fun onCreateView(
@@ -42,6 +43,11 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
         }
     }
 
+    /*******************************************
+     * Extension Functions
+     *******************************************/
+
+    // Update chart with new data values
     private fun update(y: Float) : Pair<Float, Float>? {
         val data = data()
         var time = 0F
