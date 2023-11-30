@@ -115,7 +115,7 @@ object ConnectionManager {
                         receivedAcknowledgement = true
                     }
                     else -> {
-                        Timber.d( "[TDS] = '$msg'")
+                        Timber.d( "[DATA STREAM] = '$msg'")
                         processData(msg)
                     }
                 }

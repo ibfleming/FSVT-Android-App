@@ -2,7 +2,8 @@ package me.ian.fsvt
 
 import com.github.mikephil.charting.charts.LineChart
 import me.ian.fsvt.graph.GraphDataViewModel
-import me.ian.fsvt.graph.GraphFragment
+import me.ian.fsvt.graph.GraphOneFragment
+import me.ian.fsvt.graph.GraphTwoFragment
 import timber.log.Timber
 import java.io.BufferedWriter
 import java.io.File
@@ -24,8 +25,8 @@ class AppGlobals {
         lateinit var graphOne : LineChart
         lateinit var graphTwo : LineChart
         var graphDataViewModel = GraphDataViewModel()
-        var graphOneFragment   = GraphFragment.newInstance(ChartClassifier.GRAPH_ONE)
-        var graphTwoFragment   = GraphFragment.newInstance(ChartClassifier.GRAPH_TWO)
+        lateinit var graphOneFragment   : GraphOneFragment
+        lateinit var graphTwoFragment   : GraphTwoFragment
 
         /*******************************************
          * Primary Variables
@@ -53,7 +54,8 @@ class AppGlobals {
          *******************************************/
 
         var startProgramTime    : Long? = null
-        var firstRead           : Boolean = false
+        var firstReadOne        : Boolean = false
+        var firstReadTwo        : Boolean = false
 
         /*******************************************
          * Battery Levels
@@ -76,7 +78,8 @@ class AppGlobals {
             distance = null
             velocity = null
             testCount = 0
-            firstRead = false
+            firstReadOne = false
+            firstReadTwo = false
             startProgramTime = null
         }
 
@@ -85,7 +88,8 @@ class AppGlobals {
             graphOneFragment.clear()
             graphTwoFragment.clear()
             velocity = null
-            firstRead = false
+            firstReadOne = false
+            firstReadTwo = false
             startProgramTime = null
         }
     }

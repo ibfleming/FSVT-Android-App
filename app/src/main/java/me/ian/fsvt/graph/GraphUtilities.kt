@@ -64,8 +64,8 @@ fun applyDefaultSettings(chart: LineChart?, probe: ChartClassifier) {
     // Y Axis (left axis)
     val axisLeft = chart?.axisLeft
     axisLeft?.apply {
-        axisMinimum = -5F
-        axisMaximum = 750F
+        axisMinimum = -50F
+        axisMaximum = 1000F
         axisLineWidth = 2F
         axisLineColor = Color.WHITE
         textColor = Color.WHITE

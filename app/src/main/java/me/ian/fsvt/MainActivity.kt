@@ -36,6 +36,8 @@ package me.ian.fsvt
  import me.ian.fsvt.bluetooth.ConnectionManager
  import me.ian.fsvt.csv.CSVProcessing
  import me.ian.fsvt.databinding.ActivityMainBinding
+ import me.ian.fsvt.graph.GraphOneFragment
+ import me.ian.fsvt.graph.GraphTwoFragment
  import org.jetbrains.anko.*
  import timber.log.Timber
  import kotlin.math.abs
@@ -96,6 +98,9 @@ class MainActivity: AppCompatActivity() {
          * Initialize Graph Fragments
          *******************************************/
 
+        AppGlobals.graphOneFragment = GraphOneFragment()
+        AppGlobals.graphTwoFragment = GraphTwoFragment()
+
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.GraphOneFragment, AppGlobals.graphOneFragment)
             commit()
@@ -138,9 +143,7 @@ class MainActivity: AppCompatActivity() {
                 showCustomToast(this, "Successfully connected!")
 
                 /// Button Logic
-                binding.ConnectButton.backgroundColor = R.color.connected_color
                 disable(binding.ConnectButton)
-                enable(binding.SettingsButton)
             }
             /** Behavior of APP when we disconnect **/
             else {
@@ -155,7 +158,6 @@ class MainActivity: AppCompatActivity() {
                 AppGlobals.resetDirective()
 
                 // Button Logic
-                binding.ConnectButton.backgroundColor = R.color.bluetooth_color
                 disableButtons()
             }
         }
@@ -181,7 +183,6 @@ class MainActivity: AppCompatActivity() {
 
         /** DISABLE ALL BUTTONS BUT CONNECT INITIALLY **/
         disableButtons()
-        enable(binding.SettingsButton)
 
         /** CONNECT BUTTON **/
         binding.ConnectButton.setOnClickListener {
@@ -223,7 +224,7 @@ class MainActivity: AppCompatActivity() {
         /** STOP BUTTON **/
         binding.StopButton.setOnClickListener { button ->
             Timber.tag(tag).v("[STOP]")
-            button.isEnabled = false
+           disable(button as Button)
 
             // Calculate velocity
             calculateVelocity()
@@ -240,7 +241,7 @@ class MainActivity: AppCompatActivity() {
             AppGlobals.stopDirective()
 
             // Button Logic
-            binding.StartButton.isEnabled = true
+            enable(binding.StartButton)
         }
 
     }
@@ -412,7 +413,7 @@ class MainActivity: AppCompatActivity() {
      */
     private fun disableButtons() {
         enable(binding.ConnectButton)
-        disable(binding.SettingsButton)
+        enable(binding.SettingsButton)
         disable(binding.StartButton)
         disable(binding.StopButton)
     }
@@ -468,6 +469,12 @@ class MainActivity: AppCompatActivity() {
         // OK Button
         dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK") { _, _ ->
             dialog.dismiss()
+        }
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.let { button ->
+                button.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+            }
         }
 
         dialog.show()
@@ -617,7 +624,7 @@ class MainActivity: AppCompatActivity() {
                 if ( CSVProcessing.createFile() ) {
                     Timber.tag("Settings").v("Created the file successfully.")
                     if (CSVProcessing.openBuffer())  Timber.tag("Settings").v("File Buffer OPENED!")
-                    binding.StartButton.isEnabled = true
+                    enable(binding.StartButton)
                 }
                 else {
                     Timber.tag("Settings").e("Failed to create the file.")
@@ -715,7 +722,10 @@ class MainActivity: AppCompatActivity() {
                 .setTitle("Orientation change")
                 .setMessage("WARNING: Changing the orientation will restart the app and any tests!")
                 .setCancelable(true)
-                .setPositiveButton(android.R.string.ok) { _,_ -> changeOrientation() }
+                .setPositiveButton(android.R.string.ok) { _,_ ->
+                    changeOrientation()
+                    AppGlobals.resetDirective()
+                }
                 .setNegativeButton(android.R.string.cancel) { dialog, _ -> dialog.dismiss() }
                 .show()
 
