@@ -5,8 +5,8 @@ import android.bluetooth.*
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import me.ian.fsvt.DeviceState
 import me.ian.fsvt.AppGlobals
+import me.ian.fsvt.DeviceState
 import me.ian.fsvt.graph.GraphDataViewModel
 import timber.log.Timber
 import java.util.UUID

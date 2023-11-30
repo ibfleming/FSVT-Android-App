@@ -52,6 +52,7 @@ private const val SCAN_PERIOD = 3000L
 class MainActivity: AppCompatActivity() {
 
     private var tag = "MAIN"
+
     /*******************************************
      * Properties
      *******************************************/

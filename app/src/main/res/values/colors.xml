@@ -9,7 +9,6 @@
     <color name="ripple_color">#333333</color>
 
     <!-- THEME COLORS -->
-    <color name="seed">#ffffff</color>
     <color name="md_theme_dark_primary">#303030</color>
     <color name="md_theme_dark_onPrimary">#007A8A</color>
     <color name="md_theme_dark_primaryContainer">#007A8A</color>
@@ -36,9 +35,5 @@
     <color name="md_theme_dark_inverseOnSurface">#001F25</color>
     <color name="md_theme_dark_inverseSurface">#A6EEFF</color>
     <color name="md_theme_dark_inversePrimary">#006874</color>
-    <color name="md_theme_dark_shadow">#000000</color>
-    <color name="md_theme_dark_surfaceTint">#4FD8EB</color>
-    <color name="md_theme_dark_outlineVariant">#3F484A</color>
-    <color name="md_theme_dark_scrim">#000000</color>
 
 </resources>
