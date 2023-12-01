@@ -1,6 +1,7 @@
 package me.ian.fsvt
 
 import com.github.mikephil.charting.charts.LineChart
+import me.ian.fsvt.csv.CSVProcessing
 import me.ian.fsvt.graph.GraphDataViewModel
 import me.ian.fsvt.graph.GraphOneFragment
 import me.ian.fsvt.graph.GraphTwoFragment
@@ -79,6 +80,7 @@ class AppGlobals {
             deviceState = DeviceState.STOPPED
             unitType = UnitType.FEET
             fileName = null
+            CSVProcessing.closeBuffer()
             distance = null
             velocity = null
             testCount = 0

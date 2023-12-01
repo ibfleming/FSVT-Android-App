@@ -177,7 +177,6 @@ class CSVProcessing {
         fun openBuffer(): Boolean {
             if (AppGlobals.csvFile == null) return false
             AppGlobals.fileBuffer = BufferedWriter(FileWriter(AppGlobals.csvFile, true))
-            //MyObjects.fileBuffer = newBufferedWriter(Paths.get(MyObjects.csvFile.toString()))
             return true
         }
 

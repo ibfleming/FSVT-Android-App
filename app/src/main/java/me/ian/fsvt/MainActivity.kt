@@ -560,7 +560,7 @@ class MainActivity: AppCompatActivity() {
             }
         }
 
-        // Input Box Listeners (Only Enable is No Test is RUNNING)
+        // Input Box Listeners (Only Enable if No Test is RUNNING)
         editTitle.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
@@ -616,6 +616,7 @@ class MainActivity: AppCompatActivity() {
              */
 
             if( AppGlobals.fileBuffer == null ) {
+
                 // There is currently no file buffer that is opened for writes
                 // Set parameters
                 AppGlobals.fileName = editTitle.text.toString().replace("\\s+".toRegex(), "")
@@ -632,7 +633,23 @@ class MainActivity: AppCompatActivity() {
                 }
             }
             else {
-                Timber.tag("Settings").e("FILE BUFFER IS NOT NULL")
+                if ( CSVProcessing.closeBuffer() ) {
+
+                    // There is a file buffer open but close it and return true if successful
+                    // Set parameters
+                    AppGlobals.fileName = editTitle.text.toString().replace("\\s+".toRegex(), "")
+                    AppGlobals.distance = editDist.text.toString().toFloat()
+                    AppGlobals.testCount = 0
+
+                    if ( CSVProcessing.createFile() ) {
+                        Timber.tag("Settings").v("Created the file successfully.")
+                        if (CSVProcessing.openBuffer())  Timber.tag("Settings").v("File Buffer OPENED!")
+                        enable(binding.StartButton)
+                    }
+                    else {
+                        Timber.tag("Settings").e("Failed to create the file.")
+                    }
+                }
             }
 
             // Send Custom Toast to User

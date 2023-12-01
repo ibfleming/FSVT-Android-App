@@ -60,10 +60,12 @@ object ConnectionManager {
                 status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED -> {
                     Timber.v("DEVICE DISCONNECTED")
                     handleDisconnect()
+                    AppGlobals.resetDirective()
                 }
                 status != BluetoothGatt.GATT_SUCCESS -> {
                     Timber.e("FAILED TO CONNECT TO GATT (status = $status)")
                     handleDisconnect()
+                    AppGlobals.resetDirective()
                 }
             }
         }
@@ -78,6 +80,7 @@ object ConnectionManager {
             else {
                 Timber.e("FAILED TO DISCOVER SERVICES (status = $status)")
                 handleDisconnect()
+                AppGlobals.resetDirective()
             }
         }
 
@@ -111,7 +114,6 @@ object ConnectionManager {
 
                 when (val msg = String(data.map { it.toInt().toChar() }.toCharArray())) {
                     "A" -> {
-                        Timber.v( "[ACKNOWLEDGE] = '$msg'")
                         receivedAcknowledgement = true
                     }
                     else -> {
@@ -194,13 +196,35 @@ object ConnectionManager {
         }
     }
 
-    fun sendStartCommand() {
-        writeCommand('S')
-        AppGlobals.deviceState = DeviceState.RUNNING
-    }
-
     private const val MAX_ATTEMPTS = 25
     private const val TIMEOUT_DURATION = 15L
+
+    fun sendStartCommand() {
+        var attempts = 0
+
+        fun keepSendingStart() {
+            if (attempts < MAX_ATTEMPTS) {
+                writeCommand('S')
+
+                handler.postDelayed({
+                    if (receivedAcknowledgement) {
+                        // Acknowledgement received
+                        Timber.v( "[START ACKNOWLEDGE]")
+                        AppGlobals.deviceState = DeviceState.RUNNING
+                        receivedAcknowledgement = false
+                        return@postDelayed
+                    } else {
+                        // No acknowledgment received, retry...
+                        attempts++
+                        keepSendingStart()
+                    }
+                }, TIMEOUT_DURATION)
+            } else {
+                Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts.")
+            }
+        }
+        keepSendingStart()
+    }
 
     fun sendStopCommand() {
         var attempts = 0
@@ -212,8 +236,10 @@ object ConnectionManager {
                 handler.postDelayed({
                     if (receivedAcknowledgement) {
                         // Acknowledgement received
+                        Timber.v( "[STOP ACKNOWLEDGE]")
                         AppGlobals.deviceState = DeviceState.STOPPED
                         receivedAcknowledgement = false
+                        return@postDelayed
                     } else {
                         // No acknowledgment received, retry...
                         attempts++
