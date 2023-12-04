@@ -65,7 +65,9 @@ class GraphOneFragment : Fragment(R.layout.fragment_graph_one) {
                 AppGlobals.firstReadOne = true
             } else {
                 val currentTime = System.currentTimeMillis()
-                time = (currentTime - AppGlobals.startProgramTime!!).toFloat() / 1000
+                if( AppGlobals.startProgramTime != null ) {
+                    time = (currentTime - AppGlobals.startProgramTime!!).toFloat() / 1000
+                }
             }
 
             val x = "%.1f".format(time).toFloat()

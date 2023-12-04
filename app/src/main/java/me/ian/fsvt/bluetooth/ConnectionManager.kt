@@ -125,7 +125,7 @@ object ConnectionManager {
         }
     }
 
-    private fun handleDisconnect() {
+    public fun handleDisconnect() {
         disconnect()
         readCharacteristic      = null
         writeCharacteristic     = null
@@ -220,7 +220,7 @@ object ConnectionManager {
                     }
                 }, TIMEOUT_DURATION)
             } else {
-                Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts.")
+                Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts for START.")
             }
         }
         keepSendingStart()
@@ -247,7 +247,7 @@ object ConnectionManager {
                     }
                 }, TIMEOUT_DURATION)
             } else {
-                Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts.")
+                Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts for STOP.")
             }
         }
         keepSendingStop()

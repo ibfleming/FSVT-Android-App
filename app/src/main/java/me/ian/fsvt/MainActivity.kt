@@ -8,9 +8,11 @@ package me.ian.fsvt
  import android.bluetooth.le.ScanFilter
  import android.bluetooth.le.ScanResult
  import android.bluetooth.le.ScanSettings
+ import android.content.BroadcastReceiver
  import android.content.Context
  import android.content.DialogInterface
  import android.content.Intent
+ import android.content.IntentFilter
  import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
  import android.os.Build
@@ -64,6 +66,25 @@ class MainActivity: AppCompatActivity() {
         bluetoothManager.adapter
     }
 
+    private val bluetoothReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
+                    BluetoothAdapter.STATE_OFF -> {
+                        Timber.e("[BLUETOOTH OFF]")
+                        ConnectionManager.handleDisconnect()
+                        AppGlobals.resetDirective()
+                        promptEnableBluetooth()
+                    }
+                    BluetoothAdapter.STATE_ON -> {
+                        Timber.e("[BLUETOOTH ON]")
+                    }
+                }
+            }
+        }
+    }
+
     private val bleScanner by lazy {
         bluetoothAdapter.bluetoothLeScanner
     }
@@ -94,6 +115,10 @@ class MainActivity: AppCompatActivity() {
         setContentView(view)
 
         Timber.tag(tag).v("[MAIN INIT]")
+
+        // Register the BroadcastReceiver to listen for Bluetooth state changes
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        registerReceiver(bluetoothReceiver, filter)
 
         /*******************************************
          * Initialize Graph Fragments
@@ -213,10 +238,7 @@ class MainActivity: AppCompatActivity() {
             ConnectionManager.sendStartCommand()
 
             // Set Start Time
-
-            if( AppGlobals.startProgramTime == null ) {
-                AppGlobals.startProgramTime = System.currentTimeMillis()
-            }
+            AppGlobals.startProgramTime = System.currentTimeMillis()
 
             // Button Logic
             enable(binding.StopButton)
@@ -554,9 +576,13 @@ class MainActivity: AppCompatActivity() {
         fun updateSubmitButtonState() {
             val titleText = editTitle.text.toString().trim()
             val distText = editDist.text.toString().trim()
+
             if( (titleText.isNotEmpty() && distText.isNotEmpty()) && isFloat(distText) ) {
                 submit.isEnabled = true
                 submit.background.alpha = 255
+            } else {
+                submit.isEnabled = false
+                submit.background.alpha = 64
             }
         }
 
