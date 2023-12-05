@@ -26,7 +26,7 @@ android {
             )
         }
         debug {
-            isDebuggable = true
+            isDebuggable = false
         }
     }
     compileOptions {
