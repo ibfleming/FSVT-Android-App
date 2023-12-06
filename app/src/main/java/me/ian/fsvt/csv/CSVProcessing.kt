@@ -46,30 +46,30 @@ class CSVProcessing {
         fun createDirectory(): Boolean {
             val externalStorageState = Environment.getExternalStorageState()
             if (externalStorageState == Environment.MEDIA_MOUNTED) {
-                Timber.d("External storage is available")
+                Timber.v("External storage is available.")
 
                 val saveDir = Environment.getExternalStoragePublicDirectory("Documents")
                 if (!saveDir.exists() && !saveDir.mkdirs()) {
-                    Timber.e("Failed to create parent directory")
+                    Timber.e("Failed to create parent directory.")
                     return false
                 }
 
                 AppGlobals.csvDirectory = File(saveDir, "StreamData")
 
                 return if (AppGlobals.csvDirectory!!.exists()) {
-                    Timber.v("'StreamData' exists in the device's file system")
+                    Timber.v("The 'StreamData' folder exists in the file system.")
                     true
                 } else {
                     if (AppGlobals.csvDirectory!!.mkdir()) {
-                        Timber.v("Successfully created the folder")
+                        Timber.v("Successfully created the folder.")
                         true
                     } else {
-                        Timber.e("Failed to create the folder")
+                        Timber.e("Failed to create the folder.")
                         false
                     }
                 }
             } else {
-                Timber.e("External storage not available")
+                Timber.e("External storage not available.")
                 return false
             }
         }
@@ -78,11 +78,11 @@ class CSVProcessing {
             AppGlobals.csvFile = if (AppGlobals.fileName != null) {
                 val name = generateCustomName()
                 Timber.v("Using user-defined file name.")
-                Timber.d("File name: '$name'")
+                Timber.i("\tFile name: '$name'")
                 File("${AppGlobals.csvDirectory}/${name}.csv")
             } else {
                 Timber.w("No file name specified by the user - generating DEFAULT name.")
-                Timber.d("File name: '$defaultFileName'")
+                Timber.i("File name: '$defaultFileName'")
                 File("${AppGlobals.csvDirectory}/$defaultFileName.csv")
             }
 
@@ -90,7 +90,7 @@ class CSVProcessing {
                 Timber.w("File already exists.")
                 false
             } else {
-                Timber.tag("CSVProcessing").d("Full file path: '${AppGlobals.csvFile}'")
+                Timber.tag("CSVProcessing").i("\tFull path: ${AppGlobals.csvFile}")
                 true
             }
         }
@@ -185,23 +185,6 @@ class CSVProcessing {
             AppGlobals.fileBuffer!!.flush()
             AppGlobals.fileBuffer!!.close()
             AppGlobals.fileBuffer = null
-            return true
-        }
-
-        /**
-         * TODO "MUST BE WORKED ON MORE -> DELETES CURRENT OPEN FILE"
-         * Wipes all the tests in the 'StreamData' Directory
-         */
-        @RequiresApi(Build.VERSION_CODES.O)
-        fun wipeTests(): Boolean {
-            if (AppGlobals.csvDirectory == null) return false
-
-            Timber.v("Wiping all tests in directory.")
-            AppGlobals.csvDirectory!!.listFiles()?.forEach { file ->
-                if (file.isFile) {
-                    file.delete()
-                }
-            }
             return true
         }
     }

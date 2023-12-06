@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "me.ian.fsvt"
-        minSdk = 21
+        minSdk = 23
         //noinspection OldTargetApi
         targetSdk = 33
         versionCode = 1
@@ -26,7 +26,7 @@ android {
             )
         }
         debug {
-            isDebuggable = false
+            isDebuggable = true
         }
     }
     compileOptions {

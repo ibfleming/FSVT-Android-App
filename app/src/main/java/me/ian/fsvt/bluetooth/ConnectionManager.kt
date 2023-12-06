@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import me.ian.fsvt.AppGlobals
 import me.ian.fsvt.DeviceState
+import me.ian.fsvt.MainActivity
 import me.ian.fsvt.graph.GraphDataViewModel
 import timber.log.Timber
 import java.util.UUID
@@ -125,13 +126,15 @@ object ConnectionManager {
         }
     }
 
-    public fun handleDisconnect() {
+    fun handleDisconnect() {
         disconnect()
         readCharacteristic      = null
         writeCharacteristic     = null
         hm10Delegate            = null
         receivedAcknowledgement = false
-        viewModel.setConnectionStatus(false)
+        if( viewModel.isConnected.value == true ) {
+            viewModel.setConnectionStatus(false)
+        }
     }
 
     /*******************************************

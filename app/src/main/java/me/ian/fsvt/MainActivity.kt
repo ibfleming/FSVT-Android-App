@@ -2,23 +2,23 @@ package me.ian.fsvt
 
  import android.Manifest
  import android.annotation.SuppressLint
- import android.app.Activity
  import android.bluetooth.*
  import android.bluetooth.le.ScanCallback
  import android.bluetooth.le.ScanFilter
  import android.bluetooth.le.ScanResult
  import android.bluetooth.le.ScanSettings
- import android.content.BroadcastReceiver
  import android.content.Context
  import android.content.DialogInterface
  import android.content.Intent
- import android.content.IntentFilter
  import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
+ import android.net.Uri
  import android.os.Build
  import android.os.Bundle
+ import android.os.Environment
  import android.os.Handler
  import android.os.Looper
+ import android.provider.Settings
  import android.text.Editable
  import android.text.TextWatcher
  import android.view.Gravity
@@ -33,7 +33,6 @@ package me.ian.fsvt
  import androidx.annotation.RequiresApi
  import androidx.appcompat.app.AlertDialog
  import androidx.appcompat.app.AppCompatActivity
- import androidx.core.app.ActivityCompat
  import androidx.core.content.ContextCompat
  import me.ian.fsvt.bluetooth.ConnectionManager
  import me.ian.fsvt.csv.CSVProcessing
@@ -44,9 +43,10 @@ package me.ian.fsvt
  import timber.log.Timber
  import kotlin.math.abs
 
-private const val ENABLE_BLUETOOTH_REQUEST_CODE    = 1
-private const val LOCATION_PERMISSION_REQUEST_CODE = 2
-private const val STORAGE_PERMISSION_REQUEST_CODE  = 3
+
+private const val REQUEST_BLUETOOTH_PERMISSIONS = 0
+private const val REQUEST_ENABLE_BLUETOOTH = 1
+private const val REQUEST_STORAGE_PERMISSION = 2
 
 private const val MAC_ADDRESS = "B4:52:A9:04:28:DC"
 private const val SCAN_PERIOD = 3000L
@@ -54,6 +54,8 @@ private const val SCAN_PERIOD = 3000L
 class MainActivity: AppCompatActivity() {
 
     private var tag = "MAIN"
+
+    private var bluetoothPermissionsGranted = false
 
     /*******************************************
      * Properties
@@ -64,25 +66,6 @@ class MainActivity: AppCompatActivity() {
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
-    }
-
-    private val bluetoothReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-                when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
-                    BluetoothAdapter.STATE_OFF -> {
-                        Timber.e("[BLUETOOTH OFF]")
-                        ConnectionManager.handleDisconnect()
-                        AppGlobals.resetDirective()
-                        promptEnableBluetooth()
-                    }
-                    BluetoothAdapter.STATE_ON -> {
-                        Timber.e("[BLUETOOTH ON]")
-                    }
-                }
-            }
-        }
     }
 
     private val bleScanner by lazy {
@@ -96,11 +79,180 @@ class MainActivity: AppCompatActivity() {
     private val scanFilter = ScanFilter.Builder().setDeviceAddress(MAC_ADDRESS).build()
     private val scanResults = mutableListOf<ScanResult>()
 
-    private val isLocationPermissionGranted
-        get() = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    /*******************************************
+     * PERMISSIONS
+     *******************************************/
 
-    private val isStoragePermissionGranted
-        get() = hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    private fun checkAndRequestBluetoothPermissions() {
+        // For devices SDK >= 31
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+
+            val bluetoothPermissions = arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+
+            val permissionsToRequest = mutableListOf<String>()
+
+            Timber.tag(tag).v("Bluetooth Permissions (SDK >= 31):")
+            for (permission in bluetoothPermissions) {
+                if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(permission)
+                }
+                else {
+                    Timber.tag(tag).v("\t$permission")
+                }
+            }
+
+            if (permissionsToRequest.isNotEmpty()) {
+                requestPermissions(permissionsToRequest.toTypedArray(), REQUEST_BLUETOOTH_PERMISSIONS)
+            } else {
+                bluetoothPermissionsGranted = true
+                checkBluetoothAdapter()
+            }
+        } else {
+
+            val bluetoothPermissions = arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+
+            val permissionsToRequest = mutableListOf<String>()
+
+            Timber.tag(tag).v("Bluetooth Permissions:")
+            for (permission in bluetoothPermissions) {
+                if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(permission)
+                }
+                else {
+                    Timber.tag(tag).v("\t$permission")
+                }
+            }
+
+            if (permissionsToRequest.isNotEmpty()) {
+                requestPermissions(permissionsToRequest.toTypedArray(), REQUEST_BLUETOOTH_PERMISSIONS)
+            }
+
+        }
+    }
+
+    private fun checkAndRequestStoragePermission() {
+        // For devices between SDK 23-30
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R ) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    REQUEST_STORAGE_PERMISSION
+                )
+            } else {
+                Timber.tag(tag).v("Storage permission is granted.")
+                CSVProcessing.createDirectory()
+            }
+        }
+        // For devices >= 33
+        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                intent.data = Uri.parse("package:$packageName")
+                startActivityForResult(intent, REQUEST_STORAGE_PERMISSION)
+            }
+            else {
+                Timber.tag(tag).v("Storage permission is granted.")
+                CSVProcessing.createDirectory()
+            }
+        }
+    }
+
+    /*******************************************
+     * PERMISSION RESULTS
+     *******************************************/
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_BLUETOOTH_PERMISSIONS -> {
+                val deniedPermissions = mutableListOf<String>()
+                val grantedPermissions = mutableListOf<String>()
+
+                for (i in permissions.indices) {
+                    if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                        deniedPermissions.add(permissions[i])
+                    } else {
+                        grantedPermissions.add(permissions[i])
+                    }
+                }
+
+                if (grantedPermissions.isNotEmpty()) {
+                    Timber.tag(tag).v("Successfully Granted Permissions:")
+                    for (permission in grantedPermissions) {
+                        Timber.tag(tag).v("\t$permission")
+                    }
+                }
+
+                if (deniedPermissions.isNotEmpty()) {
+                    Timber.tag(tag).e("Denied Permissions:")
+                    for (permission in deniedPermissions) {
+                        Timber.tag(tag).e("\t$permission")
+                    }
+                } else {
+                    bluetoothPermissionsGranted = true
+                    checkBluetoothAdapter()
+                }
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            REQUEST_ENABLE_BLUETOOTH -> {
+                if( bluetoothAdapter.isEnabled ) {
+                    Timber.tag(tag).v("[ENABLED BLUETOOTH]")
+                }
+            }
+            REQUEST_STORAGE_PERMISSION -> {
+                if (Environment.isExternalStorageManager()) {
+                    Timber.tag(tag).v("Successfully granted storage permission.")
+                    CSVProcessing.createDirectory()
+                } else {
+                    Timber.tag(tag).e("Failed to enable storage permission.")
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkBluetoothAdapter() {
+        if( bluetoothPermissionsGranted ) {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val bluetoothConnectPermission = Manifest.permission.BLUETOOTH_CONNECT
+                if (checkSelfPermission(bluetoothConnectPermission) == PackageManager.PERMISSION_GRANTED) {
+                    val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
+                }
+            }
+            else {
+                val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
+            }
+        }
+    }
 
     /*******************************************
      * Activity function overrides
@@ -114,11 +266,19 @@ class MainActivity: AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        Timber.tag(tag).v("[MAIN INIT]")
+        Timber.tag("DEVICE SDK").i("DEVICE SDK: ${Build.VERSION.SDK_INT}")
+        Timber.tag(tag).v("[MAIN INITIALIZING]")
 
-        // Register the BroadcastReceiver to listen for Bluetooth state changes
-        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-        registerReceiver(bluetoothReceiver, filter)
+        /*******************************************
+         * IMPORTANT: Check Permissions
+         *******************************************/
+        Timber.tag(tag).v("Checking permissions...")
+
+        // Check bluetooth and location permissions
+        checkAndRequestBluetoothPermissions()
+
+        // Check storage permission
+        checkAndRequestStoragePermission()
 
         /*******************************************
          * Initialize Graph Fragments
@@ -135,16 +295,6 @@ class MainActivity: AppCompatActivity() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.GraphTwoFragment, AppGlobals.graphTwoFragment)
             commit()
-        }
-
-        /*******************************************
-         * CSV Initialization (Creates directory)
-         *******************************************/
-
-        if( !isStoragePermissionGranted ) {
-            requestStoragePermission()
-        } else {
-            CSVProcessing.createDirectory()
         }
 
         /*******************************************
@@ -177,11 +327,8 @@ class MainActivity: AppCompatActivity() {
                 // Set disconnect state
                 AppGlobals.connectionState = ConnectionState.DISCONNECTED
 
-                // Show dialog
+                // Show disconnection dialog
                 showDisconnectedDialog()
-
-                // Reset
-                AppGlobals.resetDirective()
 
                 // Button Logic
                 disableButtons()
@@ -266,105 +413,32 @@ class MainActivity: AppCompatActivity() {
             // Button Logic
             enable(binding.StartButton)
         }
-
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (!bluetoothAdapter.isEnabled) {
-            promptEnableBluetooth()
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            ENABLE_BLUETOOTH_REQUEST_CODE -> {
-                if (resultCode != Activity.RESULT_OK) {
-                    promptEnableBluetooth()
-                }
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            LOCATION_PERMISSION_REQUEST_CODE -> {
-                if (grantResults.firstOrNull() == PackageManager.PERMISSION_DENIED) {
-                    requestLocationPermission()
-                } else {
-                    startScan()
-                }
-            }
-            STORAGE_PERMISSION_REQUEST_CODE -> {
-                if( grantResults.firstOrNull() == PackageManager.PERMISSION_DENIED) {
-                    requestStoragePermission()
-                } else {
-                    CSVProcessing.createDirectory()
-                }
-            }
-        }
     }
 
     /*******************************************
      * Private functions
      *******************************************/
 
-    @SuppressLint("MissingPermission")
-    private fun promptEnableBluetooth() {
-        if (!bluetoothAdapter.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST_CODE)
-        }
-    }
-
-    private fun requestStoragePermission() {
-        if( isStoragePermissionGranted ) {
-            return
-        }
-        requestPermission(
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            STORAGE_PERMISSION_REQUEST_CODE
-        )
-    }
-
-    private fun requestLocationPermission() {
-        if (isLocationPermissionGranted) {
-            return
-        }
-        showLocationPermissionDialog()
-    }
-
     private var scanTimeoutHandler = Handler(Looper.getMainLooper())
 
     @SuppressLint("MissingPermission")
     private fun startScan() {
-        Timber.tag(tag).d("Started BLE scan!")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isLocationPermissionGranted) {
-            requestLocationPermission()
-        } else {
-            scanResults.clear()
-            val scanFilters = mutableListOf(scanFilter)
-            bleScanner.startScan(scanFilters, scanSettings, scanCallback)
+        Timber.tag(tag).v("Starting BLE scanning...")
+        scanResults.clear()
+        val scanFilters = mutableListOf(scanFilter)
+        bleScanner?.startScan(scanFilters, scanSettings, scanCallback)
 
-            scanTimeoutHandler.postDelayed({
-                stopScan()
-                showDeviceNotFoundDialog()
-                enable(binding.ConnectButton)
-            }, SCAN_PERIOD)
-        }
+        scanTimeoutHandler.postDelayed({
+            stopScan()
+            showDeviceNotFoundDialog()
+            enable(binding.ConnectButton)
+        }, SCAN_PERIOD)
     }
 
     @SuppressLint("MissingPermission")
     private fun stopScan() {
-        Timber.tag(tag).d("Stopped BLE scan!")
-        bleScanner.stopScan(scanCallback)
+        Timber.tag(tag).v("Stopped BLE scan!")
+        bleScanner?.stopScan(scanCallback)
         scanTimeoutHandler.removeCallbacksAndMessages(null)
     }
 
@@ -451,19 +525,6 @@ class MainActivity: AppCompatActivity() {
     }
 
     /*******************************************
-     * Permissions
-     *******************************************/
-
-    private fun Context.hasPermission(permissionType: String): Boolean {
-        return ContextCompat.checkSelfPermission(this, permissionType) ==
-                PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun Activity.requestPermission(permission: String, requestCode: Int) {
-        ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
-    }
-
-    /*******************************************
      * Custom Dialog Alerts
      *******************************************/
 
@@ -495,9 +556,8 @@ class MainActivity: AppCompatActivity() {
         }
 
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.let { button ->
-                button.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
-            }
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                ?.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
         }
 
         dialog.show()
@@ -526,6 +586,7 @@ class MainActivity: AppCompatActivity() {
         val rotate = dialogView.findViewById<Button>(R.id.RotateButton)
 
         // Input Logic for All
+        /*
         if( AppGlobals.deviceState == DeviceState.STOPPED && AppGlobals.connectionState == ConnectionState.DISCONNECTED ) {
             editTitle.isEnabled      = false
             editDist.isEnabled       = false
@@ -539,6 +600,7 @@ class MainActivity: AppCompatActivity() {
             metersCheckbox.isEnabled = false
             disable(rotate)
         }
+        */
 
         // Checkbox Logic
         if( AppGlobals.unitType == UnitType.FEET ) feetCheckbox.isChecked = true
@@ -651,7 +713,7 @@ class MainActivity: AppCompatActivity() {
 
                 if ( CSVProcessing.createFile() ) {
                     Timber.tag("Settings").v("Created the file successfully.")
-                    if (CSVProcessing.openBuffer())  Timber.tag("Settings").v("File Buffer OPENED!")
+                    if (CSVProcessing.openBuffer())  Timber.tag("Settings").v("File is open for writes.")
                     enable(binding.StartButton)
                 }
                 else {
@@ -718,26 +780,6 @@ class MainActivity: AppCompatActivity() {
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok) { dialog, _ ->
                     dialog.dismiss()
-                }
-                .show()
-
-            // Change color of the button
-            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
-        }
-    }
-
-    private fun showLocationPermissionDialog() {
-        runOnUiThread {
-            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
-                .setTitle("Location permission required")
-                .setMessage("Starting from Android M (6.0), the system requires apps to be granted " +
-                        "location access in order to scan for BLE devices.")
-                .setCancelable(false)
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    requestPermission(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        LOCATION_PERMISSION_REQUEST_CODE
-                    )
                 }
                 .show()
 
