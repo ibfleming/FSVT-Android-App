@@ -3,7 +3,6 @@ package me.ian.fsvt.graph
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import timber.log.Timber
 
 class GraphDataViewModel : ViewModel() {
 

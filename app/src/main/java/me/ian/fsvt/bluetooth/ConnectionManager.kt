@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import me.ian.fsvt.AppGlobals
 import me.ian.fsvt.DeviceState
-import me.ian.fsvt.MainActivity
 import me.ian.fsvt.graph.GraphDataViewModel
 import timber.log.Timber
 import java.util.UUID
@@ -89,6 +88,7 @@ object ConnectionManager {
          * On Write
          *******************************************/
 
+        /*
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?,
@@ -100,6 +100,7 @@ object ConnectionManager {
                 Timber.e("WRITE FAILED (status = $status)")
             }
         }
+        */
 
         /*******************************************
          * On Change
@@ -194,7 +195,7 @@ object ConnectionManager {
             val packet = byteArrayOf(command.code.toByte())
             characteristic.value = packet
             if (bluetoothGatt?.writeCharacteristic(characteristic) == true) {
-                Timber.d("RETURN TRUE ON WRITE SUCCESS!")
+                Timber.d("Writing '$command' to device.")
             }
         }
     }

@@ -7,11 +7,15 @@ package me.ian.fsvt
  import android.bluetooth.le.ScanFilter
  import android.bluetooth.le.ScanResult
  import android.bluetooth.le.ScanSettings
+ import android.content.BroadcastReceiver
  import android.content.Context
  import android.content.DialogInterface
  import android.content.Intent
+ import android.content.IntentFilter
+ import android.content.IntentSender
  import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
+ import android.location.LocationManager
  import android.net.Uri
  import android.os.Build
  import android.os.Bundle
@@ -34,6 +38,13 @@ package me.ian.fsvt
  import androidx.appcompat.app.AlertDialog
  import androidx.appcompat.app.AppCompatActivity
  import androidx.core.content.ContextCompat
+ import com.google.android.gms.common.api.ResolvableApiException
+ import com.google.android.gms.location.LocationRequest
+ import com.google.android.gms.location.LocationServices
+ import com.google.android.gms.location.LocationSettingsRequest
+ import com.google.android.gms.location.LocationSettingsResponse
+ import com.google.android.gms.location.SettingsClient
+ import com.google.android.gms.tasks.Task
  import me.ian.fsvt.bluetooth.ConnectionManager
  import me.ian.fsvt.csv.CSVProcessing
  import me.ian.fsvt.databinding.ActivityMainBinding
@@ -45,8 +56,10 @@ package me.ian.fsvt
 
 
 private const val REQUEST_BLUETOOTH_PERMISSIONS = 0
-private const val REQUEST_ENABLE_BLUETOOTH = 1
-private const val REQUEST_STORAGE_PERMISSION = 2
+private const val REQUEST_STORAGE_PERMISSION    = 1
+private const val REQUEST_ENABLE_BLUETOOTH      = 2
+private const val REQUEST_ENABLE_LOCATION       = 3
+
 
 private const val MAC_ADDRESS = "B4:52:A9:04:28:DC"
 private const val SCAN_PERIOD = 3000L
@@ -63,9 +76,30 @@ class MainActivity: AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    /*******************************************
+     * BLUETOOTH
+     *******************************************/
+
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
+    }
+
+    private val bluetoothStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
+                    BluetoothAdapter.STATE_OFF -> {
+                        Timber.tag(tag).v("[BLUETOOTH DISABLED]")
+                        checkBluetoothAdapter()
+                    }
+                    BluetoothAdapter.STATE_ON -> {
+                        Timber.tag(tag).v("[BLUETOOTH ENABLED]")
+                    }
+                }
+            }
+        }
     }
 
     private val bleScanner by lazy {
@@ -78,6 +112,64 @@ class MainActivity: AppCompatActivity() {
 
     private val scanFilter = ScanFilter.Builder().setDeviceAddress(MAC_ADDRESS).build()
     private val scanResults = mutableListOf<ScanResult>()
+
+    @SuppressLint("MissingPermission")
+    private fun checkBluetoothAdapter() {
+        if( bluetoothPermissionsGranted ) {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val bluetoothConnectPermission = Manifest.permission.BLUETOOTH_CONNECT
+                if (checkSelfPermission(bluetoothConnectPermission) == PackageManager.PERMISSION_GRANTED) {
+                    val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                    startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
+                }
+            }
+            else {
+                val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
+            }
+        }
+    }
+
+    /*******************************************
+     * LOCATION SERVICE
+     *******************************************/
+
+    private val locationManager: LocationManager by lazy {
+        getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    }
+
+    private val locationServiceReceiver = object : BroadcastReceiver() {
+        @RequiresApi(Build.VERSION_CODES.P)
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (action == LocationManager.PROVIDERS_CHANGED_ACTION) {
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                if (!locationManager.isLocationEnabled) {
+                    enableLocationService(context)
+                }
+                else {
+                    Timber.tag(tag).v("Location service is enabled.")
+                }
+            }
+        }
+    }
+
+    private fun enableLocationService(context: Context) {
+        val enableLocationIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        enableLocationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        context.startActivity(enableLocationIntent)
+    }
+
+    private fun checkLocationService() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if( !locationManager.isLocationEnabled ) {
+                Timber.tag(tag).e("Location service is disabled.")
+                enableLocationService(this)
+            } else {
+                Timber.tag(tag).v("Location service is enabled.")
+            }
+        }
+    }
 
     /*******************************************
      * PERMISSIONS
@@ -113,6 +205,7 @@ class MainActivity: AppCompatActivity() {
             } else {
                 bluetoothPermissionsGranted = true
                 checkBluetoothAdapter()
+                checkLocationService()
             }
         } else {
 
@@ -137,8 +230,11 @@ class MainActivity: AppCompatActivity() {
 
             if (permissionsToRequest.isNotEmpty()) {
                 requestPermissions(permissionsToRequest.toTypedArray(), REQUEST_BLUETOOTH_PERMISSIONS)
+            } else {
+                bluetoothPermissionsGranted = true
+                checkBluetoothAdapter()
+                checkLocationService()
             }
-
         }
     }
 
@@ -211,10 +307,15 @@ class MainActivity: AppCompatActivity() {
                 } else {
                     bluetoothPermissionsGranted = true
                     checkBluetoothAdapter()
+                    checkLocationService()
                 }
             }
         }
     }
+
+    /*******************************************
+     * ACTIVITY RESULTS
+     *******************************************/
 
     @RequiresApi(Build.VERSION_CODES.R)
     @Deprecated("Deprecated in Java")
@@ -222,8 +323,16 @@ class MainActivity: AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             REQUEST_ENABLE_BLUETOOTH -> {
-                if( bluetoothAdapter.isEnabled ) {
-                    Timber.tag(tag).v("[ENABLED BLUETOOTH]")
+                if( !bluetoothAdapter.isEnabled ) {
+                    checkBluetoothAdapter()
+                }
+                else {
+                    Timber.tag(tag).v("Bluetooth is enabled.")
+                }
+            }
+            REQUEST_ENABLE_LOCATION -> {
+                if(locationManager.isLocationEnabled) {
+                    Timber.tag(tag).v("Location service is enabled.")
                 }
             }
             REQUEST_STORAGE_PERMISSION -> {
@@ -233,23 +342,6 @@ class MainActivity: AppCompatActivity() {
                 } else {
                     Timber.tag(tag).e("Failed to enable storage permission.")
                 }
-            }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun checkBluetoothAdapter() {
-        if( bluetoothPermissionsGranted ) {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val bluetoothConnectPermission = Manifest.permission.BLUETOOTH_CONNECT
-                if (checkSelfPermission(bluetoothConnectPermission) == PackageManager.PERMISSION_GRANTED) {
-                    val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                    startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
-                }
-            }
-            else {
-                val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH)
             }
         }
     }
@@ -276,6 +368,10 @@ class MainActivity: AppCompatActivity() {
 
         // Check bluetooth and location permissions
         checkAndRequestBluetoothPermissions()
+
+        // Register Receivers (Check Bluetooth and Location states)
+        registerReceiver(bluetoothStateReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+        registerReceiver(locationServiceReceiver, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION))
 
         // Check storage permission
         checkAndRequestStoragePermission()
@@ -413,6 +509,12 @@ class MainActivity: AppCompatActivity() {
             // Button Logic
             enable(binding.StartButton)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(bluetoothStateReceiver)
+        unregisterReceiver(locationServiceReceiver)
     }
 
     /*******************************************
@@ -586,7 +688,6 @@ class MainActivity: AppCompatActivity() {
         val rotate = dialogView.findViewById<Button>(R.id.RotateButton)
 
         // Input Logic for All
-        /*
         if( AppGlobals.deviceState == DeviceState.STOPPED && AppGlobals.connectionState == ConnectionState.DISCONNECTED ) {
             editTitle.isEnabled      = false
             editDist.isEnabled       = false
@@ -600,7 +701,6 @@ class MainActivity: AppCompatActivity() {
             metersCheckbox.isEnabled = false
             disable(rotate)
         }
-        */
 
         // Checkbox Logic
         if( AppGlobals.unitType == UnitType.FEET ) feetCheckbox.isChecked = true
