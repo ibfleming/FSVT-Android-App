@@ -27,7 +27,6 @@ object ConnectionManager {
     private var readCharacteristic      : BluetoothGattCharacteristic? = null
     private var writeCharacteristic     : BluetoothGattCharacteristic? = null
     private var hm10Delegate            : DeviceDelegate? = null
-    private var receivedAcknowledgement : Boolean = false
 
     /*******************************************
      * Connecting and Callback
@@ -116,7 +115,7 @@ object ConnectionManager {
 
                 when (val msg = String(data.map { it.toInt().toChar() }.toCharArray())) {
                     "A" -> {
-                        receivedAcknowledgement = true
+                        AppGlobals.receivedAcknowledgement = true
                     }
                     else -> {
                         Timber.d( "[DATA STREAM] = '$msg'")
@@ -132,7 +131,7 @@ object ConnectionManager {
         readCharacteristic      = null
         writeCharacteristic     = null
         hm10Delegate            = null
-        receivedAcknowledgement = false
+        AppGlobals.receivedAcknowledgement = false
         if( viewModel.isConnected.value == true ) {
             viewModel.setConnectionStatus(false)
         }
@@ -218,11 +217,10 @@ object ConnectionManager {
                 writeCommand('S')
 
                 handler.postDelayed({
-                    if (receivedAcknowledgement) {
+                    if (AppGlobals.receivedAcknowledgement) {
                         // Acknowledgement received
                         Timber.v( "[START ACKNOWLEDGE]")
                         AppGlobals.deviceState = DeviceState.RUNNING
-                        receivedAcknowledgement = false
                         return@postDelayed
                     } else {
                         // No acknowledgment received, retry...
@@ -245,11 +243,10 @@ object ConnectionManager {
                 writeCommand('E')
 
                 handler.postDelayed({
-                    if (receivedAcknowledgement) {
+                    if (AppGlobals.receivedAcknowledgement) {
                         // Acknowledgement received
                         Timber.v( "[STOP ACKNOWLEDGE]")
                         AppGlobals.deviceState = DeviceState.STOPPED
-                        receivedAcknowledgement = false
                         return@postDelayed
                     } else {
                         // No acknowledgment received, retry...

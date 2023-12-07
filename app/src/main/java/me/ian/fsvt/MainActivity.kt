@@ -463,18 +463,25 @@ class MainActivity: AppCompatActivity() {
             Timber.tag(tag).v("[START]")
             disable(button as Button)
 
-            // CSV Logic
-            CSVProcessing.openBuffer()
-            AppGlobals.testCount++
-
             // Send Command to Devices to RUN
             ConnectionManager.sendStartCommand()
+            if (AppGlobals.receivedAcknowledgement) {
 
-            // Set Start Time
-            AppGlobals.startProgramTime = System.currentTimeMillis()
+                // CSV Logic
+                CSVProcessing.openBuffer()
+                AppGlobals.testCount++
 
-            // Button Logic
-            enable(binding.StopButton)
+                // Set Start Time
+                AppGlobals.startProgramTime = System.currentTimeMillis()
+
+                // Button Logic
+                enable(binding.StopButton)
+
+                // Set acknowledgement to false
+                AppGlobals.receivedAcknowledgement = false
+            } else {
+                enable(button)
+            }
         }
 
         /** STOP BUTTON **/
@@ -482,22 +489,28 @@ class MainActivity: AppCompatActivity() {
             Timber.tag(tag).v("[STOP]")
            disable(button as Button)
 
-            // Calculate velocity
-            calculateVelocity()
-            showVelocityDialog()
-
-            // Write to CSV
-            CSVProcessing.writeToCSV()
-            CSVProcessing.closeBuffer()
-
             // Send Command to Devices to STOP
             ConnectionManager.sendStopCommand()
+            if( AppGlobals.receivedAcknowledgement ) {
+                // Calculate velocity
+                calculateVelocity()
+                showVelocityDialog()
 
-            // Reset objects and variables
-            AppGlobals.stopDirective()
+                // Write to CSV
+                CSVProcessing.writeToCSV()
+                CSVProcessing.closeBuffer()
 
-            // Button Logic
-            enable(binding.StartButton)
+                // Reset objects and variables
+                AppGlobals.stopDirective()
+
+                // Button Logic
+                enable(binding.StartButton)
+
+                // Set acknowledgement to false
+                AppGlobals.receivedAcknowledgement = false
+            } else {
+                enable(button)
+            }
         }
     }
 
