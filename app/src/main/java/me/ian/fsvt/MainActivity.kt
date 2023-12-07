@@ -12,7 +12,6 @@ package me.ian.fsvt
  import android.content.DialogInterface
  import android.content.Intent
  import android.content.IntentFilter
- import android.content.IntentSender
  import android.content.pm.ActivityInfo
  import android.content.pm.PackageManager
  import android.location.LocationManager
@@ -38,13 +37,6 @@ package me.ian.fsvt
  import androidx.appcompat.app.AlertDialog
  import androidx.appcompat.app.AppCompatActivity
  import androidx.core.content.ContextCompat
- import com.google.android.gms.common.api.ResolvableApiException
- import com.google.android.gms.location.LocationRequest
- import com.google.android.gms.location.LocationServices
- import com.google.android.gms.location.LocationSettingsRequest
- import com.google.android.gms.location.LocationSettingsResponse
- import com.google.android.gms.location.SettingsClient
- import com.google.android.gms.tasks.Task
  import me.ian.fsvt.bluetooth.ConnectionManager
  import me.ian.fsvt.csv.CSVProcessing
  import me.ian.fsvt.databinding.ActivityMainBinding
@@ -54,12 +46,10 @@ package me.ian.fsvt
  import timber.log.Timber
  import kotlin.math.abs
 
-
 private const val REQUEST_BLUETOOTH_PERMISSIONS = 0
 private const val REQUEST_STORAGE_PERMISSION    = 1
 private const val REQUEST_ENABLE_BLUETOOTH      = 2
 private const val REQUEST_ENABLE_LOCATION       = 3
-
 
 private const val MAC_ADDRESS = "B4:52:A9:04:28:DC"
 private const val SCAN_PERIOD = 3000L

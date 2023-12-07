@@ -177,12 +177,19 @@ object ConnectionManager {
     }
 
     private fun checkBatteryLevel(level: Float): Int {
-        if (level >= 3.5) {
-            return 100
-        } else if (level >= 2.5) {
-            return ((level - 2.5) / 0.1).toInt() * 10
+        return when {
+            level >= 2.28 -> 100
+            level >= 2.21 -> 90
+            level >= 2.15 -> 80
+            level >= 2.08 -> 70
+            level >= 2.02 -> 60
+            level >= 1.95 -> 50
+            level >= 1.89 -> 40
+            level >= 1.82 -> 30
+            level >= 1.76 -> 20
+            level >= 1.69 -> 10
+            else -> 0
         }
-        return 0
     }
 
     /*******************************************
