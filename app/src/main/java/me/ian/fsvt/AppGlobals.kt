@@ -28,7 +28,6 @@ class AppGlobals {
         var graphDataViewModel          = GraphDataViewModel()
         lateinit var graphOneFragment   : GraphOneFragment
         lateinit var graphTwoFragment   : GraphTwoFragment
-        var receivedAcknowledgement     : Boolean = false
 
         /*******************************************
          * Primary Variables

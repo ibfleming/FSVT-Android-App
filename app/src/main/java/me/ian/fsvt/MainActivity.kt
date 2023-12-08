@@ -460,56 +460,55 @@ class MainActivity: AppCompatActivity() {
 
         /** START BUTTON **/
         binding.StartButton.setOnClickListener { button ->
-            Timber.tag(tag).v("[START]")
-            disable(button as Button)
+            Timber.tag(tag).v("Start button pressed.")
 
-            // Send Command to Devices to RUN
-            ConnectionManager.sendStartCommand()
-            if (AppGlobals.receivedAcknowledgement) {
+            ConnectionManager.sendStartCommand().thenAccept { acknowledge ->
+                if(acknowledge) {
+                    // Received acknowledge that devices are running
 
-                // CSV Logic
-                CSVProcessing.openBuffer()
-                AppGlobals.testCount++
+                    // Set Start Time
+                    AppGlobals.startProgramTime = System.currentTimeMillis()
 
-                // Set Start Time
-                AppGlobals.startProgramTime = System.currentTimeMillis()
+                    // CSV Logic
+                    CSVProcessing.openBuffer()
+                    AppGlobals.testCount++
 
-                // Button Logic
-                enable(binding.StopButton)
-
-                // Set acknowledgement to false
-                AppGlobals.receivedAcknowledgement = false
-            } else {
-                enable(button)
+                    // Button Logic
+                    disable(button as Button)
+                    enable(binding.StopButton)
+                }
+                else {
+                    showAcknowledgementFail("started")
+                }
             }
         }
 
         /** STOP BUTTON **/
         binding.StopButton.setOnClickListener { button ->
-            Timber.tag(tag).v("[STOP]")
-           disable(button as Button)
+            Timber.tag(tag).v("Stop button pressed.")
 
-            // Send Command to Devices to STOP
-            ConnectionManager.sendStopCommand()
-            if( AppGlobals.receivedAcknowledgement ) {
-                // Calculate velocity
-                calculateVelocity()
-                showVelocityDialog()
+            ConnectionManager.sendStopCommand().thenAccept { acknowledge ->
+                if (acknowledge) {
+                    // Received acknowledge that devices are stopping
 
-                // Write to CSV
-                CSVProcessing.writeToCSV()
-                CSVProcessing.closeBuffer()
+                    // Calculate velocity
+                    calculateVelocity()
+                    showVelocityDialog()
 
-                // Reset objects and variables
-                AppGlobals.stopDirective()
+                    // Write to CSV
+                    CSVProcessing.writeToCSV()
+                    CSVProcessing.closeBuffer()
 
-                // Button Logic
-                enable(binding.StartButton)
+                    // Reset objects and variables
+                    AppGlobals.stopDirective()
 
-                // Set acknowledgement to false
-                AppGlobals.receivedAcknowledgement = false
-            } else {
-                enable(button)
+                    // Button Logic
+                    disable(button as Button)
+                    enable(binding.StartButton)
+                }
+                else {
+                    showAcknowledgementFail("stopped")
+                }
             }
         }
     }
@@ -939,6 +938,21 @@ class MainActivity: AppCompatActivity() {
         toast.view = layout
         toast.show()
     }
+
+    private fun showAcknowledgementFail(msg : String) {
+        runOnUiThread {
+            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+                .setTitle("No acknowledgement")
+                .setMessage("Received no acknowledgement that the devices $msg. Please try pressing the button again.")
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok) { _,_ -> /* NOP */ }
+                .show()
+
+            // Change color of the button
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+        }
+    }
+
 
     private fun enable(button: Button) {
         button.isEnabled = true

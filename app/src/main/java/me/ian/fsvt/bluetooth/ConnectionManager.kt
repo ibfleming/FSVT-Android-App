@@ -3,13 +3,16 @@ package me.ian.fsvt.bluetooth
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import me.ian.fsvt.AppGlobals
 import me.ian.fsvt.DeviceState
 import me.ian.fsvt.graph.GraphDataViewModel
 import timber.log.Timber
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 
 private val bluetoothService = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")
 private val bluetoothCharRW  = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb")
@@ -22,11 +25,12 @@ object ConnectionManager {
 
     private val handler = Handler(Looper.getMainLooper())
     private var viewModel : GraphDataViewModel = AppGlobals.graphDataViewModel
-
+    
     private var bluetoothGatt           : BluetoothGatt? = null
     private var readCharacteristic      : BluetoothGattCharacteristic? = null
     private var writeCharacteristic     : BluetoothGattCharacteristic? = null
     private var hm10Delegate            : DeviceDelegate? = null
+    private var receivedAcknowledgement     : Boolean = false
 
     /*******************************************
      * Connecting and Callback
@@ -84,24 +88,6 @@ object ConnectionManager {
         }
 
         /*******************************************
-         * On Write
-         *******************************************/
-
-        /*
-        override fun onCharacteristicWrite(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?,
-            status: Int
-        ) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                Timber.v("WRITE SUCCESS")
-            } else {
-                Timber.e("WRITE FAILED (status = $status)")
-            }
-        }
-        */
-
-        /*******************************************
          * On Change
          *******************************************/
 
@@ -115,7 +101,7 @@ object ConnectionManager {
 
                 when (val msg = String(data.map { it.toInt().toChar() }.toCharArray())) {
                     "A" -> {
-                        AppGlobals.receivedAcknowledgement = true
+                        receivedAcknowledgement = true
                     }
                     else -> {
                         Timber.d( "[DATA STREAM] = '$msg'")
@@ -131,7 +117,7 @@ object ConnectionManager {
         readCharacteristic      = null
         writeCharacteristic     = null
         hm10Delegate            = null
-        AppGlobals.receivedAcknowledgement = false
+        receivedAcknowledgement = false
         if( viewModel.isConnected.value == true ) {
             viewModel.setConnectionStatus(false)
         }
@@ -209,7 +195,9 @@ object ConnectionManager {
     private const val MAX_ATTEMPTS = 25
     private const val TIMEOUT_DURATION = 15L
 
-    fun sendStartCommand() {
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun sendStartCommand() : CompletableFuture<Boolean> {
+        val receivedAcknowledge = CompletableFuture<Boolean>()
         var attempts = 0
 
         fun keepSendingStart() {
@@ -217,11 +205,12 @@ object ConnectionManager {
                 writeCommand('S')
 
                 handler.postDelayed({
-                    if (AppGlobals.receivedAcknowledgement) {
+                    if (receivedAcknowledgement) {
                         // Acknowledgement received
                         Timber.v( "[START ACKNOWLEDGE]")
                         AppGlobals.deviceState = DeviceState.RUNNING
-                        return@postDelayed
+                        receivedAcknowledgement = false
+                        receivedAcknowledge.complete(true)
                     } else {
                         // No acknowledgment received, retry...
                         attempts++
@@ -230,12 +219,17 @@ object ConnectionManager {
                 }, TIMEOUT_DURATION)
             } else {
                 Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts for START.")
+                receivedAcknowledge.complete(false)
             }
         }
+
         keepSendingStart()
+        return receivedAcknowledge
     }
 
-    fun sendStopCommand() {
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun sendStopCommand() : CompletableFuture<Boolean> {
+        val receivedAcknowledge = CompletableFuture<Boolean>()
         var attempts = 0
 
         fun keepSendingStop() {
@@ -243,11 +237,12 @@ object ConnectionManager {
                 writeCommand('E')
 
                 handler.postDelayed({
-                    if (AppGlobals.receivedAcknowledgement) {
+                    if (receivedAcknowledgement) {
                         // Acknowledgement received
                         Timber.v( "[STOP ACKNOWLEDGE]")
                         AppGlobals.deviceState = DeviceState.STOPPED
-                        return@postDelayed
+                        receivedAcknowledgement = false
+                        receivedAcknowledge.complete(true)
                     } else {
                         // No acknowledgment received, retry...
                         attempts++
@@ -256,9 +251,12 @@ object ConnectionManager {
                 }, TIMEOUT_DURATION)
             } else {
                 Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts for STOP.")
+                receivedAcknowledge.complete(false)
             }
         }
+
         keepSendingStop()
+        return receivedAcknowledge
     }
 
     /*******************************************
