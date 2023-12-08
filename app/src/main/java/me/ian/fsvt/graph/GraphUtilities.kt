@@ -43,8 +43,8 @@ fun applyDefaultSettings(chart: LineChart?, probe: ChartClassifier) {
             ChartClassifier.GRAPH_TWO -> "2"
         }}"
         textColor = Color.GRAY
-        yOffset = 20F
-        textSize = 12F
+        yOffset = 30F
+        textSize = 10F
         typeface = Typeface.MONOSPACE
     }
     chart?.description = desc

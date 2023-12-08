@@ -402,7 +402,7 @@ class MainActivity: AppCompatActivity() {
                 ConnectionManager.sendStopCommand()
 
                 // Show toast
-                showCustomToast(this, "Successfully connected!")
+                showCustomToast(this, "Successfully connected!", 1)
 
                 /// Button Logic
                 disable(binding.ConnectButton)
@@ -478,7 +478,7 @@ class MainActivity: AppCompatActivity() {
                     enable(binding.StopButton)
                 }
                 else {
-                    showAcknowledgementFail("started")
+                    showCustomToast(this, "Received no acknowledgement.\nPlease press the button again.", 0)
                 }
             }
         }
@@ -507,7 +507,7 @@ class MainActivity: AppCompatActivity() {
                     enable(binding.StartButton)
                 }
                 else {
-                    showAcknowledgementFail("stopped")
+                    showCustomToast(this, "Received no acknowledgement.\nPlease press the button again.", 0)
                 }
             }
         }
@@ -776,7 +776,6 @@ class MainActivity: AppCompatActivity() {
 
         // Buttons
 
-        rotate.isEnabled = true
         rotate.setOnClickListener {
             // prompt user if this indeed what they desire -> will reset app!
             dialog.dismiss() // Must dismiss this Alert first otherwise a View Leak will occur
@@ -848,7 +847,7 @@ class MainActivity: AppCompatActivity() {
             } else {
                 "${AppGlobals.distance}m"
             }
-            showCustomToast(this, "Name = ${AppGlobals.fileName}\nDistance = $distStr")
+            showCustomToast(this, "Name = ${AppGlobals.fileName}\nDistance = $distStr", 1)
 
             dialog.dismiss()
         }
@@ -908,7 +907,8 @@ class MainActivity: AppCompatActivity() {
         runOnUiThread {
             val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
                 .setTitle("Orientation change")
-                .setMessage("WARNING: Changing the orientation will restart the app and any tests!")
+                .setMessage("WARNING: Changing the orientation will restart the app and any tests!" +
+                "\nNote: If you established a Bluetooth connection prior it will remain connected.")
                 .setCancelable(true)
                 .setPositiveButton(android.R.string.ok) { _,_ ->
                     changeOrientation()
@@ -924,8 +924,7 @@ class MainActivity: AppCompatActivity() {
     }
 
     @SuppressLint("InflateParams")
-    @Deprecated("Deprecated in Java")
-    private fun showCustomToast(context: Context, message: String) {
+    private fun showCustomToast(context: Context, message: String, length : Int) {
         val layoutInflater: LayoutInflater = LayoutInflater.from(context)
         val layout: View = layoutInflater.inflate(R.layout.toast_layout, null)
 
@@ -934,25 +933,10 @@ class MainActivity: AppCompatActivity() {
 
         val toast = Toast(context)
         toast.setGravity(Gravity.TOP, 0, 96)
-        toast.duration = Toast.LENGTH_LONG
+        toast.duration = length
         toast.view = layout
         toast.show()
     }
-
-    private fun showAcknowledgementFail(msg : String) {
-        runOnUiThread {
-            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
-                .setTitle("No acknowledgement")
-                .setMessage("Received no acknowledgement that the devices $msg. Please try pressing the button again.")
-                .setCancelable(false)
-                .setPositiveButton(android.R.string.ok) { _,_ -> /* NOP */ }
-                .show()
-
-            // Change color of the button
-            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
-        }
-    }
-
 
     private fun enable(button: Button) {
         button.isEnabled = true
