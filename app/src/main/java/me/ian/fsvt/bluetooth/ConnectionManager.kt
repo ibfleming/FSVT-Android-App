@@ -11,6 +11,8 @@ import me.ian.fsvt.AppGlobals
 import me.ian.fsvt.DeviceState
 import me.ian.fsvt.graph.GraphDataViewModel
 import timber.log.Timber
+import java.util.Timer
+import java.util.TimerTask
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
@@ -30,7 +32,7 @@ object ConnectionManager {
     private var readCharacteristic      : BluetoothGattCharacteristic? = null
     private var writeCharacteristic     : BluetoothGattCharacteristic? = null
     private var hm10Delegate            : DeviceDelegate? = null
-    private var receivedAcknowledgement     : Boolean = false
+    private var receivedAcknowledgement : Boolean = false
 
     /*******************************************
      * Connecting and Callback
@@ -96,18 +98,23 @@ object ConnectionManager {
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
         ) {
-            if( characteristic === readCharacteristic) {
-                val data = readCharacteristic!!.value
+            readCharacteristic?.let { readChar ->
+                readChar.value?.let { data ->
+                    val msg = String(data.map { it.toInt().toChar() }.toCharArray())
 
-                when (val msg = String(data.map { it.toInt().toChar() }.toCharArray())) {
-                    "A" -> {
-                        receivedAcknowledgement = true
-                    }
-                    else -> {
-                        Timber.d( "[DATA STREAM] = '$msg'")
-                        processData(msg)
+                    when(msg) {
+                        "A" -> {
+                            Timber.tag("BLUETOOTH DEVICE").v("Read acknowledgement.")
+                            receivedAcknowledgement = true
+                        }
+                        else -> {
+                            Timber.tag("BLUETOOTH DEVICE").v("Read: '$msg'")
+                            processData(msg)
+                        }
                     }
                 }
+            } ?: run {
+                Timber.e("Read characteristic is null.")
             }
         }
     }
@@ -186,15 +193,54 @@ object ConnectionManager {
         writeCharacteristic?.let { characteristic ->
             val packet = byteArrayOf(command.code.toByte())
             characteristic.value = packet
-            if (bluetoothGatt?.writeCharacteristic(characteristic) == true) {
-                Timber.d("Writing '$command' to device.")
+
+            bluetoothGatt?.let { gatt->
+                if(gatt.writeCharacteristic(characteristic)) {
+                    Timber.d("Writing '$command' to device.")
+                } else {
+                    Timber.e("Failed writing '$command' to device.")
+                }
+            }?: run {
+                Timber.e("Bluetooth gatt is null.")
             }
+        } ?: run {
+            Timber.e("Write characteristic is null.")
         }
     }
 
-    private const val MAX_ATTEMPTS = 25
-    private const val TIMEOUT_DURATION = 15L
+    private const val PERIOD_DURATION = 10L
+    private const val TASK_DURATION = 6000L
 
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun sendCommand(command: Char): CompletableFuture<Boolean> {
+        val returnAcknowledgement = CompletableFuture<Boolean>()
+
+        val sendCommandRunnable = object : Runnable {
+            override fun run() {
+                writeCommand(command)
+                if (receivedAcknowledgement) {
+                    receivedAcknowledgement = false
+                    returnAcknowledgement.complete(true)
+                    handler.removeCallbacks(this)
+                } else {
+                    handler.postDelayed(this, PERIOD_DURATION)
+                }
+            }
+        }
+
+        handler.postDelayed(sendCommandRunnable, 0)
+
+        handler.postDelayed({
+            if (!returnAcknowledgement.isDone) {
+                returnAcknowledgement.complete(false)
+                handler.removeCallbacks(sendCommandRunnable)
+            }
+        }, TASK_DURATION)
+
+        return returnAcknowledgement
+    }
+
+    /*
     @RequiresApi(Build.VERSION_CODES.N)
     fun sendStartCommand() : CompletableFuture<Boolean> {
         val receivedAcknowledge = CompletableFuture<Boolean>()
@@ -228,16 +274,13 @@ object ConnectionManager {
         return receivedAcknowledge
     }
 
-    private const val MAX_STOP_ATTEMPTS = 50
-    private const val TIMEOUT_STOP_DURATION = 10L
-
     @RequiresApi(Build.VERSION_CODES.N)
     fun sendStopCommand() : CompletableFuture<Boolean> {
         val receivedAcknowledge = CompletableFuture<Boolean>()
         var attempts = 0
 
         fun keepSendingStop() {
-            if (attempts < MAX_STOP_ATTEMPTS) {
+            if (attempts < MAX_ATTEMPTS) {
                 writeCommand('E')
 
                 handler.postDelayed({
@@ -252,7 +295,7 @@ object ConnectionManager {
                         attempts++
                         keepSendingStop()
                     }
-                }, TIMEOUT_STOP_DURATION)
+                }, TIMEOUT_DURATION)
             } else {
                 keepSendingStop()
                 Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts for STOP.")
@@ -262,7 +305,7 @@ object ConnectionManager {
 
         keepSendingStop()
         return receivedAcknowledge
-    }
+    }*/
 
     /*******************************************
      * Connect to Characteristics

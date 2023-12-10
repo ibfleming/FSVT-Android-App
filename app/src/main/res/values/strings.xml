@@ -14,6 +14,7 @@
     <string name="Battery_Probe_One">Probe One</string>
     <string name="Battery_Probe_Two">Probe Two</string>
     <string name="Battery_Format">%d%%</string>
+    <string name="Battery_Disconnected">NA</string>
     <string name="Copyright">© 2023 FSVT - All Rights Reserved.</string>
     <string name="Empty_Placeholder">Empty</string>
 </resources>

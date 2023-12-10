@@ -114,17 +114,17 @@ class CSVProcessing {
             bufferRef.newLine()
 
             /** Get Velocity and Distance **/
-            if (AppGlobals.unitType == UnitType.METERS) {
-                bufferRef.write("Velocity:,${AppGlobals.velocity} m/s")
-                bufferRef.newLine()
-                bufferRef.write("Distance:,${AppGlobals.distance} m")
-                bufferRef.newLine()
-            } else {
-                bufferRef.write("Velocity:,${AppGlobals.velocity} ft/s")
-                bufferRef.newLine()
-                bufferRef.write("Distance:,${AppGlobals.distance} ft")
-                bufferRef.newLine()
-            }
+            val velocityText = AppGlobals.velocity?.takeUnless { it.isNaN() || it.isInfinite() }
+                ?.let { "${String.format("%.2f", it)} ${if (AppGlobals.unitType == UnitType.METERS) "m/s" else "ft/s"}" }
+                ?: "NA"
+
+            val distanceText = AppGlobals.distance?.let { "$it ${if (AppGlobals.unitType == UnitType.METERS) "m" else "ft"}" }
+                ?: "NA"
+
+            bufferRef.write("Velocity:,$velocityText")
+            bufferRef.newLine()
+            bufferRef.write("Distance:,$distanceText")
+            bufferRef.newLine()
 
             /** Generate Value Headers  **/
             bufferRef.write("Time (s),Probe 1 (ppm), Probe 2 (ppm)")
@@ -150,12 +150,12 @@ class CSVProcessing {
                         val y1 = setOne.getEntryForIndex(i).y
                         val y2 = setTwo.getEntryForIndex(i).y
 
-                        Timber.d("[CSV] -> ($avgX, $y1, $y2)")
+                        Timber.d("CSV Write: ($avgX, $y1, $y2)")
                         bufferRef.write("$avgX,$y1,$y2")
                         bufferRef.newLine()
                     }
 
-                    Timber.v("Finished writing test #${AppGlobals.testCount}")
+                    Timber.v("Finished writing test #${AppGlobals.testCount} to file.")
                     bufferRef.flush()
                 }
             }

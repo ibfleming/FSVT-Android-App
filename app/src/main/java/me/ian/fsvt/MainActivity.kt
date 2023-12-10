@@ -394,13 +394,6 @@ class MainActivity: AppCompatActivity() {
                 // Set connection state
                 AppGlobals.connectionState = ConnectionState.CONNECTED
 
-                /**
-                 * Send a STOP command to devices initially...
-                 * In the event the program on the devices is running.
-                 * Better to be safe than sorry.
-                 */
-                //ConnectionManager.sendStopCommand()
-
                 // Show toast
                 showCustomToast(this, "Successfully connected!", 1)
 
@@ -462,9 +455,12 @@ class MainActivity: AppCompatActivity() {
         binding.StartButton.setOnClickListener { button ->
             Timber.tag(tag).v("Start button pressed.")
 
-            ConnectionManager.sendStartCommand().thenAccept { acknowledge ->
-                if(acknowledge) {
+            disable(button as Button)
+            ConnectionManager.sendCommand('S').thenAccept { acknowledged ->
+                if( acknowledged ) {
                     // Received acknowledge that devices are running
+                    Timber.tag(tag).v("Devices are running.")
+                    AppGlobals.deviceState = DeviceState.RUNNING
 
                     // Set Start Time
                     AppGlobals.startProgramTime = System.currentTimeMillis()
@@ -474,11 +470,11 @@ class MainActivity: AppCompatActivity() {
                     AppGlobals.testCount++
 
                     // Button Logic
-                    disable(button as Button)
                     enable(binding.StopButton)
-                }
-                else {
-                    showCustomToast(this, "Received no acknowledgement.\nPlease press the button again.", 0)
+                } else {
+                    enable(button)
+                    Timber.tag(tag).e("Failed to start.")
+                    showCustomToast(this, "Failed to initiate the START command to devices. Try again.", 1)
                 }
             }
         }
@@ -487,15 +483,19 @@ class MainActivity: AppCompatActivity() {
         binding.StopButton.setOnClickListener { button ->
             Timber.tag(tag).v("Stop button pressed.")
 
-
-
-            ConnectionManager.sendStopCommand().thenAccept { acknowledge ->
-                if (acknowledge) {
+            disable(button as Button)
+            ConnectionManager.sendCommand('E').thenAccept { acknowledged ->
+                if( acknowledged ) {
                     // Received acknowledge that devices are stopping
+                    Timber.tag(tag).v("Devices are stopped.")
+                    AppGlobals.deviceState = DeviceState.STOPPED
 
                     // Calculate velocity
-                    calculateVelocity()
-                    showVelocityDialog()
+                    if( calculateVelocity() ) {
+                        showVelocityDialog()
+                    } else {
+                        showFailedVelocityDialog()
+                    }
 
                     // Write to CSV
                     CSVProcessing.writeToCSV()
@@ -505,11 +505,11 @@ class MainActivity: AppCompatActivity() {
                     AppGlobals.stopDirective()
 
                     // Button Logic
-                    disable(button as Button)
                     enable(binding.StartButton)
-                }
-                else {
-                    showCustomToast(this, "Received no acknowledgement.\nPlease press the button again.", 0)
+                } else {
+                    enable(button)
+                    Timber.tag(tag).e("Failed to stop.")
+                    showCustomToast(this, "Failed to initiate the STOP command to devices. Try again.", 0)
                 }
             }
         }
@@ -529,7 +529,7 @@ class MainActivity: AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun startScan() {
-        Timber.tag(tag).v("Starting BLE scanning...")
+        Timber.tag(tag).v("Started BLE scan.")
         scanResults.clear()
         val scanFilters = mutableListOf(scanFilter)
         bleScanner?.startScan(scanFilters, scanSettings, scanCallback)
@@ -537,13 +537,14 @@ class MainActivity: AppCompatActivity() {
         scanTimeoutHandler.postDelayed({
             stopScan()
             showDeviceNotFoundDialog()
+            Timber.tag(tag).e("No device found.")
             enable(binding.ConnectButton)
         }, SCAN_PERIOD)
     }
 
     @SuppressLint("MissingPermission")
     private fun stopScan() {
-        Timber.tag(tag).v("Stopped BLE scan!")
+        Timber.tag(tag).v("Stopped BLE scan.")
         bleScanner?.stopScan(scanCallback)
         scanTimeoutHandler.removeCallbacksAndMessages(null)
     }
@@ -577,36 +578,48 @@ class MainActivity: AppCompatActivity() {
      * Helper Functions
      *******************************************/
 
-    private fun calculateVelocity() {
+    private fun calculateVelocity() : Boolean {
+
+        // (0) Set the velocity variable to null
+        AppGlobals.velocity = null
+
+        // (1) Fetch data
         val graph1Pair = AppGlobals.graphOneFragment.maxY()
         val graph2Pair = AppGlobals.graphTwoFragment.maxY()
-
         val graph1X = graph1Pair?.first ?: Float.NaN
         val graph2X = graph2Pair?.first ?: Float.NaN
 
+        // (2) Determine the time and distance
+
+        /**
+         * If the deltaTime is 0, then distance will be divided by 0 and therefore is UNDEFINED behavior.
+         * Return false and communicate this to the user.
+         * Also return false if the user-input distance is null.
+         */
+
         val deltaTime = abs(graph2X - graph1X)
+        if( deltaTime == 0F || AppGlobals.distance == null ) return false
 
-        if( AppGlobals.distance == null ) return
+        // (3) Calculate the velocity
+        val velocity = AppGlobals.distance!! / deltaTime
+        val isVelocityValid = !velocity.isInfinite() && !velocity.isNaN()
 
-        /** DEFAULT VALUE OF DISTANCE IS 0F **/
-        val velocity = if( AppGlobals.unitType == UnitType.METERS ) {
-            //val distanceMeters = AppGlobals.distance!!.times(0.3048)
-            AppGlobals.distance?.div(deltaTime)
-        } else {
-            AppGlobals.distance?.div(deltaTime)
+        if(!isVelocityValid) {
+            return false
         }
 
-        AppGlobals.velocity = String.format("%.2f", velocity).toFloat()
-        if( AppGlobals.velocity!!.isInfinite() || AppGlobals.velocity!!.isNaN() ) {
-            Timber.e("Invalid Velocity!")
-            AppGlobals.velocity = 0F
-        }
+        AppGlobals.velocity = velocity  // Set the velocity
 
-        Timber.d( "------------------------------"
-            + "\n\t[Graph One] : " + graph1Pair.toString()
-            + "\n\t[Graph Two] : " + graph2Pair.toString()
-            + "\n\t[Velocity]  : ${AppGlobals.velocity}"
-            + "\n------------------------------")
+        // Debug
+        Timber.d(
+            "------------------------------" +
+                    "\n\t[Probe One] : ${graph1Pair.toString()}" +
+                    "\n\t[Probe Two] : ${graph2Pair.toString()}" +
+                    "\n\t[Velocity]  : ${String.format("%.2f", AppGlobals.velocity)}"
+                    + "\n------------------------------"
+        )
+
+        return true
     }
 
     /***
@@ -669,6 +682,24 @@ class MainActivity: AppCompatActivity() {
         dialog.show()
     }
 
+    private fun showFailedVelocityDialog() {
+        runOnUiThread {
+            val alertDialog = AlertDialog.Builder(this, R.style.CustomAlertDialog)
+                .setTitle("Error in calculating velocity")
+                .setMessage("The data from the test failed to calculate a valid velocity." +
+                        "\nThis can arise from division by 0 or the velocity calculated is infinity or not a number." +
+                        "\nPlease redo the test and ensure valid data points are being read in.")
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
+
+            // Change color of the button
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showSettingsDialog() {
         val builder = AlertDialog.Builder(this)
@@ -691,6 +722,9 @@ class MainActivity: AppCompatActivity() {
         val back = dialogView.findViewById<Button>(R.id.Back_Button)
         val rotate = dialogView.findViewById<Button>(R.id.RotateButton)
 
+        // Debug
+        AppGlobals.checkStatus()
+
         // Input Logic for All
         if( AppGlobals.deviceState == DeviceState.STOPPED && AppGlobals.connectionState == ConnectionState.DISCONNECTED ) {
             editTitle.isEnabled      = false
@@ -710,21 +744,6 @@ class MainActivity: AppCompatActivity() {
         if( AppGlobals.unitType == UnitType.FEET ) feetCheckbox.isChecked = true
         else metersCheckbox.isChecked = true
 
-        // Checkbox Listeners (Actually Sets the Unit Type value)
-        feetCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                metersCheckbox.isChecked = false
-                AppGlobals.unitType = UnitType.FEET
-            }
-        }
-
-        metersCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                feetCheckbox.isChecked = false
-                AppGlobals.unitType = UnitType.METERS
-            }
-        }
-
         // Input Box Logic
         if( AppGlobals.fileName != null ) editTitle.setText(AppGlobals.fileName)
         if( AppGlobals.distance != null ) editDist.setText(AppGlobals.distance.toString())
@@ -739,25 +758,45 @@ class MainActivity: AppCompatActivity() {
             }
         }
 
-        fun updateSubmitButtonState() {
+        // Function to change the state of the Submit button
+        fun enableSubmitButton() {
             val titleText = editTitle.text.toString().trim()
             val distText = editDist.text.toString().trim()
 
-            if( (titleText.isNotEmpty() && distText.isNotEmpty()) && isFloat(distText) ) {
-                submit.isEnabled = true
-                submit.background.alpha = 255
+            if(AppGlobals.deviceState == DeviceState.STOPPED && AppGlobals.connectionState == ConnectionState.CONNECTED) {
+                submit.isEnabled = (titleText.isNotEmpty() && distText.isNotEmpty() && isFloat(distText))
             } else {
                 submit.isEnabled = false
-                submit.background.alpha = 64
+            }
+
+            submit.background.alpha = if (submit.isEnabled) 255 else 64
+        }
+
+        // Checkbox Listeners (Actually Sets the Unit Type value)
+
+        feetCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                metersCheckbox.isChecked = false
+                AppGlobals.unitType = UnitType.FEET
+                enableSubmitButton()
+            }
+        }
+
+        metersCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                feetCheckbox.isChecked = false
+                AppGlobals.unitType = UnitType.METERS
+                enableSubmitButton()
             }
         }
 
         // Input Box Listeners (Only Enable if No Test is RUNNING)
+
         editTitle.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
             override fun afterTextChanged(p0: Editable?) {
-                updateSubmitButtonState()
+                enableSubmitButton()
             }
         })
 
@@ -765,16 +804,22 @@ class MainActivity: AppCompatActivity() {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
             override fun afterTextChanged(p0: Editable?) {
-                updateSubmitButtonState()
+                enableSubmitButton()
             }
         })
 
         // Battery Indicator
 
-        val batteryText1 = getString(R.string.Battery_Format, AppGlobals.batteryProbe1)
-        val batteryText2 = getString(R.string.Battery_Format, AppGlobals.batteryProbe2)
-        batteryViewProbe1.text = batteryText1
-        batteryViewProbe2.text = batteryText2
+        if( AppGlobals.connectionState == ConnectionState.CONNECTED ) {
+            val batteryText1 = getString(R.string.Battery_Format, AppGlobals.batteryProbe1)
+            val batteryText2 = getString(R.string.Battery_Format, AppGlobals.batteryProbe2)
+            batteryViewProbe1.text = batteryText1
+            batteryViewProbe2.text = batteryText2
+        } else {
+            val disconnectedText = getString(R.string.Battery_Disconnected)
+            batteryViewProbe1.text = disconnectedText
+            batteryViewProbe2.text = disconnectedText
+        }
 
         // Buttons
 
@@ -927,17 +972,19 @@ class MainActivity: AppCompatActivity() {
 
     @SuppressLint("InflateParams")
     private fun showCustomToast(context: Context, message: String, length : Int) {
-        val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-        val layout: View = layoutInflater.inflate(R.layout.toast_layout, null)
+        runOnUiThread {
+            val layoutInflater: LayoutInflater = LayoutInflater.from(context)
+            val layout: View = layoutInflater.inflate(R.layout.toast_layout, null)
 
-        val textView: TextView = layout.findViewById(R.id.Toast_Text)
-        textView.text = message
+            val textView: TextView = layout.findViewById(R.id.Toast_Text)
+            textView.text = message
 
-        val toast = Toast(context)
-        toast.setGravity(Gravity.TOP, 0, 96)
-        toast.duration = length
-        toast.view = layout
-        toast.show()
+            val toast = Toast(context)
+            toast.setGravity(Gravity.TOP, 0, 96)
+            toast.duration = length
+            toast.view = layout
+            toast.show()
+        }
     }
 
     private fun enable(button: Button) {

@@ -99,6 +99,11 @@ class AppGlobals {
             firstReadTwo = false
             startProgramTime = null
         }
+
+        fun checkStatus() {
+            Timber.tag("STATUS").v("Connection State: $connectionState ")
+            Timber.tag("STATUS").v("Device State: $deviceState")
+        }
     }
 }
 
