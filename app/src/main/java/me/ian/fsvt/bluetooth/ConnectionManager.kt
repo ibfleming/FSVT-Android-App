@@ -218,6 +218,7 @@ object ConnectionManager {
                     }
                 }, TIMEOUT_DURATION)
             } else {
+                keepSendingStart()
                 Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts for START.")
                 receivedAcknowledge.complete(false)
             }
@@ -227,13 +228,16 @@ object ConnectionManager {
         return receivedAcknowledge
     }
 
+    private const val MAX_STOP_ATTEMPTS = 50
+    private const val TIMEOUT_STOP_DURATION = 10L
+
     @RequiresApi(Build.VERSION_CODES.N)
     fun sendStopCommand() : CompletableFuture<Boolean> {
         val receivedAcknowledge = CompletableFuture<Boolean>()
         var attempts = 0
 
         fun keepSendingStop() {
-            if (attempts < MAX_ATTEMPTS) {
+            if (attempts < MAX_STOP_ATTEMPTS) {
                 writeCommand('E')
 
                 handler.postDelayed({
@@ -248,8 +252,9 @@ object ConnectionManager {
                         attempts++
                         keepSendingStop()
                     }
-                }, TIMEOUT_DURATION)
+                }, TIMEOUT_STOP_DURATION)
             } else {
+                keepSendingStop()
                 Timber.e("No acknowledgment received after $MAX_ATTEMPTS attempts for STOP.")
                 receivedAcknowledge.complete(false)
             }

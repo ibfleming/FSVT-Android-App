@@ -399,7 +399,7 @@ class MainActivity: AppCompatActivity() {
                  * In the event the program on the devices is running.
                  * Better to be safe than sorry.
                  */
-                ConnectionManager.sendStopCommand()
+                //ConnectionManager.sendStopCommand()
 
                 // Show toast
                 showCustomToast(this, "Successfully connected!", 1)
@@ -486,6 +486,8 @@ class MainActivity: AppCompatActivity() {
         /** STOP BUTTON **/
         binding.StopButton.setOnClickListener { button ->
             Timber.tag(tag).v("Stop button pressed.")
+
+
 
             ConnectionManager.sendStopCommand().thenAccept { acknowledge ->
                 if (acknowledge) {
@@ -588,8 +590,8 @@ class MainActivity: AppCompatActivity() {
 
         /** DEFAULT VALUE OF DISTANCE IS 0F **/
         val velocity = if( AppGlobals.unitType == UnitType.METERS ) {
-            val distanceMeters = AppGlobals.distance!!.times(0.3048)
-            (distanceMeters.div(deltaTime)).toFloat()
+            //val distanceMeters = AppGlobals.distance!!.times(0.3048)
+            AppGlobals.distance?.div(deltaTime)
         } else {
             AppGlobals.distance?.div(deltaTime)
         }
@@ -647,9 +649,9 @@ class MainActivity: AppCompatActivity() {
 
         val velocityText : String =
             if( AppGlobals.unitType == UnitType.METERS ) {
-                getString(R.string.Velocity_Meters, String.format("%.2f", AppGlobals.velocity))
+                getString(R.string.Velocity_Meters, AppGlobals.velocity.toString())
             } else {
-                getString(R.string.Velocity_Feet, String.format("%.2f", AppGlobals.velocity))
+                getString(R.string.Velocity_Feet, AppGlobals.velocity.toString())
             }
 
         tvVelocity.text = velocityText
