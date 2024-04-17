@@ -1,17 +1,19 @@
-# Stream Velocity App for USDA Forest Service
+<img src="https://github.com/ibfleming/fsvt-app/blob/main/usda_logo.png" alt="logo" width="100"/>
 
-### Free Stream Velocity Team
+# Free Stream Velocity Team - Android Application
 
-**Senior Capstone Project, University of Idaho, 2023**
+**Version:** 4.0 (LTS)
 
-*Developed by Ian Fleming*
+**Author:** Ian Fleming
 
-> Official Release :
-> Version: 4.0 (LTS)
+**Senior Capstone Project - University of Idaho 2023**
 
-<img src="https://github.com/ibfleming/fsvt-app/blob/main/usda_logo.png" alt="app" width="100"/>
+Welcome to...
 
-<img src="https://github.com/ibfleming/fsvt-app/blob/main/app_image.png" alt="app" width="300"/>
+## Overview
+
+#### User Interface Snippet
+<img src="https://github.com/ibfleming/fsvt-app/blob/main/app_image.png" alt="gui_example" width="300"/>
 
 #### Features:
 - Friendly and dynamic user interface
